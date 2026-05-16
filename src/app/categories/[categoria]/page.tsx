@@ -1,3 +1,5 @@
+export const revalidate = 3600; // revalida cada hora
+
 import { Metadata } from 'next';
 import { getActivitatsByCategoria } from '@/lib/airtable';
 import Nav from '@/components/Nav';

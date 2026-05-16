@@ -1,3 +1,5 @@
+export const revalidate = 3600; // revalida cada hora
+
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import { getActivitats } from '@/lib/airtable';
