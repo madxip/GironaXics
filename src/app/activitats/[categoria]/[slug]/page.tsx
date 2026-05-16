@@ -3,12 +3,21 @@ export const revalidate = 3600; // revalida cada hora
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { getActivitatBySlug, getActivitatsByBarri, getCentreBySlug, normalizeSlug, getActivitats } from '@/lib/airtable';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import ActivitatCard from '@/components/ActivitatCard';
 import CloseButton from '@/components/CloseButton';
 import Galeria from '@/components/Galeria';
+
+export async function generateStaticParams() {
+  const activitats = await getActivitats();
+  return activitats.map((activitat) => ({
+    categoria: normalizeSlug(activitat.categoria),
+    slug: activitat.slug,
+  }));
+}
 
 export async function generateMetadata({ params }: { params: { categoria: string, slug: string } }): Promise<Metadata> {
   const activitat = await getActivitatBySlug(params.slug);
@@ -68,9 +77,9 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       <main style={{ paddingBottom: '60px' }}>
-        <div className="modal-hero">
+        <div className="modal-hero" style={{ position: 'relative' }}>
           {/* Aprofitem la imatge pujada a Airtable, o deixem el placeholder de disseny si no n'hi ha cap */}
-          <img src={activitat.imatgeUrl || "https://images.unsplash.com/photo-1516627145497-ae6968895b74?q=80&w=2000&auto=format&fit=crop"} alt={activitat.nom} />
+          <Image src={activitat.imatgeUrl || "https://images.unsplash.com/photo-1516627145497-ae6968895b74?q=80&w=2000&auto=format&fit=crop"} alt={activitat.nom} fill style={{ objectFit: 'cover' }} priority />
           <div className="modal-hero-gradient">
             <h1 className="modal-hero-title">{activitat.nom}</h1>
           </div>
@@ -92,15 +101,15 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
             )} · {activitat.barri} · {activitat.edat}
           </div>
 
-          <div className="grid-12" style={{ marginBottom: '60px' }}>
-            <div style={{ gridColumn: 'span 6', paddingRight: '40px' }}>
+          <div className="grid-12 detail-grid" style={{ marginBottom: '60px' }}>
+            <div className="detail-col-left" style={{ gridColumn: 'span 6', paddingRight: '40px' }}>
               <div style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', lineHeight: 1.6, color: 'var(--fosc)' }}>
                 {activitat.descripcio || "Aquesta activitat no té cap descripció detallada encara. El centre pot afegir-ne més aviat."}
               </div>
-              <Galeria images={activitat.galeria} />
+              <Galeria images={activitat.galeria} nom={activitat.nom} />
             </div>
 
-            <div style={{ gridColumn: 'span 6' }}>
+            <div className="detail-col-right" style={{ gridColumn: 'span 6' }}>
               <div style={{ backgroundColor: 'white', padding: '32px', borderRadius: '4px', border: '1px solid var(--crema-fosca)' }}>
                 <div style={{ fontSize: '32px', fontWeight: 700, color: 'var(--verd-fosc)', marginBottom: '24px' }}>
                   {activitat.preu != null && activitat.preu !== '' ? (
@@ -137,9 +146,19 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
                   )}
                 </div>
 
-                <a href={contactLink} className="hoverable" style={{ display: 'block', backgroundColor: 'var(--verd-fosc)', color: 'white', padding: '16px', textAlign: 'center', borderRadius: '4px', textDecoration: 'none', fontWeight: 700 }}>
-                  Contacta el centre
-                </a>
+                {contactLink !== '#' ? (
+                  <a href={contactLink} className="hoverable" style={{ display: 'block', backgroundColor: 'var(--verd-fosc)', color: 'white', padding: '16px', textAlign: 'center', borderRadius: '4px', textDecoration: 'none', fontWeight: 700 }}>
+                    Contacta el centre
+                  </a>
+                ) : centre?.web ? (
+                  <a href={centre.web} target="_blank" rel="noopener noreferrer" className="hoverable" style={{ display: 'block', backgroundColor: 'var(--verd-fosc)', color: 'white', padding: '16px', textAlign: 'center', borderRadius: '4px', textDecoration: 'none', fontWeight: 700 }}>
+                    Visita la web del centre ↗
+                  </a>
+                ) : (
+                  <div style={{ display: 'block', backgroundColor: 'var(--crema-fosca)', color: 'var(--muted)', padding: '16px', textAlign: 'center', borderRadius: '4px', fontWeight: 700, fontSize: '14px' }}>
+                    Sense dades de contacte
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -149,7 +168,7 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
               <h2 style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: '32px', color: 'var(--verd-fosc)', marginBottom: '32px' }}>
                 Més activitats a {activitat.centre}
               </h2>
-              <div className="results-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+              <div className="modal-related-grid">
                 {altresCentre.map(a => (
                   <ActivitatCard key={a.slug} activitat={a} />
                 ))}
@@ -162,7 +181,7 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
               <h2 style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: '32px', color: 'var(--verd-fosc)', marginBottom: '32px' }}>
                 Altres activitats a {activitat.barri}
               </h2>
-              <div className="results-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+              <div className="modal-related-grid">
                 {altresBarri.map(a => (
                   <ActivitatCard key={a.slug} activitat={a} />
                 ))}

@@ -23,13 +23,23 @@ export default function Hero() {
         </h1>
         <form className="hero-search" onSubmit={handleSearch}>
             <input 
+              id="hero-search-input"
               type="text" 
-              placeholder="Quina activitat busques?" 
+              placeholder="Quina activitat busques?"
+              aria-label="Cerca una activitat"
               value={query}
               onChange={e => setQuery(e.target.value)}
             />
             <button type="submit" className="arrow hoverable" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>→</button>
         </form>
+        <div style={{ marginTop: '24px', marginLeft: '20vw', display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <a href="#filtres" className="hoverable" style={{ display: 'inline-block', backgroundColor: 'var(--verd-fosc)', color: 'white', padding: '12px 28px', fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '14px', letterSpacing: '0.05em', textDecoration: 'none', borderRadius: '2px', transition: 'background-color 0.3s' }}>
+            Veure totes les activitats
+          </a>
+          <a href="#categories" className="hoverable" style={{ display: 'inline-block', color: 'var(--fosc)', fontFamily: 'var(--font-sans)', fontSize: '14px', textDecoration: 'none', borderBottom: '1px solid currentColor', opacity: 0.6 }}>
+            Explorar per categoria
+          </a>
+        </div>
         <div className="hero-subtitle">De Girona. Per a Girona.<br />En català.</div>
         <div className="scroll-indicator">Fes scroll per descobrir</div>
     </section>

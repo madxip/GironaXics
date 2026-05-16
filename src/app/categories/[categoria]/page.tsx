@@ -1,11 +1,18 @@
 export const revalidate = 3600; // revalida cada hora
 
 import { Metadata } from 'next';
-import { getActivitatsByCategoria } from '@/lib/airtable';
+import { getActivitatsByCategoria, getActivitats, normalizeSlug } from '@/lib/airtable';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import ActivitatCard from '@/components/ActivitatCard';
 import Link from 'next/link';
+
+export async function generateStaticParams() {
+  const activitats = await getActivitats();
+  const categories = new Set<string>();
+  activitats.forEach(a => { if (a.categoria) categories.add(normalizeSlug(a.categoria)); });
+  return Array.from(categories).map(categoria => ({ categoria }));
+}
 
 export async function generateMetadata({ params }: { params: { categoria: string } }): Promise<Metadata> {
   const catDisplay = params.categoria.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());

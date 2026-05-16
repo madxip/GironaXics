@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 
-export default function Galeria({ images }: { images?: string[] }) {
+export default function Galeria({ images, nom = '' }: { images?: string[], nom?: string }) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   // Afegim suport per tecles (fletxes) per navegar
@@ -49,6 +50,7 @@ export default function Galeria({ images }: { images?: string[] }) {
             className="hoverable"
             onClick={() => setSelectedIndex(idx)}
             style={{ 
+              position: 'relative',
               aspectRatio: '1', 
               borderRadius: '8px', 
               overflow: 'hidden', 
@@ -56,10 +58,12 @@ export default function Galeria({ images }: { images?: string[] }) {
               border: '1px solid var(--crema-fosca)'
             }}
           >
-            <img 
+            <Image 
               src={url} 
-              alt={`Galeria imatge ${idx + 1}`} 
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+              alt={nom ? `Imatge ${idx + 1} de ${nom}` : `Galeria imatge ${idx + 1}`} 
+              fill
+              sizes="(max-width: 768px) 50vw, 33vw"
+              style={{ objectFit: 'cover' }} 
             />
           </div>
         ))}
@@ -105,18 +109,19 @@ export default function Galeria({ images }: { images?: string[] }) {
             </button>
           )}
 
-          <img 
-            src={images[selectedIndex]} 
-            alt="Imatge ampliada" 
-            onClick={(e) => e.stopPropagation()}
-            style={{ 
-              maxWidth: '100%', 
-              maxHeight: '100%', 
-              objectFit: 'contain',
-              borderRadius: '4px',
-              boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
-            }} 
-          />
+          <div style={{ position: 'relative', width: '90vw', height: '90vh' }}>
+            <Image 
+              src={images[selectedIndex]} 
+              alt={nom ? `Imatge ampliada de ${nom}` : "Imatge ampliada"} 
+              onClick={(e) => e.stopPropagation()}
+              fill
+              style={{ 
+                objectFit: 'contain',
+                borderRadius: '4px',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+              }} 
+            />
+          </div>
 
           {images.length > 1 && (
             <button 

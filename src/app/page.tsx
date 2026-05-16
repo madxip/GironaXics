@@ -9,21 +9,27 @@ import Categories from '@/components/Categories';
 import ComFunciona from '@/components/ComFunciona';
 import BannerCentres from '@/components/BannerCentres';
 import Footer from '@/components/Footer';
-import { getActivitats } from '@/lib/airtable';
+import { getActivitats, getCentres } from '@/lib/airtable';
+import { Suspense } from 'react';
 
 export default async function Home() {
-  const activitats = await getActivitats();
+  const [activitats, centres] = await Promise.all([
+    getActivitats(),
+    getCentres()
+  ]);
   return (
     <>
       <Nav />
       <Hero />
-      <Stats />
+      <Stats numCentres={centres.length} numActivitats={activitats.length} />
       
-      <div className="editorial-sep">
+      <div id="filtres" className="editorial-sep">
         <div className="sep-num">01 · FILTRES</div>
         <div className="sep-line"></div>
       </div>
-      <Filtres activitats={activitats} />
+      <Suspense fallback={<div style={{ padding: '0 5vw 80px' }}>Carregant filtres...</div>}>
+        <Filtres activitats={activitats} />
+      </Suspense>
       
       <div className="editorial-sep">
         <div className="sep-num">02 · EL NOSTRE RECULL</div>
@@ -31,8 +37,18 @@ export default async function Home() {
       </div>
       <Destacades />
       
+      <div id="categories" className="editorial-sep">
+        <div className="sep-num">03 · CATEGORIES</div>
+        <div className="sep-line"></div>
+      </div>
       <Categories activitats={activitats} />
+
+      <div className="editorial-sep">
+        <div className="sep-num">04 · COM FUNCIONA</div>
+        <div className="sep-line"></div>
+      </div>
       <ComFunciona />
+
       <BannerCentres />
       <Footer />
     </>

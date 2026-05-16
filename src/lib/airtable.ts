@@ -9,6 +9,35 @@ const getFallbackActivitats = (): Activitat[] => {
   return activitatsSeed as unknown as Activitat[];
 };
 
+async function fetchAllRecords(tableName: string, filterByFormula?: string): Promise<any[]> {
+  let allRecords: any[] = [];
+  let offset: string | undefined;
+  
+  do {
+    const params = new URLSearchParams();
+    if (filterByFormula) params.append('filterByFormula', filterByFormula);
+    if (offset) params.append('offset', offset);
+    
+    const url = `https://api.airtable.com/v0/${BASE_ID}/${tableName}${params.toString() ? '?' + params.toString() : ''}`;
+    
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${API_KEY}` },
+      next: { revalidate: 3600 }
+    });
+    
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`Error fetching ${tableName}: ${res.status} ${errorText}`);
+    }
+    
+    const data = await res.json();
+    allRecords = allRecords.concat(data.records || []);
+    offset = data.offset;
+  } while (offset);
+  
+  return allRecords;
+}
+
 export async function getActivitats(): Promise<Activitat[]> {
   if (!API_KEY || !BASE_ID) {
     console.warn("Manca AIRTABLE_API_KEY o AIRTABLE_BASE_ID. Utilitzant dades de prova.");
@@ -16,33 +45,30 @@ export async function getActivitats(): Promise<Activitat[]> {
   }
 
   try {
-    const actRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/Activitats?filterByFormula={publicada}=TRUE()`, {
-      headers: { Authorization: `Bearer ${API_KEY}` },
-      next: { revalidate: 3600 }  // ← refresca cada hora
-    });
-    if (!actRes.ok) {
-      const errorText = await actRes.text();
-      throw new Error(`Error fetching activitats: ${actRes.status} ${errorText}`);
-    }
-    const data = await actRes.json();
+    const records = await fetchAllRecords('Activitats', '{publicada}=TRUE()');
 
-    const centresRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/Centres`, {
-      headers: { Authorization: `Bearer ${API_KEY}` },
-      next: { revalidate: 3600 }
-    });
-    const centresData = centresRes.ok ? await centresRes.json() : { records: [] };
+    let centresRecords: any[] = [];
+    try {
+      centresRecords = await fetchAllRecords('Centres');
+    } catch (e) {
+      // Ignore
+    }
+
     const centreMap = new Map<string, string>();
-    centresData.records.forEach((c: { id: string; fields: { nom: string } }) => {
+    centresRecords.forEach((c: { id: string; fields: { nom: string } }) => {
       if (c.fields && c.fields.nom) centreMap.set(c.id, c.fields.nom);
     });
 
-    return data.records.map((r: { fields: Record<string, unknown> }) => {
+    return records.map((r: { fields: Record<string, unknown> }) => {
       const f = { ...r.fields } as unknown as Activitat;
       if (Array.isArray(r.fields.centre) && r.fields.centre.length > 0) {
         f.centre = centreMap.get(r.fields.centre[0] as string) || (r.fields.centre[0] as string);
       }
       if (Array.isArray(r.fields.Imatge) && r.fields.Imatge.length > 0) {
         f.imatgeUrl = (r.fields.Imatge[0] as { url: string }).url;
+      }
+      if (f.barri === 'Centro') {
+        f.barri = 'Centre';
       }
       f.qui_imparteix = (r.fields.qui_imparteix as string) || (r.fields['Qui imparteix'] as string) || (r.fields['qui imparteix'] as string);
       return f;
@@ -54,50 +80,8 @@ export async function getActivitats(): Promise<Activitat[]> {
 }
 
 export async function getActivitatBySlug(slug: string): Promise<Activitat | null> {
-  if (!API_KEY || !BASE_ID) {
-    return getFallbackActivitats().find(a => a.slug === slug) || null;
-  }
-  try {
-    const res = await fetch(`https://api.airtable.com/v0/${BASE_ID}/Activitats?filterByFormula=AND({slug}='${slug}', {publicada}=TRUE())`, {
-      headers: { Authorization: `Bearer ${API_KEY}` },
-      next: { revalidate: 3600 }
-    });
-    const data = await res.json();
-    if (!data.records || data.records.length === 0) return null;
-
-    const r = data.records[0];
-    const f = { ...r.fields } as unknown as Activitat;
-
-    if (Array.isArray(r.fields.centre) && r.fields.centre.length > 0) {
-      const centresRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/Centres`, {
-        headers: { Authorization: `Bearer ${API_KEY}` },
-        next: { revalidate: 3600 }
-      });
-      if (centresRes.ok) {
-        const centresData = await centresRes.json();
-        const centreMap = new Map<string, string>();
-        centresData.records.forEach((c: { id: string; fields: { nom: string } }) => {
-          if (c.fields && c.fields.nom) centreMap.set(c.id, c.fields.nom);
-        });
-        f.centre = centreMap.get(r.fields.centre[0] as string) || (r.fields.centre[0] as string);
-      } else {
-        f.centre = r.fields.centre[0] as string;
-      }
-    }
-
-    if (Array.isArray(r.fields.Imatge) && r.fields.Imatge.length > 0) {
-      f.imatgeUrl = (r.fields.Imatge[0] as { url: string }).url;
-    }
-
-    if (Array.isArray(r.fields.Galeria) && r.fields.Galeria.length > 0) {
-      f.galeria = r.fields.Galeria.map((img: any) => img.url);
-    }
-
-    f.qui_imparteix = (r.fields.qui_imparteix as string) || (r.fields['Qui imparteix'] as string) || (r.fields['qui imparteix'] as string);
-    return f;
-  } catch {
-    return null;
-  }
+  const all = await getActivitats();
+  return all.find(a => a.slug === slug) || null;
 }
 
 export async function getActivitatsByCategoria(cat: string): Promise<Activitat[]> {
@@ -123,12 +107,8 @@ export async function getCentres(): Promise<Centre[]> {
     return [];
   }
   try {
-    const res = await fetch(`https://api.airtable.com/v0/${BASE_ID}/Centres`, {
-      headers: { Authorization: `Bearer ${API_KEY}` },
-      next: { revalidate: 3600 }
-    });
-    const data = await res.json();
-    return data.records.map((r: unknown) => (r as { fields: Centre }).fields);
+    const records = await fetchAllRecords('Centres');
+    return records.map((r: unknown) => (r as { fields: Centre }).fields);
   } catch {
     return [];
   }

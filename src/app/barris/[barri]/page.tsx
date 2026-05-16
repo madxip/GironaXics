@@ -1,11 +1,19 @@
 export const revalidate = 3600; // revalida cada hora
 
 import { Metadata } from 'next';
-import { getActivitats } from '@/lib/airtable';
+import { getActivitats, normalizeSlug } from '@/lib/airtable';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import MapaBarris from '@/components/MapaBarris';
 import Link from 'next/link';
+
+export async function generateStaticParams() {
+  const activitats = await getActivitats();
+  const barris = new Set<string>();
+  activitats.forEach(a => { if (a.barri) barris.add(normalizeSlug(a.barri)); });
+  barris.add('tots');
+  return Array.from(barris).map(barri => ({ barri }));
+}
 
 export async function generateMetadata({ params }: { params: { barri: string } }): Promise<Metadata> {
   const barriDisplay = params.barri.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());

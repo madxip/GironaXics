@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Activitat } from '@/lib/types';
 import AccordionCategoria from './AccordionCategoria';
 
@@ -54,9 +55,22 @@ function matchEdatGroup(edatStr: string | undefined, group: string): boolean {
 }
 
 export default function Filtres({ activitats }: { activitats: Activitat[] }) {
-  const [selectedCategoria, setSelectedCategoria] = useState<string>('Totes');
-  const [selectedEdat, setSelectedEdat] = useState<string>('Totes');
-  const [selectedBarri, setSelectedBarri] = useState<string>('Totes');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const selectedCategoria = searchParams.get('categoria') || 'Totes';
+  const selectedEdat = searchParams.get('edat') || 'Totes';
+  const selectedBarri = searchParams.get('barri') || 'Totes';
+
+  const updateFilter = (key: string, value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === 'Totes') {
+      params.delete(key);
+    } else {
+      params.set(key, value);
+    }
+    router.replace(`?${params.toString()}`, { scroll: false });
+  };
 
   const categories = useMemo(() => {
     const set = new Set<string>();
@@ -89,7 +103,7 @@ export default function Filtres({ activitats }: { activitats: Activitat[] }) {
   }, [filtered]);
 
   return (
-    <section className="map-section grid-12" style={{ padding: '0 0 80px' }}>
+    <section className="map-section grid-12" style={{ paddingBottom: '80px' }}>
         <div className="map-container" style={{ gridColumn: 'span 4', paddingRight: '2vw' }}>
             <h2 style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: '32px', color: 'var(--verd-fosc)', marginBottom: '32px' }}>
               Filtra les activitats
@@ -100,7 +114,7 @@ export default function Filtres({ activitats }: { activitats: Activitat[] }) {
                     <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', color: 'var(--verd)', marginBottom: '8px' }}>PER CATEGORIA</label>
                     <select 
                         value={selectedCategoria} 
-                        onChange={e => setSelectedCategoria(e.target.value)}
+                        onChange={e => updateFilter('categoria', e.target.value)}
                         style={{ width: '100%', padding: '12px 16px', borderRadius: '0', border: '1px solid var(--verd)', backgroundColor: 'transparent', color: 'var(--fosc)', fontFamily: 'var(--font-sans)', fontSize: '16px', outline: 'none', cursor: 'pointer' }}
                     >
                         {categories.map(c => <option key={c} value={c}>{c}</option>)}
@@ -111,7 +125,7 @@ export default function Filtres({ activitats }: { activitats: Activitat[] }) {
                     <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', color: 'var(--verd)', marginBottom: '8px' }}>PER EDATS</label>
                     <select 
                         value={selectedEdat} 
-                        onChange={e => setSelectedEdat(e.target.value)}
+                        onChange={e => updateFilter('edat', e.target.value)}
                         style={{ width: '100%', padding: '12px 16px', borderRadius: '0', border: '1px solid var(--verd)', backgroundColor: 'transparent', color: 'var(--fosc)', fontFamily: 'var(--font-sans)', fontSize: '16px', outline: 'none', cursor: 'pointer' }}
                     >
                         {EDAT_GROUPS.map(e => <option key={e} value={e}>{e}</option>)}
@@ -122,7 +136,7 @@ export default function Filtres({ activitats }: { activitats: Activitat[] }) {
                     <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', color: 'var(--verd)', marginBottom: '8px' }}>PER BARRI</label>
                     <select 
                         value={selectedBarri} 
-                        onChange={e => setSelectedBarri(e.target.value)}
+                        onChange={e => updateFilter('barri', e.target.value)}
                         style={{ width: '100%', padding: '12px 16px', borderRadius: '0', border: '1px solid var(--verd)', backgroundColor: 'transparent', color: 'var(--fosc)', fontFamily: 'var(--font-sans)', fontSize: '16px', outline: 'none', cursor: 'pointer' }}
                     >
                         {barris.map(b => <option key={b} value={b}>{b}</option>)}
@@ -131,9 +145,7 @@ export default function Filtres({ activitats }: { activitats: Activitat[] }) {
                 
                 <button 
                   onClick={() => {
-                    setSelectedCategoria('Totes');
-                    setSelectedEdat('Totes');
-                    setSelectedBarri('Totes');
+                    router.replace('?', { scroll: false });
                   }}
                   className="hoverable"
                   style={{
@@ -154,11 +166,18 @@ export default function Filtres({ activitats }: { activitats: Activitat[] }) {
                     <div className="results-empty">No s'han trobat activitats amb aquests filtres.</div>
                 ) : (
                     <div className="results-list">
-                        {Object.entries(grouped)
-                        .sort(([catA], [catB]) => catA.localeCompare(catB))
-                        .map(([categoria, activitatsCat]) => (
-                            <AccordionCategoria key={categoria} categoria={categoria} activitats={activitatsCat} />
-                        ))}
+                        {(() => {
+                          const entries = Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b));
+                          const numCats = entries.length;
+                          return entries.map(([categoria, activitatsCat], idx) => (
+                            <AccordionCategoria
+                              key={categoria}
+                              categoria={categoria}
+                              activitats={activitatsCat}
+                              defaultOpen={numCats <= 3 || idx === 0}
+                            />
+                          ));
+                        })()}
                     </div>
                 )}
             </div>

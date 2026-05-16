@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GironaXics
 
-## Getting Started
+El directori d'activitats extraescolars a Girona per a nens i nenes, impulsat per Next.js 14 i Airtable.
 
-First, run the development server:
+## Requisits
+
+- Node.js 18.x o superior
+- Gestor de paquets npm o yarn
+- Compte d'Airtable amb el Base corresponent per obtenir les dades
+- L'Airtable ha de tenir les taules `Centres` i `Activitats` configurades correctament
+
+## Instal·lació i Configuració
+
+1. Clona el repositori.
+2. Instal·la les dependències:
+   ```bash
+   npm install
+   ```
+3. Crea un fitxer `.env.local` a l'arrel del projecte utilitzant `.env.example` com a plantilla i afegeix-hi les teves credencials d'Airtable:
+   ```bash
+   cp .env.example .env.local
+   ```
+   Omple les variables al fitxer `.env.local`:
+   - `AIRTABLE_API_KEY`: El teu Personal Access Token d'Airtable amb permisos de lectura.
+   - `AIRTABLE_BASE_ID`: L'ID de la base d'Airtable (sol començar per `app...`).
+
+## Execució en Local
+
+Per executar el projecte en mode desenvolupament:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Obre http://localhost:3000 al teu navegador.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts Disponibles
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `npm run dev`: Inicia el servidor de desenvolupament (hot-reloading, SSR segons convingui).
+- `npm run build`: Construeix l'aplicació per a producció (crea les pàgines estàtiques i optimitza els actius).
+- `npm run start`: Executa la versió de producció creada amb `build`.
+- `npm run lint`: Executa l'eina de linter per detectar errors de codi.
 
-## Learn More
+## Estructura i Tecnologies
 
-To learn more about Next.js, take a look at the following resources:
+- **Framework**: Next.js (App Router)
+- **CMS**: Airtable per a gestionar els centres, activitats i les dades relacionades
+- **Estils**: Vanilla CSS (`src/app/globals.css`)
+- **Imatges**: Suport natiu amb `next/image` per compressió automàtica i WebP
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Integració amb Airtable
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+L'aplicació obté les dades dinàmiques des de l'API d'Airtable (`src/lib/airtable.ts`).
+Utilitza offset automàtic per a obtenir més de 100 registres (que és el límit per defecte d'Airtable), garantint que apareguin totes les activitats de la base de dades sense cap pèrdua. A més, inclou mecanismes de sanitització en els `slugs` i normalització de camps (per exemple convertint "Centro" a "Centre").
 
-## Deploy on Vercel
+## Contribució i Desplegament
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+El desplegament recomanat és mitjançant [Vercel](https://vercel.com/), que aprofita les funcionalitats Edge de Next.js. Només has de vincular aquest repositori de Git al teu compte de Vercel i assegurar-te de configurar les variables d'entorn (`AIRTABLE_API_KEY` i `AIRTABLE_BASE_ID`) a la pestanya Settings del teu projecte.

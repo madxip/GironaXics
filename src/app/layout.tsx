@@ -19,6 +19,20 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: "GironaXics - Extraescolars a Girona",
   description: "Directori d'activitats extraescolars per a nens a Girona.",
+  openGraph: {
+    title: "GironaXics - Extraescolars a Girona",
+    description: "Directori d'activitats extraescolars per a nens a Girona.",
+    images: [
+      {
+        url: 'https://images.unsplash.com/photo-1516627145497-ae6968895b74?q=80&w=1200&auto=format&fit=crop', // Imatge genèrica per defecte
+        width: 1200,
+        height: 630,
+        alt: 'GironaXics - Extraescolars a Girona',
+      },
+    ],
+    locale: 'ca_ES',
+    type: 'website',
+  },
 };
 
 export default function RootLayout({

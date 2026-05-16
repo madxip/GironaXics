@@ -32,12 +32,12 @@ export default function Nav() {
         </Link>
         <div className="nav-right">
             <Link href="#" className="hoverable" style={{ textDecoration: 'none' }}>Per als centres</Link>
-            <div className="hoverable" style={{ color: 'var(--verd)' }}>
+            <Link href="/cerca" aria-label="Cerca" className="hoverable" style={{ color: 'var(--verd)', display: 'inline-flex' }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="11" cy="11" r="8"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                 </svg>
-            </div>
+            </Link>
         </div>
         <div className="hamburger hoverable" onClick={() => setMenuOpen(true)}>☰</div>
       </nav>

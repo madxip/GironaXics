@@ -1,7 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
+/* Tailwind removed */
 
         /* CSS Variables */
         :root {
@@ -12,7 +9,7 @@
             --crema: #F7F4EE;
             --crema-fosca: #EDE8DF;
             --fosc: #1A1A18;
-            --muted: #6B6B65;
+            --muted: #525250;
 
             --font-serif: 'Playfair Display', serif;
             --font-sans: 'DM Sans', sans-serif;
@@ -277,7 +274,7 @@
 
         /* Secció Mapa */
         .map-section {
-            padding: 0 0 80px;
+            padding-bottom: 80px;
         }
 
         .map-container {
@@ -638,32 +635,26 @@
             color: var(--muted);
         }
 
-        .cat-scroll {
-            display: flex;
-            gap: 2px;
-            overflow-x: auto;
-            scroll-snap-type: x mandatory;
-            scrollbar-width: none;
-            /* Firefox */
-            padding: 0 5vw;
-        }
-
-        .cat-scroll::-webkit-scrollbar {
-            display: none;
-            /* Chrome/Safari */
+        .cat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 16px;
         }
 
         .cat-item {
-            flex: 0 0 200px;
-            height: 200px;
+            height: 160px;
             background-color: var(--verd-fosc);
             color: white;
-            scroll-snap-align: start;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            transition: background-color 0.3s;
+            border-radius: 8px;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+        
+        .cat-item:hover {
+            transform: translateY(-4px);
         }
 
         .cat-item:nth-child(even) {
@@ -673,6 +664,13 @@
         .cat-item.hoverable:hover {
             background-color: var(--taronja);
         }
+
+        .activitat-card:hover {
+            border-color: var(--verd-pallid) !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+        }
+
+
 
         .cat-icon {
             width: 60px;
@@ -684,17 +682,11 @@
             font-family: var(--font-serif);
             font-style: italic;
             font-size: 20px;
+            text-align: center;
+            padding: 0 12px;
         }
 
-        .drag-indicator {
-            position: absolute;
-            right: 5vw;
-            top: 80px;
-            font-size: 11px;
-            text-transform: uppercase;
-            color: var(--muted);
-            letter-spacing: 0.1em;
-        }
+
 
         /* Secció Com Funciona */
         .com-funciona {
@@ -1069,7 +1061,8 @@
 
         @media (max-width: 900px) {
             .modal-hero {
-                aspect-ratio: 16/9;
+                aspect-ratio: 4/3;
+                min-height: 260px;
             }
         }
 
@@ -1391,7 +1384,33 @@
             color: var(--muted);
         }
 
+        .modal-related-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
         body.modal-open {
             overflow: hidden;
         }
-    
+
+        @media (max-width: 768px) {
+            .detail-col-left, .detail-col-right {
+                grid-column: span 12 !important;
+                padding-right: 0 !important;
+            }
+            .detail-col-right {
+                margin-top: 32px;
+            }
+            .map-container, .map-results {
+                grid-column: span 12 !important;
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+            }
+            .map-results {
+                margin-top: 40px;
+            }
+            .modal-related-grid {
+                grid-template-columns: 1fr;
+            }
+        }
