@@ -1,0 +1,33 @@
+export interface Activitat {
+  slug: string;
+  nom: string;
+  centre: string; // The text name or ID
+  barri: string;
+  categoria: string;
+  edat: string;
+  preu?: number | string;
+  destacada: boolean;
+  horari: string;
+  dies: string;
+  descripcio: string;
+  durada: string;
+  alumnes: string;
+  material: string;
+  inici: string;
+  idioma: string;
+  qui_imparteix?: string;
+  publicada: boolean;
+  imatgeUrl?: string;
+  galeria?: string[];
+}
+
+export interface Centre {
+  slug: string;
+  nom: string;
+  adreça: string;
+  telefon: string;
+  email: string;
+  web: string;
+  barri: string;
+  descripcio: string;
+}
