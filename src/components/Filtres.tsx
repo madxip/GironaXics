@@ -163,7 +163,7 @@ export default function Filtres({ activitats }: { activitats: Activitat[] }) {
             <h2>Resultats ({filtered.length})</h2>
             <div id="results-container">
                 {filtered.length === 0 ? (
-                    <div className="results-empty">No s'han trobat activitats amb aquests filtres.</div>
+                    <div className="results-empty">No s&apos;han trobat activitats amb aquests filtres.</div>
                 ) : (
                     <div className="results-list">
                         {(() => {

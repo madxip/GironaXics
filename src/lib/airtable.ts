@@ -9,8 +9,8 @@ const getFallbackActivitats = (): Activitat[] => {
   return activitatsSeed as unknown as Activitat[];
 };
 
-async function fetchAllRecords(tableName: string, filterByFormula?: string): Promise<any[]> {
-  let allRecords: any[] = [];
+async function fetchAllRecords(tableName: string, filterByFormula?: string): Promise<{id: string; fields: Record<string, unknown>}[]> {
+  let allRecords: {id: string; fields: Record<string, unknown>}[] = [];
   let offset: string | undefined;
   
   do {
@@ -47,16 +47,16 @@ export async function getActivitats(): Promise<Activitat[]> {
   try {
     const records = await fetchAllRecords('Activitats', '{publicada}=TRUE()');
 
-    let centresRecords: any[] = [];
+    let centresRecords: {id: string; fields: Record<string, unknown>}[] = [];
     try {
       centresRecords = await fetchAllRecords('Centres');
-    } catch (e) {
+    } catch {
       // Ignore
     }
 
     const centreMap = new Map<string, string>();
-    centresRecords.forEach((c: { id: string; fields: { nom: string } }) => {
-      if (c.fields && c.fields.nom) centreMap.set(c.id, c.fields.nom);
+    centresRecords.forEach((c) => {
+      if (c.fields && c.fields.nom) centreMap.set(c.id, c.fields.nom as string);
     });
 
     return records.map((r: { fields: Record<string, unknown> }) => {

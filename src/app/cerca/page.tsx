@@ -39,7 +39,7 @@ export default async function CercaPage({ searchParams }: { searchParams: { q?: 
         </div>
 
         <h1 style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: '48px', color: 'var(--verd-fosc)', marginBottom: '40px' }}>
-          {queryRaw ? `Resultats per: "${searchParams.q}"` : "Cerca"}
+          {queryRaw ? <>Resultats per: &ldquo;{searchParams.q}&rdquo;</> : "Cerca"}
         </h1>
 
         {queryRaw === '' ? (
@@ -48,17 +48,17 @@ export default async function CercaPage({ searchParams }: { searchParams: { q?: 
           </div>
         ) : filtered.length === 0 ? (
           <div className="results-empty" style={{ padding: '4rem 2rem', textAlign: 'center', background: 'var(--crema-fosca)', borderRadius: '4px' }}>
-             No hem trobat cap activitat que coincideixi amb "{searchParams.q}".
+             No hem trobat cap activitat que coincideixi amb &ldquo;{searchParams.q}&rdquo;.
              <div style={{ marginTop: '24px' }}>
                 <Link href="/" className="hoverable" style={{ color: 'var(--verd-fosc)', textDecoration: 'none', fontWeight: 700, borderBottom: '1px solid var(--verd)' }}>
-                  Torna a l'inici per veure totes les activitats
+                  Torna a l&apos;inici per veure totes les activitats
                 </Link>
              </div>
           </div>
         ) : (
           <div>
             <div style={{ fontSize: '16px', color: 'var(--muted)', marginBottom: '32px' }}>
-              S'han trobat {filtered.length} {filtered.length === 1 ? 'activitat' : 'activitats'}
+              S&apos;han trobat {filtered.length} {filtered.length === 1 ? 'activitat' : 'activitats'}
             </div>
             <div className="results-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '32px' }}>
                 {filtered.map(a => (

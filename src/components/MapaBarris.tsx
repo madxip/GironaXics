@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { Activitat } from '@/lib/types';
-import ActivitatCard from './ActivitatCard';
 import AccordionCategoria from './AccordionCategoria';
 import { normalizeSlug } from '@/lib/airtable';
 

@@ -41,7 +41,7 @@ export default function Galeria({ images, nom = '' }: { images?: string[], nom?:
   return (
     <div style={{ marginTop: '40px' }}>
       <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '16px', color: 'var(--verd-fosc)' }}>
-        Galeria d'imatges
+        Galeria d&apos;imatges
       </h3>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '16px' }}>
         {images.map((url, idx) => (

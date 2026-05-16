@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { useEffect, useRef, useMemo } from 'react';
+import { useMemo } from 'react';
 import { Activitat } from '@/lib/types';
 import { normalizeSlug } from '@/lib/airtable';
 
