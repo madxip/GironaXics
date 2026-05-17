@@ -18,7 +18,6 @@ export default function Categories({ activitats = [] }: { activitats?: Activitat
         <span className="cat-header-num">{String(uniqueCats.length).padStart(2, '0')}</span>
         <div className="cat-header-meta">
           <span className="cat-header-title">Categories Actives</span>
-          <span className="cat-header-desc">temàtiques diferents per a escollir</span>
         </div>
       </div>
 
@@ -26,9 +25,9 @@ export default function Categories({ activitats = [] }: { activitats?: Activitat
         {uniqueCats.map((cat, index) => {
           const formattedIndex = String(index + 1).padStart(2, '0');
           return (
-            <Link 
-              key={cat} 
-              href={`/categories/${normalizeSlug(cat)}`} 
+            <Link
+              key={cat}
+              href={`/categories/${normalizeSlug(cat)}`}
               className="cat-item"
               style={{ textDecoration: 'none' }}
             >
