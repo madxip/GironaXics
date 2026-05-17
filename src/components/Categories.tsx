@@ -54,7 +54,7 @@ export default function Categories({ activitats = [] }: { activitats?: Activitat
     <section className="categories" style={{ padding: '0 5vw 80px' }}>
         <div className="cat-grid">
             {uniqueCats.map(cat => (
-                <Link key={cat} href={`/categories/${normalizeSlug(cat)}`} className="cat-item hoverable" style={{textDecoration:'none', color:'inherit'}}>
+                <Link key={cat} href={`/categories/${normalizeSlug(cat)}`} className="cat-item hoverable" style={{textDecoration:'none', color:'white'}}>
                     <div className="cat-icon">
                         {getIconForCategory(cat)}
                     </div>

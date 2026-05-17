@@ -19,7 +19,7 @@ export default function Hero() {
       <h1 className="hero-title">
         <div className="line-1">Troba</div>
         <div className="line-2">les millors</div>
-        <div className="line-3">extraescolars.</div>
+        <div className="line-3">extraescolars</div>
       </h1>
       <form className="hero-search" onSubmit={handleSearch}>
         <input

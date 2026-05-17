@@ -672,6 +672,7 @@
 
         .cat-item.hoverable:hover {
             background-color: var(--taronja);
+            color: var(--fosc) !important;
         }
 
         .activitat-card:hover {
