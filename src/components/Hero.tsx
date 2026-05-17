@@ -32,7 +32,7 @@ export default function Hero() {
         />
         <button type="submit" className="arrow hoverable" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>→</button>
       </form>
-      <div style={{ marginTop: '24px', marginLeft: '20vw', display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
+      <div className="hero-buttons">
         <a href="#filtres" className="hoverable" style={{ display: 'inline-block', backgroundColor: 'var(--verd-fosc)', color: 'white', padding: '12px 28px', fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '14px', letterSpacing: '0.05em', textDecoration: 'none', borderRadius: '2px', transition: 'background-color 0.3s' }}>
           Veure totes les activitats
         </a>

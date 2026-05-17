@@ -194,6 +194,15 @@
             opacity: 1;
         }
 
+        .hero-buttons {
+            margin-top: 24px;
+            margin-left: 20vw;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
         .scroll-indicator {
             position: absolute;
             right: 5vw;
@@ -867,19 +876,27 @@
             }
 
             .hero-title {
-                font-size: 16vw;
+                font-size: 13vw;
             }
 
             .hero-title .line-2 {
-                text-indent: 5vw;
+                text-indent: 0vw;
             }
 
             .hero-title .line-3 {
-                text-indent: 10vw;
+                text-indent: 0vw;
             }
 
             .hero-search {
                 margin-left: 5vw;
+            }
+
+            .hero-buttons {
+                margin-left: 5vw;
+            }
+
+            .scroll-indicator {
+                display: none;
             }
 
             .stat-item {
