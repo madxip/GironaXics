@@ -10,6 +10,7 @@ import Footer from '@/components/Footer';
 import ActivitatCard from '@/components/ActivitatCard';
 import CloseButton from '@/components/CloseButton';
 import Galeria from '@/components/Galeria';
+import ContactModal from '@/components/ContactModal';
 
 export async function generateStaticParams() {
   const activitats = await getActivitats();
@@ -41,7 +42,8 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
 
   // Try to find center data
   const centre = await getCentreBySlug(normalizeSlug(activitat.centre));
-  const contactLink = centre?.telefon ? `tel:${centre.telefon}` : (centre?.email ? `mailto:${centre.email}` : '#');
+
+  const contactTelefon = centre?.telefon ?? null;
 
   const totesBarri = await getActivitatsByBarri(normalizeSlug(activitat.barri));
   const altresBarri = totesBarri.filter(a => a.slug !== activitat.slug).slice(0, 3);
@@ -146,19 +148,28 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
                   )}
                 </div>
 
-                {contactLink !== '#' ? (
-                  <a href={contactLink} className="hoverable" style={{ display: 'block', backgroundColor: 'var(--verd-fosc)', color: 'white', padding: '16px', textAlign: 'center', borderRadius: '4px', textDecoration: 'none', fontWeight: 700 }}>
-                    Contacta el centre
-                  </a>
-                ) : centre?.web ? (
-                  <a href={centre.web} target="_blank" rel="noopener noreferrer" className="hoverable" style={{ display: 'block', backgroundColor: 'var(--verd-fosc)', color: 'white', padding: '16px', textAlign: 'center', borderRadius: '4px', textDecoration: 'none', fontWeight: 700 }}>
-                    Visita la web del centre ↗
-                  </a>
-                ) : (
-                  <div style={{ display: 'block', backgroundColor: 'var(--crema-fosca)', color: 'var(--muted)', padding: '16px', textAlign: 'center', borderRadius: '4px', fontWeight: 700, fontSize: '14px' }}>
-                    Sense dades de contacte
-                  </div>
-                )}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {contactTelefon && (
+                    <a href={`tel:${contactTelefon}`} className="hoverable" style={{ display: 'block', backgroundColor: 'var(--verd-fosc)', color: 'white', padding: '16px', textAlign: 'center', borderRadius: '4px', textDecoration: 'none', fontWeight: 700 }}>
+                      📞 {contactTelefon}
+                    </a>
+                  )}
+                  {centre?.email ? (
+                    <ContactModal
+                      centreEmail={centre.email}
+                      centreNom={activitat.centre}
+                      activitatNom={activitat.nom}
+                    />
+                  ) : centre?.web ? (
+                    <a href={centre.web} target="_blank" rel="noopener noreferrer" className="hoverable" style={{ display: 'block', backgroundColor: 'var(--verd-fosc)', color: 'white', padding: '16px', textAlign: 'center', borderRadius: '4px', textDecoration: 'none', fontWeight: 700 }}>
+                      Visita la web del centre ↗
+                    </a>
+                  ) : !contactTelefon ? (
+                    <div style={{ backgroundColor: 'var(--crema-fosca)', color: 'var(--muted)', padding: '16px', textAlign: 'center', borderRadius: '4px', fontWeight: 700, fontSize: '14px' }}>
+                      Sense dades de contacte
+                    </div>
+                  ) : null}
+                </div>
               </div>
             </div>
           </div>
