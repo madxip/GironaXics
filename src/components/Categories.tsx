@@ -14,6 +14,14 @@ export default function Categories({ activitats = [] }: { activitats?: Activitat
 
   return (
     <section className="categories">
+      <div className="cat-header">
+        <span className="cat-header-num">{String(uniqueCats.length).padStart(2, '0')}</span>
+        <div className="cat-header-meta">
+          <span className="cat-header-title">Categories Actives</span>
+          <span className="cat-header-desc">temàtiques diferents per a escollir</span>
+        </div>
+      </div>
+
       <div className="cat-grid">
         {uniqueCats.map((cat, index) => {
           const formattedIndex = String(index + 1).padStart(2, '0');

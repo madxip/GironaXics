@@ -621,6 +621,44 @@
             padding: 20px 5vw 120px;
         }
 
+        .cat-header {
+            display: flex;
+            align-items: baseline;
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        .cat-header-num {
+            font-family: var(--font-sans);
+            font-size: clamp(64px, 8vw, 96px);
+            font-weight: 800;
+            color: var(--verd);
+            line-height: 0.8;
+            letter-spacing: -0.04em;
+        }
+
+        .cat-header-meta {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cat-header-title {
+            font-family: var(--font-sans);
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--taronja);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .cat-header-desc {
+            font-family: var(--font-serif);
+            font-style: italic;
+            font-size: 14px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
         .cat-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
