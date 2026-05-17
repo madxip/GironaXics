@@ -1,22 +1,24 @@
+import Link from 'next/link';
+
 export default function Footer() {
     return (
         <>
             <footer>
-                <div className="footer-logo">
+                <Link href="/" className="footer-logo" style={{ textDecoration: 'none', color: 'inherit' }}>
                     <span>Girona</span><span>Xics</span>
-                </div>
+                </Link>
                 <div className="footer-links">
                     <div>
-                        <a href="#" className="hoverable">Sobre nosaltres</a>
-                        <a href="#" className="hoverable">Contacte</a>
+                        <Link href="/sobre-nosaltres" className="hoverable">Sobre nosaltres</Link>
+                        <Link href="/contacte" className="hoverable">Contacte</Link>
                     </div>
                     <div>
-                        <a href="#" className="hoverable">Per als centres</a>
-                        <a href="#" className="hoverable">Preguntes freqüents</a>
+                        <Link href="/per-a-centres" className="hoverable">Per als centres</Link>
+                        <Link href="/preguntes-frequents" className="hoverable">Preguntes freqüents</Link>
                     </div>
                     <div>
-                        <a href="#" className="hoverable">Avís legal</a>
-                        <a href="#" className="hoverable">Privacitat</a>
+                        <Link href="/avis-legal" className="hoverable">Avís legal</Link>
+                        <Link href="/privacitat" className="hoverable">Privacitat</Link>
                     </div>
                 </div>
                 <div className="footer-bottom">

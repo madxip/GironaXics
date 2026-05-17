@@ -54,7 +54,7 @@ export default function Nav() {
         <div className="mobile-menu-close hoverable" onClick={() => setMenuOpen(false)}>✕</div>
         <Link href="/barris/tots" className="hoverable" onClick={() => setMenuOpen(false)}>Activitats</Link>
         <Link href="/barris/tots" className="hoverable" onClick={() => setMenuOpen(false)}>Barris</Link>
-        <Link href="#" className="hoverable" onClick={() => setMenuOpen(false)}>Centres</Link>
+        <Link href="/per-a-centres" className="hoverable" onClick={() => setMenuOpen(false)}>Centres</Link>
       </div>
 
       {/* Nav */}
@@ -108,7 +108,7 @@ export default function Nav() {
             <span>Girona</span><span>Xics</span>
         </Link>
         <div className="nav-right">
-            <Link href="#" className="hoverable" style={{ textDecoration: 'none' }}>Per als centres</Link>
+            <Link href="/per-a-centres" className="hoverable" style={{ textDecoration: 'none' }}>Per als centres</Link>
             <button
               onClick={() => setSearchOpen(true)}
               aria-label="Cerca"
