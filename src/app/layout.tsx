@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { DM_Sans, Playfair_Display } from "next/font/google";
+import { GoogleAnalytics } from '@next/third-parties/google';
 import "./globals.css";
+
 const dmSans = DM_Sans({
   subsets: ["latin"],
   weight: ["300", "400", "500", "700"],
@@ -24,7 +26,7 @@ export const metadata: Metadata = {
     description: "Directori d'activitats extraescolars per a nens a Girona.",
     images: [
       {
-        url: 'https://images.unsplash.com/photo-1516627145497-ae6968895b74?q=80&w=1200&auto=format&fit=crop', // Imatge genèrica per defecte
+        url: 'https://images.unsplash.com/photo-1516627145497-ae6968895b74?q=80&w=1200&auto=format&fit=crop',
         width: 1200,
         height: 630,
         alt: 'GironaXics - Extraescolars a Girona',
@@ -44,6 +46,7 @@ export default function RootLayout({
     <html lang="ca" className={`${dmSans.variable} ${playfair.variable}`}>
       <body>
         {children}
+        <GoogleAnalytics gaId="G-HLLM705LRK" />
       </body>
     </html>
   );

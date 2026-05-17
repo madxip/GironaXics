@@ -1,6 +1,7 @@
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 
+
 export const metadata = {
   title: "Sobre nosaltres · GironaXics",
   description: "Descobreix la missió i valors de GironaXics, el directori de referència d'activitats extraescolars en català a Girona.",
