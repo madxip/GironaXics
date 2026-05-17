@@ -42,8 +42,8 @@ export default function Contacte() {
                 Si vols registrar la teva acadèmia o associació, recorda que pots visitar la nostra secció específica per a centres on trobaràs tota la informació.
               </p>
               <p>
-                <strong>On som:</strong><br />
-                Plaça del Vi, 1 · 17004 Girona
+                <strong>Àmbit d'actuació:</strong><br />
+                Girona, Catalunya
               </p>
             </div>
 

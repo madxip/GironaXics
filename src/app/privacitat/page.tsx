@@ -23,7 +23,7 @@ export default function Privacitat() {
 
           <h2>1. Qui és el responsable del tractament de les vostres dades?</h2>
           <p>
-            El responsable és <strong>GironaXics</strong>, amb domicili a Plaça del Vi, 1, 17004 Girona, i correu electrònic de contacte <a href="mailto:hola@gironaxics.cat" style={{color:'var(--verd)'}}>hola@gironaxics.cat</a>.
+            El responsable és <strong>GironaXics</strong>, amb domicili a Girona, i correu electrònic de contacte <a href="mailto:hola@gironaxics.cat" style={{ color: 'var(--verd)' }}>hola@gironaxics.cat</a>.
           </p>
 
           <h2>2. Quines dades recollim i amb quina finalitat?</h2>
@@ -56,10 +56,10 @@ export default function Privacitat() {
 
           <h2>6. Els vostres drets</h2>
           <p>
-            Podeu exercir en qualsevol moment els vostres drets d'<strong>accés, rectificació, supressió (dret a l'oblit), limitació, oposició i portabilitat</strong> de les vostres dades personals. 
+            Podeu exercir en qualsevol moment els vostres drets d'<strong>accés, rectificació, supressió (dret a l'oblit), limitació, oposició i portabilitat</strong> de les vostres dades personals.
           </p>
           <p>
-            Per fer-ho, només cal que ens envieu un correu electrònic a <a href="mailto:hola@gironaxics.cat" style={{color:'var(--verd)'}}>hola@gironaxics.cat</a> indicant clarament el dret que voleu exercir. Respondrem a la vostra sol·licitud al més aviat possible.
+            Per fer-ho, només cal que ens envieu un correu electrònic a <a href="mailto:hola@gironaxics.cat" style={{ color: 'var(--verd)' }}>hola@gironaxics.cat</a> indicant clarament el dret que voleu exercir. Respondrem a la vostra sol·licitud al més aviat possible.
           </p>
         </section>
       </main>

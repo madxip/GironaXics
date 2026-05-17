@@ -23,7 +23,7 @@ export default function AvisLegal() {
 
           <h2>1. Dades identificatives</h2>
           <p>
-            El lloc web gironaxics.cat és propietat i està administrat per GironaXics (d'ara endavant, "GironaXics"), amb domicili social a Plaça del Vi, 1, 17004 Girona, i correu de contacte <a href="mailto:hola@gironaxics.cat" style={{color:'var(--verd)'}}>hola@gironaxics.cat</a>.
+            El lloc web gironaxics.cat és una iniciativa local de caràcter informatiu sota la denominació de <strong>GironaXics</strong> (marca provisional actualment no registrada i sense personalitat jurídica pròpia), amb àmbit d'actuació a la ciutat de Girona i correu de contacte <a href="mailto:hola@gironaxics.cat" style={{color:'var(--verd)'}}>hola@gironaxics.cat</a>.
           </p>
 
           <h2>2. Objecte i condicions d'ús</h2>
