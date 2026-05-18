@@ -112,7 +112,7 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
 
           <div className="grid-12 detail-grid" style={{ marginBottom: '60px' }}>
             <div className="detail-col-left" style={{ gridColumn: 'span 6', paddingRight: '40px' }}>
-              <div style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', lineHeight: 1.6, color: 'var(--fosc)' }}>
+              <div style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', lineHeight: 1.6, color: 'var(--fosc)', whiteSpace: 'pre-line' }}>
                 {activitat.descripcio || "Aquesta activitat no té cap descripció detallada encara. El centre pot afegir-ne més aviat."}
               </div>
               <Galeria images={activitat.galeria} nom={activitat.nom} />
