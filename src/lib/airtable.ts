@@ -59,8 +59,11 @@ export async function getActivitats(): Promise<Activitat[]> {
       if (c.fields && c.fields.nom) centreMap.set(c.id, c.fields.nom as string);
     });
 
-    return records.map((r: { fields: Record<string, unknown> }) => {
+    return records.map((r: { id: string; fields: Record<string, unknown> }) => {
       const f = { ...r.fields } as unknown as Activitat;
+      // Robust slug fallback: use slug field (lowercase or uppercase) or generate from name or fallback to record ID
+      f.slug = (r.fields.slug as string) || (r.fields.Slug as string) || (r.fields.nom ? normalizeSlug(r.fields.nom as string) : r.id);
+      
       if (Array.isArray(r.fields.centre) && r.fields.centre.length > 0) {
         f.centre = centreMap.get(r.fields.centre[0] as string) || (r.fields.centre[0] as string);
       }
@@ -108,7 +111,12 @@ export async function getCentres(): Promise<Centre[]> {
   }
   try {
     const records = await fetchAllRecords('Centres');
-    return records.map((r: unknown) => (r as { fields: Centre }).fields);
+    return records.map((r: { id: string; fields: Record<string, unknown> }) => {
+      const f = { ...r.fields } as unknown as Centre;
+      // Robust slug fallback: use slug field (lowercase or uppercase) or generate from name or fallback to record ID
+      f.slug = (r.fields.slug as string) || (r.fields.Slug as string) || (r.fields.nom ? normalizeSlug(r.fields.nom as string) : r.id);
+      return f;
+    });
   } catch {
     return [];
   }
