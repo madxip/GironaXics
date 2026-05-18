@@ -4,7 +4,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getActivitatBySlug, normalizeSlug, getActivitats, getCentres, generateFullSlug } from '@/lib/airtable';
+import { getActivitatBySlug, normalizeSlug, getActivitats, getCentres } from '@/lib/airtable';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import ActivitatCard from '@/components/ActivitatCard';
@@ -16,7 +16,7 @@ export async function generateStaticParams() {
   const activitats = await getActivitats();
   return activitats.map((activitat) => ({
     categoria: normalizeSlug(activitat.categoria),
-    slug: generateFullSlug(activitat.slug, activitat.barri),
+    slug: activitat.slug,
   }));
 }
 

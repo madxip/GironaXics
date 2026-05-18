@@ -41,7 +41,13 @@ async function fetchAllRecords(tableName: string, filterByFormula?: string): Pro
 export async function getActivitats(): Promise<Activitat[]> {
   if (!API_KEY || !BASE_ID) {
     console.warn("Manca AIRTABLE_API_KEY o AIRTABLE_BASE_ID. Utilitzant dades de prova.");
-    return getFallbackActivitats();
+    return getFallbackActivitats().map(a => {
+      let slug = a.slug || '';
+      if (!slug.endsWith('-girona')) {
+        slug = slug ? `${slug}-girona` : 'girona';
+      }
+      return { ...a, slug };
+    });
   }
 
   try {
@@ -82,6 +88,11 @@ export async function getActivitats(): Promise<Activitat[]> {
         const barriPart = f.barri ? normalizeSlug(f.barri) : '';
         f.slug = barriPart ? `${namePart}-${barriPart}` : namePart;
         if (!f.slug) f.slug = r.id; // absolute fallback
+      }
+
+      // Ensure slug ends with '-girona'
+      if (f.slug && !f.slug.endsWith('-girona')) {
+        f.slug = `${f.slug}-girona`;
       }
 
       return f;
