@@ -52,8 +52,7 @@ export default function Nav() {
       {/* Mobile Menu */}
       <div className={`mobile-menu ${menuOpen ? 'open' : ''}`} id="mobile-menu">
         <div className="mobile-menu-close hoverable" onClick={() => setMenuOpen(false)}>✕</div>
-        <Link href="/barris/tots" className="hoverable" onClick={() => setMenuOpen(false)}>Activitats</Link>
-        <Link href="/barris/tots" className="hoverable" onClick={() => setMenuOpen(false)}>Barris</Link>
+        <Link href="/#filtres" className="hoverable" onClick={() => setMenuOpen(false)}>Activitats</Link>
         <Link href="/per-a-centres" className="hoverable" onClick={() => setMenuOpen(false)}>Centres</Link>
       </div>
 

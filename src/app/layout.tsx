@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { DM_Sans, Playfair_Display } from "next/font/google";
-import { GoogleAnalytics } from '@next/third-parties/google';
 import "./globals.css";
+import AnalyticsTracker from "@/components/AnalyticsTracker";
+import CookieBanner from "@/components/CookieBanner";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -46,7 +47,8 @@ export default function RootLayout({
     <html lang="ca" className={`${dmSans.variable} ${playfair.variable}`}>
       <body>
         {children}
-        <GoogleAnalytics gaId="G-HLLM705LRK" />
+        <AnalyticsTracker />
+        <CookieBanner />
       </body>
     </html>
   );

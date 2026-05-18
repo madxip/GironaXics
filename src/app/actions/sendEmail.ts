@@ -1,10 +1,46 @@
 "use server";
 
-
 import { Resend } from 'resend';
+import { headers } from 'next/headers';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = 'GironaXics <hola@gironaxics.cat>';
+
+// Simple in-memory rate limiting by IP (helps prevent rapid automated spam)
+const ipCache = new Map<string, { count: number; lastReset: number }>();
+const LIMIT_WINDOW_MS = 60 * 1000; // 1 minut
+const MAX_REQUESTS_PER_MINUTE = 3; // màxim 3 correus per minut
+
+function rateLimit(ip: string): boolean {
+  const now = Date.now();
+  const limitInfo = ipCache.get(ip);
+
+  if (!limitInfo) {
+    ipCache.set(ip, { count: 1, lastReset: now });
+    return true;
+  }
+
+  if (now - limitInfo.lastReset > LIMIT_WINDOW_MS) {
+    ipCache.set(ip, { count: 1, lastReset: now });
+    return true;
+  }
+
+  if (limitInfo.count >= MAX_REQUESTS_PER_MINUTE) {
+    return false;
+  }
+
+  limitInfo.count += 1;
+  return true;
+}
+
+const esc = (unsafe: string): string => {
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
 
 export async function sendContactEmail(data: {
   centreEmail: string;
@@ -13,7 +49,54 @@ export async function sendContactEmail(data: {
   nomRemitent: string;
   emailRemitent: string;
   missatge: string;
+  website?: string; // honeypot field
 }) {
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error("El servei d'enviament de correus no està configurat (falta RESEND_API_KEY).");
+  }
+
+  // 1. Honeypot check
+  if (data.website && data.website.trim() !== '') {
+    console.warn("Spam detectat (honeypot):", data.emailRemitent);
+    return; // Silent discard to avoid letting the bot know
+  }
+
+  // 2. IP Rate Limiting
+  let ip = '127.0.0.1';
+  try {
+    const headersList = headers();
+    ip = headersList.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1';
+  } catch {
+    // ignore if headers() cannot be read (e.g. in some dev contexts)
+  }
+
+  if (!rateLimit(ip)) {
+    console.warn("Spam detectat (rate-limit per IP):", ip);
+    throw new Error("S'ha superat el límit d'enviaments permesos per minut. Si us plau, espera una mica.");
+  }
+
+  // 3. Manual validations
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!data.nomRemitent || data.nomRemitent.trim().length === 0 || data.nomRemitent.length > 100) {
+    throw new Error("El nom és obligatori i no pot superar els 100 caràcters.");
+  }
+
+  if (!data.emailRemitent || !emailRegex.test(data.emailRemitent)) {
+    throw new Error("El correu electrònic indicat no és vàlid.");
+  }
+
+  if (!data.missatge || data.missatge.trim().length === 0 || data.missatge.length > 2000) {
+    throw new Error("El missatge és obligatori i no pot superar els 2000 caràcters.");
+  }
+
+  if (!data.centreEmail || !emailRegex.test(data.centreEmail)) {
+    throw new Error("Correu de destí invàlid.");
+  }
+
+  if (!data.centreNom || data.centreNom.trim().length === 0 || !data.activitatNom || data.activitatNom.trim().length === 0) {
+    throw new Error("Dades del centre o de l'activitat incompletes.");
+  }
   // 1. Correu al centre
   await resend.emails.send({
     from: FROM,
@@ -27,13 +110,13 @@ export async function sendContactEmail(data: {
         </div>
         <div style="padding:32px">
           <h2 style="margin:0 0 8px">Nova consulta rebuda</h2>
-          <p style="color:#525250;margin:0 0 24px">Activitat: <strong>${data.activitatNom}</strong></p>
+          <p style="color:#525250;margin:0 0 24px">Activitat: <strong>${esc(data.activitatNom)}</strong></p>
           <table style="width:100%;border-collapse:collapse;margin-bottom:24px">
-            <tr><td style="padding:8px 0;border-bottom:1px solid #EDE8DF;color:#525250;width:120px">Nom</td><td style="padding:8px 0;border-bottom:1px solid #EDE8DF"><strong>${data.nomRemitent}</strong></td></tr>
-            <tr><td style="padding:8px 0;border-bottom:1px solid #EDE8DF;color:#525250">Correu</td><td style="padding:8px 0;border-bottom:1px solid #EDE8DF"><a href="mailto:${data.emailRemitent}" style="color:#1A6B3A">${data.emailRemitent}</a></td></tr>
+            <tr><td style="padding:8px 0;border-bottom:1px solid #EDE8DF;color:#525250;width:120px">Nom</td><td style="padding:8px 0;border-bottom:1px solid #EDE8DF"><strong>${esc(data.nomRemitent)}</strong></td></tr>
+            <tr><td style="padding:8px 0;border-bottom:1px solid #EDE8DF;color:#525250">Correu</td><td style="padding:8px 0;border-bottom:1px solid #EDE8DF"><a href="mailto:${esc(data.emailRemitent)}" style="color:#1A6B3A">${esc(data.emailRemitent)}</a></td></tr>
           </table>
-          <div style="background:#F7F4EE;border-radius:4px;padding:20px;margin-bottom:32px;white-space:pre-wrap">${data.missatge}</div>
-          <a href="mailto:${data.emailRemitent}" style="display:inline-block;background:#1A6B3A;color:white;padding:12px 24px;border-radius:4px;text-decoration:none;font-weight:700">Respon a ${data.nomRemitent}</a>
+          <div style="background:#F7F4EE;border-radius:4px;padding:20px;margin-bottom:32px;white-space:pre-wrap">${esc(data.missatge)}</div>
+          <a href="mailto:${esc(data.emailRemitent)}" style="display:inline-block;background:#1A6B3A;color:white;padding:12px 24px;border-radius:4px;text-decoration:none;font-weight:700">Respon a ${esc(data.nomRemitent)}</a>
         </div>
         <div style="padding:16px 32px;border-top:1px solid #EDE8DF;font-size:12px;color:#525250">
           Missatge enviat a través de <a href="https://gironaxics.cat" style="color:#1A6B3A">gironaxics.cat</a>
@@ -55,12 +138,12 @@ export async function sendContactEmail(data: {
         <div style="padding:32px">
           <h2 style="margin:0 0 16px">Missatge enviat ✓</h2>
           <p style="color:#525250;margin:0 0 24px">
-            Hola <strong>${data.nomRemitent}</strong>, hem fet arribar el teu missatge a <strong>${data.centreNom}</strong> sobre l'activitat <strong>${data.activitatNom}</strong>.<br/><br/>
-            El centre et respondrà directament a <strong>${data.emailRemitent}</strong> en breu.
+            Hola <strong>${esc(data.nomRemitent)}</strong>, hem fet arribar el teu missatge a <strong>${esc(data.centreNom)}</strong> sobre l'activitat <strong>${esc(data.activitatNom)}</strong>.<br/><br/>
+            El centre et respondrà directament a <strong>${esc(data.emailRemitent)}</strong> en breu.
           </p>
           <div style="background:#F7F4EE;border-radius:4px;padding:20px;margin-bottom:32px">
             <p style="margin:0 0 8px;font-size:12px;color:#525250;text-transform:uppercase;letter-spacing:0.05em">El teu missatge</p>
-            <p style="margin:0;white-space:pre-wrap">${data.missatge}</p>
+            <p style="margin:0;white-space:pre-wrap">${esc(data.missatge)}</p>
           </div>
           <a href="https://gironaxics.cat" style="display:inline-block;background:#1A6B3A;color:white;padding:12px 24px;border-radius:4px;text-decoration:none;font-weight:700">Torna a GironaXics</a>
         </div>
@@ -69,5 +152,115 @@ export async function sendContactEmail(data: {
         </div>
       </div>
     `,
+  });
+}
+
+export async function sendInternalEmail(data: {
+  type: 'contacte' | 'centre';
+  nom: string;
+  email: string;
+  centreNom?: string;
+  missatge: string;
+  website?: string;
+}) {
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error("El servei d'enviament de correus no està configurat (falta RESEND_API_KEY).");
+  }
+
+  // 1. Honeypot check
+  if (data.website && data.website.trim() !== '') {
+    console.warn("Spam detectat en correu intern (honeypot):", data.email);
+    return; // Silent discard
+  }
+
+  // 2. IP Rate Limiting
+  let ip = '127.0.0.1';
+  try {
+    const headersList = headers();
+    ip = headersList.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1';
+  } catch {
+    // ignore
+  }
+
+  if (!rateLimit(ip)) {
+    console.warn("Spam detectat en correu intern (rate-limit per IP):", ip);
+    throw new Error("S'ha superat el límit d'enviaments permesos per minut. Si us plau, espera una mica.");
+  }
+
+  // 3. Validations
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!data.nom || data.nom.trim().length === 0 || data.nom.length > 100) {
+    throw new Error("El nom és obligatori i no pot superar els 100 caràcters.");
+  }
+
+  if (!data.email || !emailRegex.test(data.email)) {
+    throw new Error("El correu electrònic indicat no és vàlid.");
+  }
+
+  if (!data.missatge || data.missatge.trim().length === 0 || data.missatge.length > 2000) {
+    throw new Error("El missatge és obligatori i no pot superar els 2000 caràcters.");
+  }
+
+  if (data.type === 'centre') {
+    if (!data.centreNom || data.centreNom.trim().length === 0 || data.centreNom.length > 100) {
+      throw new Error("El nom del centre és obligatori i no pot superar els 100 caràcters.");
+    }
+  }
+
+  // Define subject and HTML content based on type
+  const subject = data.type === 'centre' 
+    ? `[GironaXics] Sol·licitud de registre de centre: ${data.centreNom}`
+    : `[GironaXics] Nou missatge de contacte general`;
+
+  const htmlContent = data.type === 'centre'
+    ? `
+      <div style="font-family:sans-serif;max-width:600px;margin:0 auto;color:#1A1A18">
+        <div style="background:#1A6B3A;padding:20px 32px">
+          <span style="color:white;font-size:20px;font-weight:700">Girona<span style="color:#F5A623">Xics</span></span>
+        </div>
+        <div style="padding:32px">
+          <h2 style="margin:0 0 16px;color:#1A6B3A">Sol·licitud d'Alta de Centre</h2>
+          <table style="width:100%;border-collapse:collapse;margin-bottom:24px">
+            <tr><td style="padding:8px 0;border-bottom:1px solid #EDE8DF;color:#525250;width:160px">Nom del Contacte</td><td style="padding:8px 0;border-bottom:1px solid #EDE8DF"><strong>${esc(data.nom)}</strong></td></tr>
+            <tr><td style="padding:8px 0;border-bottom:1px solid #EDE8DF;color:#525250">Nom del Centre</td><td style="padding:8px 0;border-bottom:1px solid #EDE8DF"><strong>${esc(data.centreNom || '')}</strong></td></tr>
+            <tr><td style="padding:8px 0;border-bottom:1px solid #EDE8DF;color:#525250">Correu electrònic</td><td style="padding:8px 0;border-bottom:1px solid #EDE8DF"><a href="mailto:${esc(data.email)}" style="color:#1A6B3A">${esc(data.email)}</a></td></tr>
+          </table>
+          <p style="margin:0 0 8px;font-size:12px;color:#525250;text-transform:uppercase;letter-spacing:0.05em">Activitats que ofereixen:</p>
+          <div style="background:#F7F4EE;border-radius:4px;padding:20px;margin-bottom:32px;white-space:pre-wrap">${esc(data.missatge)}</div>
+          <a href="mailto:${esc(data.email)}" style="display:inline-block;background:#1A6B3A;color:white;padding:12px 24px;border-radius:4px;text-decoration:none;font-weight:700">Respon a ${esc(data.nom)}</a>
+        </div>
+        <div style="padding:16px 32px;border-top:1px solid #EDE8DF;font-size:12px;color:#525250">
+          Enviat automàticament per GironaXics
+        </div>
+      </div>
+    `
+    : `
+      <div style="font-family:sans-serif;max-width:600px;margin:0 auto;color:#1A1A18">
+        <div style="background:#1A6B3A;padding:20px 32px">
+          <span style="color:white;font-size:20px;font-weight:700">Girona<span style="color:#F5A623">Xics</span></span>
+        </div>
+        <div style="padding:32px">
+          <h2 style="margin:0 0 16px;color:#1A6B3A">Consulta General de Contacte</h2>
+          <table style="width:100%;border-collapse:collapse;margin-bottom:24px">
+            <tr><td style="padding:8px 0;border-bottom:1px solid #EDE8DF;color:#525250;width:160px">Nom del Contacte</td><td style="padding:8px 0;border-bottom:1px solid #EDE8DF"><strong>${esc(data.nom)}</strong></td></tr>
+            <tr><td style="padding:8px 0;border-bottom:1px solid #EDE8DF;color:#525250">Correu electrònic</td><td style="padding:8px 0;border-bottom:1px solid #EDE8DF"><a href="mailto:${esc(data.email)}" style="color:#1A6B3A">${esc(data.email)}</a></td></tr>
+          </table>
+          <p style="margin:0 0 8px;font-size:12px;color:#525250;text-transform:uppercase;letter-spacing:0.05em">Missatge:</p>
+          <div style="background:#F7F4EE;border-radius:4px;padding:20px;margin-bottom:32px;white-space:pre-wrap">${esc(data.missatge)}</div>
+          <a href="mailto:${esc(data.email)}" style="display:inline-block;background:#1A6B3A;color:white;padding:12px 24px;border-radius:4px;text-decoration:none;font-weight:700">Respon a ${esc(data.nom)}</a>
+        </div>
+        <div style="padding:16px 32px;border-top:1px solid #EDE8DF;font-size:12px;color:#525250">
+          Enviat automàticament per GironaXics
+        </div>
+      </div>
+    `;
+
+  await resend.emails.send({
+    from: FROM,
+    to: 'hola@gironaxics.cat',
+    replyTo: data.email,
+    subject: subject,
+    html: htmlContent,
   });
 }

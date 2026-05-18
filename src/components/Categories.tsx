@@ -17,7 +17,7 @@ export default function Categories({ activitats = [] }: { activitats?: Activitat
       <div className="cat-header">
         <span className="cat-header-num">{String(uniqueCats.length).padStart(2, '0')}</span>
         <div className="cat-header-meta">
-          <span className="cat-header-title">Categories Actives</span>
+          <span className="cat-header-title">Categories actives</span>
         </div>
       </div>
 

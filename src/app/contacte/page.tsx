@@ -3,16 +3,32 @@
 import { useState } from 'react';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
+import { sendInternalEmail } from '@/app/actions/sendEmail';
 
 export default function Contacte() {
   const [submitted, setSubmitted] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'sending' | 'ok' | 'error'>('idle');
+  const [website, setWebsite] = useState('');
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.name && formData.email && formData.message) {
-      setSubmitted(true);
-      // In a real application, you would send this to an API route (e.g. resend)
+      setStatus('sending');
+      try {
+        await sendInternalEmail({
+          type: 'contacte',
+          nom: formData.name,
+          email: formData.email,
+          missatge: formData.message,
+          website: website,
+        });
+        setStatus('ok');
+        setSubmitted(true);
+      } catch (err) {
+        console.error(err);
+        setStatus('error');
+      }
     }
   };
 
@@ -89,7 +105,29 @@ export default function Contacte() {
                       placeholder="Explica'ns en què et podem ajudar..."
                     />
                   </div>
-                  <button type="submit" className="btn-submit">Enviar missatge →</button>
+
+                  {/* Honeypot field (hidden from humans, filled by bots) */}
+                  <div style={{ display: 'none' }} aria-hidden="true">
+                    <label htmlFor="contact-website">Si us plau, no omplis aquest camp</label>
+                    <input
+                      id="contact-website"
+                      type="text"
+                      value={website}
+                      onChange={e => setWebsite(e.target.value)}
+                      tabIndex={-1}
+                      autoComplete="off"
+                    />
+                  </div>
+
+                  {status === 'error' && (
+                    <p style={{ color: '#c0392b', fontSize: '14px', background: '#fde8e8', padding: '10px 14px', borderRadius: '4px', marginBottom: '15px' }}>
+                      Hi ha hagut un error enviant el missatge. Si us plau, torna-ho a provar o escriu-nos directament a hola@gironaxics.cat.
+                    </p>
+                  )}
+
+                  <button type="submit" disabled={status === 'sending'} className="btn-submit">
+                    {status === 'sending' ? 'Enviant...' : 'Enviar missatge →'}
+                  </button>
                 </form>
               )}
             </div>

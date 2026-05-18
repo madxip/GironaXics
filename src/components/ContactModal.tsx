@@ -14,8 +14,10 @@ export default function ContactModal({ centreEmail, centreNom, activitatNom }: P
   const [nom, setNom] = useState('');
   const [email, setEmail] = useState('');
   const [missatge, setMissatge] = useState('');
+  const [website, setWebsite] = useState('');
   const [status, setStatus] = useState<'idle' | 'sending' | 'ok' | 'error'>('idle');
   const firstInputRef = useRef<HTMLInputElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   // Tanca amb Escape
   useEffect(() => {
@@ -24,17 +26,64 @@ export default function ContactModal({ centreEmail, centreNom, activitatNom }: P
     return () => window.removeEventListener('keydown', handler);
   }, []);
 
+  // Focus trap
+  useEffect(() => {
+    if (!open) return;
+
+    const modalElement = modalRef.current;
+    if (!modalElement) return;
+
+    const focusableSelector = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+
+      const focusableElements = Array.from(modalElement.querySelectorAll<HTMLElement>(focusableSelector))
+        .filter(el => el.offsetParent !== null); // Filter out hidden elements (like honeypot parent)
+
+      if (focusableElements.length === 0) return;
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (e.shiftKey) {
+        // Shift + Tab
+        if (document.activeElement === firstElement) {
+          lastElement.focus();
+          e.preventDefault();
+        }
+      } else {
+        // Tab
+        if (document.activeElement === lastElement) {
+          firstElement.focus();
+          e.preventDefault();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [open]);
+
   // Focus al primer camp quan s'obre
   useEffect(() => {
     if (open) setTimeout(() => firstInputRef.current?.focus(), 60);
-    else { setStatus('idle'); setNom(''); setEmail(''); setMissatge(''); }
+    else { setStatus('idle'); setNom(''); setEmail(''); setMissatge(''); setWebsite(''); }
   }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('sending');
     try {
-      await sendContactEmail({ centreEmail, centreNom, activitatNom, nomRemitent: nom, emailRemitent: email, missatge });
+      await sendContactEmail({
+        centreEmail,
+        centreNom,
+        activitatNom,
+        nomRemitent: nom,
+        emailRemitent: email,
+        missatge,
+        website
+      });
       setStatus('ok');
     } catch {
       setStatus('error');
@@ -82,7 +131,7 @@ export default function ContactModal({ centreEmail, centreNom, activitatNom }: P
           }}
           role="dialog" aria-modal="true" aria-label={`Contactar amb ${centreNom}`}
         >
-          <div style={{
+          <div ref={modalRef} style={{
             background: 'var(--crema)', borderRadius: '8px', padding: '40px',
             width: '100%', maxWidth: '520px', position: 'relative',
             boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
@@ -128,6 +177,19 @@ export default function ContactModal({ centreEmail, centreNom, activitatNom }: P
                     id="contact-missatge" required value={missatge} onChange={e => setMissatge(e.target.value)}
                     rows={4} placeholder={`Voldria informació sobre ${activitatNom}...`}
                     style={{ ...inputStyle, resize: 'vertical', minHeight: '100px' }}
+                  />
+                </div>
+
+                {/* Honeypot field (hidden from humans, filled by bots) */}
+                <div style={{ display: 'none' }} aria-hidden="true">
+                  <label htmlFor="contact-website">Si us plau, no omplis aquest camp</label>
+                  <input
+                    id="contact-website"
+                    type="text"
+                    value={website}
+                    onChange={e => setWebsite(e.target.value)}
+                    tabIndex={-1}
+                    autoComplete="off"
                   />
                 </div>
 

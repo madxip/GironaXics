@@ -4,7 +4,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getActivitatBySlug, getActivitatsByBarri, getCentreBySlug, normalizeSlug, getActivitats } from '@/lib/airtable';
+import { getActivitatBySlug, normalizeSlug, getActivitats, getCentres } from '@/lib/airtable';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import ActivitatCard from '@/components/ActivitatCard';
@@ -37,18 +37,20 @@ export async function generateMetadata({ params }: { params: { categoria: string
 }
 
 export default async function ActivitatPage({ params }: { params: { categoria: string, slug: string } }) {
-  const activitat = await getActivitatBySlug(params.slug);
+  const activitats = await getActivitats();
+  const activitat = activitats.find(a => a.slug === params.slug);
   if (!activitat) notFound();
 
   // Try to find center data
-  const centre = await getCentreBySlug(normalizeSlug(activitat.centre));
+  const centres = await getCentres();
+  const centre = centres.find(c => c.slug === normalizeSlug(activitat.centre) || (c.nom && normalizeSlug(c.nom) === normalizeSlug(activitat.centre))) || null;
 
   const contactTelefon = centre?.telefon ?? null;
 
-  const totesBarri = await getActivitatsByBarri(normalizeSlug(activitat.barri));
+  const totesBarri = activitats.filter(a => normalizeSlug(a.barri) === normalizeSlug(activitat.barri));
   const altresBarri = totesBarri.filter(a => a.slug !== activitat.slug).slice(0, 3);
 
-  const totesCentre = (await getActivitats()).filter(a => normalizeSlug(a.centre) === normalizeSlug(activitat.centre));
+  const totesCentre = activitats.filter(a => normalizeSlug(a.centre) === normalizeSlug(activitat.centre));
   const altresCentre = totesCentre.filter(a => a.slug !== activitat.slug);
 
   const jsonLd = {

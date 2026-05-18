@@ -34,11 +34,14 @@ export default function Privacitat() {
             <li>
               <strong>Formularis de contacte general:</strong> Si us poseu en contacte directament amb GironaXics, utilitzarem les dades per respondre les vostres consultes, dubtes o sol·licituds de col·laboració.
             </li>
+            <li>
+              <strong>Cookies i dades de navegació (Google Analytics):</strong> Únicament si hi doneu el vostre consentiment exprés, utilitzem Google Analytics per recopilar informació estadística sobre l'ús del nostre directori web (com ara visites de pàgines, navegació o durada de la sessió). Aquestes dades es tracten de manera agregada i anònima i serveixen exclusivament per analitzar el trànsit i optimitzar la guia.
+            </li>
           </ul>
 
           <h2>3. Legitimació del tractament</h2>
           <p>
-            La base legal per al tractament de les vostres dades és el vostre propi <strong>consentiment exprés</strong> que ens atorgueu de manera voluntària en prémer el botó d'enviar de qualsevol dels nostres formularis.
+            La base legal per al tractament de les vostres dades als formularis és el vostre propi <strong>consentiment exprés</strong> que ens atorgueu de manera voluntària en prémer el botó d'enviar. En el cas del seguiment analític (Google Analytics), la legitimació es basa en el consentiment que ens concediu en prémer "Accepta" al banner informatiu de cookies. Podeu retirar aquest consentiment o rebutjar el seguiment en qualsevol moment netejant les cookies del vostre navegador.
           </p>
 
           <h2>4. Conservació de les dades</h2>

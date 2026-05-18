@@ -27,6 +27,9 @@ yarn-error.log*
 
 # local env files
 .env*.local
+.env
+.env.production
+.env.staging
 
 # vercel
 .vercel
@@ -34,3 +37,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# airtable dumps and images
+airtable_dump.json
+imatges airtable/

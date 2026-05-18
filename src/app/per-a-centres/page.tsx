@@ -3,15 +3,33 @@
 import { useState } from 'react';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
+import { sendInternalEmail } from '@/app/actions/sendEmail';
 
 export default function PerACentres() {
   const [submitted, setSubmitted] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'sending' | 'ok' | 'error'>('idle');
+  const [website, setWebsite] = useState('');
   const [formData, setFormData] = useState({ name: '', centerName: '', email: '', details: '' });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.name && formData.centerName && formData.email && formData.details) {
-      setSubmitted(true);
+      setStatus('sending');
+      try {
+        await sendInternalEmail({
+          type: 'centre',
+          nom: formData.name,
+          centreNom: formData.centerName,
+          email: formData.email,
+          missatge: formData.details,
+          website: website,
+        });
+        setStatus('ok');
+        setSubmitted(true);
+      } catch (err) {
+        console.error(err);
+        setStatus('error');
+      }
     }
   };
 
@@ -108,7 +126,29 @@ export default function PerACentres() {
                   placeholder="Dansa creativa, teatre musical, idiomes per a primària..."
                 />
               </div>
-              <button type="submit" className="btn-submit">Enviar sol·licitud d'alta →</button>
+
+              {/* Honeypot field (hidden from humans, filled by bots) */}
+              <div style={{ display: 'none' }} aria-hidden="true">
+                <label htmlFor="center-website">Si us plau, no omplis aquest camp</label>
+                <input
+                  id="center-website"
+                  type="text"
+                  value={website}
+                  onChange={e => setWebsite(e.target.value)}
+                  tabIndex={-1}
+                  autoComplete="off"
+                />
+              </div>
+
+              {status === 'error' && (
+                <p style={{ color: '#c0392b', fontSize: '14px', background: '#fde8e8', padding: '10px 14px', borderRadius: '4px', marginBottom: '15px' }}>
+                  Hi ha hagut un error enviant la sol·licitud. Si us plau, torna-ho a provar o escriu-nos directament a hola@gironaxics.cat.
+                </p>
+              )}
+
+              <button type="submit" disabled={status === 'sending'} className="btn-submit">
+                {status === 'sending' ? 'Enviant...' : "Enviar sol·licitud d'alta →"}
+              </button>
             </form>
           )}
         </section>
