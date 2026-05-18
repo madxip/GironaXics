@@ -46,6 +46,7 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
   const centre = centres.find(c => c.slug === normalizeSlug(activitat.centre) || (c.nom && normalizeSlug(c.nom) === normalizeSlug(activitat.centre))) || null;
 
   const contactTelefon = centre?.telefon ?? null;
+  const safeWeb = (centre?.web && /^https?:\/\//i.test(centre.web)) ? centre.web : null;
 
   const totesBarri = activitats.filter(a => normalizeSlug(a.barri) === normalizeSlug(activitat.barri));
   const altresBarri = totesBarri.filter(a => a.slug !== activitat.slug).slice(0, 3);
@@ -162,8 +163,8 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
                       centreNom={activitat.centre}
                       activitatNom={activitat.nom}
                     />
-                  ) : centre?.web ? (
-                    <a href={centre.web} target="_blank" rel="noopener noreferrer" className="hoverable" style={{ display: 'block', backgroundColor: 'var(--verd-fosc)', color: 'white', padding: '16px', textAlign: 'center', borderRadius: '4px', textDecoration: 'none', fontWeight: 700 }}>
+                  ) : safeWeb ? (
+                    <a href={safeWeb} target="_blank" rel="noopener noreferrer" className="hoverable" style={{ display: 'block', backgroundColor: 'var(--verd-fosc)', color: 'white', padding: '16px', textAlign: 'center', borderRadius: '4px', textDecoration: 'none', fontWeight: 700 }}>
                       Visita la web del centre ↗
                     </a>
                   ) : !contactTelefon ? (
