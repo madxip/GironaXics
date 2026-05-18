@@ -19,6 +19,7 @@ export interface Activitat {
   publicada: boolean;
   imatgeUrl?: string;
   galeria?: string[];
+  centreImatgeUrl?: string;
 }
 
 export interface Centre {
@@ -30,4 +31,5 @@ export interface Centre {
   web: string;
   barri: string;
   descripcio: string;
+  imatgeUrl?: string;
 }

@@ -46,7 +46,19 @@ export async function getActivitats(): Promise<Activitat[]> {
       if (!slug.endsWith('-girona')) {
         slug = slug ? `${slug}-girona` : 'girona';
       }
-      return { ...a, slug };
+      // Let's add mock centre images for beautiful fallback design!
+      let centreImatgeUrl = '';
+      if (a.centre === 'Piscina Municipal') centreImatgeUrl = 'https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?q=80&w=150&auto=format&fit=crop';
+      else if (a.centre?.includes('Música')) centreImatgeUrl = 'https://images.unsplash.com/photo-1507838153414-b4b713384a76?q=80&w=150&auto=format&fit=crop';
+      else if (a.centre?.includes('Oxford')) centreImatgeUrl = 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=150&auto=format&fit=crop';
+      else if (a.centre?.includes('Dansa')) centreImatgeUrl = 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?q=80&w=150&auto=format&fit=crop';
+      else if (a.centre?.includes('Tech')) centreImatgeUrl = 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?q=80&w=150&auto=format&fit=crop';
+      else if (a.centre?.includes('Teatre')) centreImatgeUrl = 'https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?q=80&w=150&auto=format&fit=crop';
+      else if (a.centre?.includes('Art')) centreImatgeUrl = 'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?q=80&w=150&auto=format&fit=crop';
+      else if (a.centre?.includes('Club')) centreImatgeUrl = 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=150&auto=format&fit=crop';
+      else if (a.centre?.includes('Cuina')) centreImatgeUrl = 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?q=80&w=150&auto=format&fit=crop';
+      
+      return { ...a, slug, centreImatgeUrl };
     });
   }
 
@@ -61,8 +73,22 @@ export async function getActivitats(): Promise<Activitat[]> {
     }
 
     const centreMap = new Map<string, string>();
+    const centreImatgeMap = new Map<string, string>();
+
     centresRecords.forEach((c) => {
-      if (c.fields && c.fields.nom) centreMap.set(c.id, c.fields.nom as string);
+      if (c.fields && c.fields.nom) {
+        centreMap.set(c.id, c.fields.nom as string);
+      }
+      if (c.fields) {
+        const attachmentField = c.fields.Imatge || c.fields.imatge || c.fields.Logo || c.fields.logo || c.fields.Logotip || c.fields.logotip;
+        if (Array.isArray(attachmentField) && attachmentField.length > 0) {
+          const url = (attachmentField[0] as { url: string }).url;
+          centreImatgeMap.set(c.id, url);
+          if (c.fields.nom) {
+            centreImatgeMap.set(c.fields.nom as string, url);
+          }
+        }
+      }
     });
 
     return records.map((r: { id: string; fields: Record<string, unknown> }) => {
@@ -70,7 +96,12 @@ export async function getActivitats(): Promise<Activitat[]> {
 
       if (Array.isArray(r.fields.centre) && r.fields.centre.length > 0) {
         f.centre = centreMap.get(r.fields.centre[0] as string) || (r.fields.centre[0] as string);
+        f.centreImatgeUrl = centreImatgeMap.get(r.fields.centre[0] as string);
       }
+      if (!f.centreImatgeUrl && f.centre) {
+        f.centreImatgeUrl = centreImatgeMap.get(f.centre);
+      }
+
       if (Array.isArray(r.fields.Imatge) && r.fields.Imatge.length > 0) {
         f.imatgeUrl = (r.fields.Imatge[0] as { url: string }).url;
       }
@@ -134,6 +165,13 @@ export async function getCentres(): Promise<Centre[]> {
     const records = await fetchAllRecords('Centres');
     return records.map((r: { id: string; fields: Record<string, unknown> }) => {
       const f = { ...r.fields } as unknown as Centre;
+
+      // Robust logo/image mapping from Airtable for Centre
+      const attachmentField = r.fields.Imatge || r.fields.imatge || r.fields.Logo || r.fields.logo || r.fields.Logotip || r.fields.logotip;
+      if (Array.isArray(attachmentField) && attachmentField.length > 0) {
+        f.imatgeUrl = (attachmentField[0] as { url: string }).url;
+      }
+
       // Robust slug fallback: use slug field (lowercase or uppercase) or generate from name or fallback to record ID
       f.slug = (r.fields.slug as string) || (r.fields.Slug as string) || (r.fields.nom ? normalizeSlug(r.fields.nom as string) : r.id);
       return f;

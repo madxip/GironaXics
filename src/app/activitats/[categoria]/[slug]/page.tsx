@@ -44,6 +44,7 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
   // Try to find center data
   const centres = await getCentres();
   const centre = centres.find(c => c.slug === normalizeSlug(activitat.centre) || (c.nom && normalizeSlug(c.nom) === normalizeSlug(activitat.centre))) || null;
+  const logoUrl = activitat.centreImatgeUrl || centre?.imatgeUrl || null;
 
   const contactTelefon = centre?.telefon ?? null;
   const safeWeb = (centre?.web && /^https?:\/\//i.test(centre.web)) ? centre.web : null;
@@ -121,6 +122,7 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
             <div className="detail-col-right" style={{ gridColumn: 'span 6' }}>
               <div style={{ backgroundColor: 'white', padding: '32px', borderRadius: '4px', border: '1px solid var(--crema-fosca)' }}>
                 <div style={{ fontSize: '32px', fontWeight: 700, color: 'var(--verd-fosc)', marginBottom: '24px' }}>
+                  <strong style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', opacity: 0.5, marginBottom: '6px', letterSpacing: '0.05em', fontWeight: 700, color: 'var(--muted)' }}>Preu:</strong>
                   {activitat.preu != null && activitat.preu !== '' ? (
                     <>{activitat.preu}€ <span style={{ fontSize: '16px', fontWeight: 400, opacity: 0.6 }}>/mes</span></>
                   ) : (
@@ -136,23 +138,30 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
                   <div><strong style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', opacity: 0.5 }}>Idioma</strong>{activitat.idioma}</div>
                 </div>
 
-                <div style={{ paddingTop: '24px', borderTop: '1px solid var(--crema-fosca)', marginBottom: '24px' }}>
-                  <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>
-                    {altresCentre.length > 0 ? (
-                      <a href="#activitats-centre" className="hoverable" style={{ color: 'inherit', textDecoration: 'none' }}>{activitat.centre}</a>
-                    ) : (
-                      activitat.centre
-                    )}
-                  </h3>
-                  {centre ? (
-                    <div style={{ fontSize: '14px', color: 'var(--muted)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      {centre.adreça && <div>{centre.adreça}</div>}
-                      {centre.telefon && <div>{centre.telefon}</div>}
-                      {centre.email && <div>{centre.email}</div>}
+                <div style={{ paddingTop: '24px', borderTop: '1px solid var(--crema-fosca)', marginBottom: '24px', display: 'flex', gap: '20px', alignItems: 'center' }}>
+                  {logoUrl && (
+                    <div style={{ position: 'relative', width: '80px', height: '80px', flexShrink: 0, borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--crema-fosca)', backgroundColor: '#fcfcfc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Image src={logoUrl} alt={activitat.centre} fill style={{ objectFit: 'contain', padding: '6px' }} />
                     </div>
-                  ) : (
-                    <div style={{ fontSize: '14px', color: 'var(--muted)' }}>Contacteu amb el centre per més informació.</div>
                   )}
+                  <div style={{ flexGrow: 1 }}>
+                    <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px', marginTop: 0 }}>
+                      {altresCentre.length > 0 ? (
+                        <a href="#activitats-centre" className="hoverable" style={{ color: 'inherit', textDecoration: 'none' }}>{activitat.centre}</a>
+                      ) : (
+                        activitat.centre
+                      )}
+                    </h3>
+                    {centre ? (
+                      <div style={{ fontSize: '14px', color: 'var(--muted)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {centre.adreça && <div>{centre.adreça}</div>}
+                        {centre.telefon && <div>{centre.telefon}</div>}
+                        {centre.email && <div>{centre.email}</div>}
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: '14px', color: 'var(--muted)' }}>Contacteu amb el centre per més informació.</div>
+                    )}
+                  </div>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
