@@ -9,32 +9,32 @@ const getFallbackActivitats = (): Activitat[] => {
   return activitatsSeed as unknown as Activitat[];
 };
 
-async function fetchAllRecords(tableName: string, filterByFormula?: string): Promise<{id: string; fields: Record<string, unknown>}[]> {
-  let allRecords: {id: string; fields: Record<string, unknown>}[] = [];
+async function fetchAllRecords(tableName: string, filterByFormula?: string): Promise<{ id: string; fields: Record<string, unknown> }[]> {
+  let allRecords: { id: string; fields: Record<string, unknown> }[] = [];
   let offset: string | undefined;
-  
+
   do {
     const params = new URLSearchParams();
     if (filterByFormula) params.append('filterByFormula', filterByFormula);
     if (offset) params.append('offset', offset);
-    
+
     const url = `https://api.airtable.com/v0/${BASE_ID}/${tableName}${params.toString() ? '?' + params.toString() : ''}`;
-    
+
     const res = await fetch(url, {
       headers: { Authorization: `Bearer ${API_KEY}` },
       next: { revalidate: 3600 }
     });
-    
+
     if (!res.ok) {
       const errorText = await res.text();
       throw new Error(`Error fetching ${tableName}: ${res.status} ${errorText}`);
     }
-    
+
     const data = await res.json();
     allRecords = allRecords.concat(data.records || []);
     offset = data.offset;
   } while (offset);
-  
+
   return allRecords;
 }
 
@@ -47,7 +47,7 @@ export async function getActivitats(): Promise<Activitat[]> {
   try {
     const records = await fetchAllRecords('Activitats', '{publicada}=TRUE()');
 
-    let centresRecords: {id: string; fields: Record<string, unknown>}[] = [];
+    let centresRecords: { id: string; fields: Record<string, unknown> }[] = [];
     try {
       centresRecords = await fetchAllRecords('Centres');
     } catch {
@@ -61,7 +61,7 @@ export async function getActivitats(): Promise<Activitat[]> {
 
     return records.map((r: { id: string; fields: Record<string, unknown> }) => {
       const f = { ...r.fields } as unknown as Activitat;
-      
+
       if (Array.isArray(r.fields.centre) && r.fields.centre.length > 0) {
         f.centre = centreMap.get(r.fields.centre[0] as string) || (r.fields.centre[0] as string);
       }
@@ -72,7 +72,7 @@ export async function getActivitats(): Promise<Activitat[]> {
         f.barri = 'Centre';
       }
       f.qui_imparteix = (r.fields.qui_imparteix as string) || (r.fields['Qui imparteix'] as string) || (r.fields['qui imparteix'] as string);
-      
+
       // Auto-generate a beautiful SEO-friendly slug: "nom-de-l-activitat-nom-del-barri"
       const customSlug = (r.fields.slug as string) || (r.fields.Slug as string);
       if (customSlug) {
@@ -83,7 +83,7 @@ export async function getActivitats(): Promise<Activitat[]> {
         f.slug = barriPart ? `${namePart}-${barriPart}` : namePart;
         if (!f.slug) f.slug = r.id; // absolute fallback
       }
-      
+
       return f;
     });
   } catch (error) {
@@ -147,4 +147,19 @@ export function normalizeSlug(text: string): string {
     .replace(/[^a-z0-9\s-]/g, ' ')   // Replace punctuation and special characters with spaces
     .replace(/[\s-]+/g, '-')         // Collapse multiple spaces/hyphens into a single hyphen
     .replace(/^-+|-+$/g, '');        // Strip leading/trailing hyphens
+}
+
+export function generateFullSlug(baseSlug: string, barri: string): string {
+  if (!baseSlug || !barri) return baseSlug;
+  const barriSlug = normalizeSlug(barri);
+  return `${baseSlug}-${barriSlug}`;
+}
+
+export function extractBaseSlug(fullSlug: string, barri: string): string {
+  const barriSlug = normalizeSlug(barri);
+  const suffix = `-${barriSlug}`;
+  if (fullSlug.endsWith(suffix)) {
+    return fullSlug.slice(0, -suffix.length);
+  }
+  return fullSlug;
 }
