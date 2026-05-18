@@ -16,10 +16,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const categories = new Set<string>();
   const centres = new Set<string>();
+  const barris = new Set<string>();
 
   const activitatRoutes = activitats.map((a) => {
     if (a.categoria) categories.add(normalizeSlug(a.categoria));
     if (a.centre) centres.add(normalizeSlug(a.centre));
+    if (a.barri) barris.add(normalizeSlug(a.barri));
 
     return {
       url: `${baseUrl}/activitats/${normalizeSlug(a.categoria || 'altres')}/${a.slug}`,
@@ -43,5 +45,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  return [...routes, ...activitatRoutes, ...categoryRoutes, ...centreRoutes];
+  const barriRoutes = Array.from(barris).map((b) => ({
+    url: `${baseUrl}/barris/${b}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.7,
+  }));
+
+  return [...routes, ...activitatRoutes, ...categoryRoutes, ...centreRoutes, ...barriRoutes];
 }

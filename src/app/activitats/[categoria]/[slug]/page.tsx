@@ -103,7 +103,11 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
               <a href="#activitats-centre" className="hoverable" style={{ color: 'inherit', textDecoration: 'none', borderBottom: '1px dotted var(--muted)' }}>{activitat.centre}</a>
             ) : (
               activitat.centre
-            )} · {activitat.barri} · {activitat.edat}
+            )} · {activitat.barri ? (
+              <Link href={`/barris/${normalizeSlug(activitat.barri)}`} className="hoverable" style={{ color: 'inherit', textDecoration: 'none', borderBottom: '1px dotted var(--muted)' }}>
+                {activitat.barri}
+              </Link>
+            ) : null} · {activitat.edat}
           </div>
 
           <div className="grid-12 detail-grid" style={{ marginBottom: '60px' }}>
