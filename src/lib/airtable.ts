@@ -61,8 +61,6 @@ export async function getActivitats(): Promise<Activitat[]> {
 
     return records.map((r: { id: string; fields: Record<string, unknown> }) => {
       const f = { ...r.fields } as unknown as Activitat;
-      // Robust slug fallback: use slug field (lowercase or uppercase) or generate from name or fallback to record ID
-      f.slug = (r.fields.slug as string) || (r.fields.Slug as string) || (r.fields.nom ? normalizeSlug(r.fields.nom as string) : r.id);
       
       if (Array.isArray(r.fields.centre) && r.fields.centre.length > 0) {
         f.centre = centreMap.get(r.fields.centre[0] as string) || (r.fields.centre[0] as string);
@@ -74,6 +72,18 @@ export async function getActivitats(): Promise<Activitat[]> {
         f.barri = 'Centre';
       }
       f.qui_imparteix = (r.fields.qui_imparteix as string) || (r.fields['Qui imparteix'] as string) || (r.fields['qui imparteix'] as string);
+      
+      // Auto-generate a beautiful SEO-friendly slug: "nom-de-l-activitat-nom-del-barri"
+      const customSlug = (r.fields.slug as string) || (r.fields.Slug as string);
+      if (customSlug) {
+        f.slug = customSlug;
+      } else {
+        const namePart = r.fields.nom ? normalizeSlug(r.fields.nom as string) : '';
+        const barriPart = f.barri ? normalizeSlug(f.barri) : '';
+        f.slug = barriPart ? `${namePart}-${barriPart}` : namePart;
+        if (!f.slug) f.slug = r.id; // absolute fallback
+      }
+      
       return f;
     });
   } catch (error) {
