@@ -6,12 +6,13 @@ import { headers } from 'next/headers';
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = 'GironaXics <hola@gironaxics.cat>';
 
-// Simple in-memory rate limiting by IP (helps prevent rapid automated spam)
+// Simple distributed rate limiting by IP (supports Vercel serverless environment)
+// It uses Vercel KV / Upstash Redis REST API if configured, falling back to local memory limit
 const ipCache = new Map<string, { count: number; lastReset: number }>();
 const LIMIT_WINDOW_MS = 60 * 1000; // 1 minut
 const MAX_REQUESTS_PER_MINUTE = 3; // màxim 3 correus per minut
 
-function rateLimit(ip: string): boolean {
+function rateLimitLocal(ip: string): boolean {
   const now = Date.now();
   const limitInfo = ipCache.get(ip);
 
@@ -31,6 +32,60 @@ function rateLimit(ip: string): boolean {
 
   limitInfo.count += 1;
   return true;
+}
+
+async function rateLimit(ip: string): Promise<boolean> {
+  const KV_URL = process.env.KV_REST_API_URL;
+  const KV_TOKEN = process.env.KV_REST_API_TOKEN;
+
+  if (KV_URL && KV_TOKEN) {
+    try {
+      const key = `ratelimit:contact:${ip}`;
+      const windowSeconds = 60;
+      const maxRequests = MAX_REQUESTS_PER_MINUTE;
+
+      // Increment count and get TTL using Upstash pipeline REST endpoint to avoid roundtrips
+      const res = await fetch(`${KV_URL}/pipeline`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${KV_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify([
+          ['INCR', key],
+          ['TTL', key],
+        ]),
+        cache: 'no-store',
+      });
+
+      if (res.ok) {
+        const result = await res.json();
+        const currentCount = result[0]?.result;
+        const currentTtl = result[1]?.result;
+
+        // If the key is new or has no expiration (TTL is -1), set the expiration
+        if (currentCount === 1 || currentTtl === -1) {
+          fetch(`${KV_URL}/EXPIRE/${key}/${windowSeconds}`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${KV_TOKEN}` },
+            cache: 'no-store',
+          }).catch((err) => console.error("Error setting redis expire:", err));
+        }
+
+        if (currentCount > maxRequests) {
+          return false;
+        }
+
+        return true;
+      }
+      console.warn("REST Redis response not OK, falling back to local memory rate limiting.");
+    } catch (err) {
+      console.error("Distributed rate limiting error, falling back to local memory rate limiting:", err);
+    }
+  }
+
+  // Fallback to local memory limiter
+  return rateLimitLocal(ip);
 }
 
 const esc = (unsafe: string): string => {
@@ -70,7 +125,7 @@ export async function sendContactEmail(data: {
     // ignore if headers() cannot be read (e.g. in some dev contexts)
   }
 
-  if (!rateLimit(ip)) {
+  if (!await rateLimit(ip)) {
     console.warn("Spam detectat (rate-limit per IP):", ip);
     throw new Error("S'ha superat el límit d'enviaments permesos per minut. Si us plau, espera una mica.");
   }
@@ -182,7 +237,7 @@ export async function sendInternalEmail(data: {
     // ignore
   }
 
-  if (!rateLimit(ip)) {
+  if (!await rateLimit(ip)) {
     console.warn("Spam detectat en correu intern (rate-limit per IP):", ip);
     throw new Error("S'ha superat el límit d'enviaments permesos per minut. Si us plau, espera una mica.");
   }
