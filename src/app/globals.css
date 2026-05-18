@@ -957,6 +957,7 @@
 
             .masonry {
                 grid-template-columns: 1fr;
+                grid-auto-rows: auto;
             }
 
             .card-large,
@@ -964,6 +965,7 @@
             .card-text,
             .card-slant {
                 grid-column: span 1;
+                grid-row: span 1;
             }
 
             .step {
