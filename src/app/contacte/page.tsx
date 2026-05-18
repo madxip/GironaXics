@@ -107,7 +107,7 @@ export default function Contacte() {
                   </div>
 
                   {/* Honeypot field (hidden from humans, filled by bots) */}
-                  <div style={{ display: 'none' }} aria-hidden="true">
+                  <div style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', border: 0 }} aria-hidden="true">
                     <label htmlFor="contact-website">Si us plau, no omplis aquest camp</label>
                     <input
                       id="contact-website"
