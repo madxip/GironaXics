@@ -142,9 +142,9 @@ export function normalizeSlug(text: string): string {
   return text
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '')
-    .replace(/-+/g, '-')
-    .replace(/^-+|-+$/g, '');
+    .replace(/[\u0300-\u036f]/g, "") // Remove accents/diacritics
+    .replace(/&/g, ' i ')             // Replace ampersand with 'i' (Catalan 'and')
+    .replace(/[^a-z0-9\s-]/g, ' ')   // Replace punctuation and special characters with spaces
+    .replace(/[\s-]+/g, '-')         // Collapse multiple spaces/hyphens into a single hyphen
+    .replace(/^-+|-+$/g, '');        // Strip leading/trailing hyphens
 }
