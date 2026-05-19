@@ -113,7 +113,34 @@ export async function getActivitats(): Promise<Activitat[]> {
       // Auto-generate a beautiful SEO-friendly slug: "nom-activitat-nom-centre-nom-barri-girona"
       const customSlug = (r.fields.slug as string) || (r.fields.Slug as string);
       if (customSlug) {
-        f.slug = normalizeSlug(customSlug);
+        let tempSlug = normalizeSlug(customSlug);
+        
+        // Strip final "-girona" temporarily for clean comparison
+        if (tempSlug.endsWith('-girona')) {
+          tempSlug = tempSlug.slice(0, -7);
+        }
+
+        let centrePart = f.centre ? normalizeSlug(f.centre) : '';
+        let barriPart = f.barri ? normalizeSlug(f.barri) : '';
+
+        // Strip intermediate trailing "-girona" to avoid duplicates
+        if (centrePart.endsWith('-girona')) {
+          centrePart = centrePart.slice(0, -7);
+        }
+        if (barriPart.endsWith('-girona')) {
+          barriPart = barriPart.slice(0, -7);
+        }
+
+        const parts = [tempSlug];
+        // Only append if not already present in the custom slug to prevent duplicates
+        if (centrePart && !tempSlug.includes(centrePart)) {
+          parts.push(centrePart);
+        }
+        if (barriPart && !tempSlug.includes(barriPart)) {
+          parts.push(barriPart);
+        }
+
+        f.slug = parts.filter(Boolean).join('-');
       } else {
         const namePart = r.fields.nom ? normalizeSlug(r.fields.nom as string) : '';
         let centrePart = f.centre ? normalizeSlug(f.centre) : '';
