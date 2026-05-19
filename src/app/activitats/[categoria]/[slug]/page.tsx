@@ -38,7 +38,8 @@ export async function generateMetadata({ params }: { params: { categoria: string
 
 export default async function ActivitatPage({ params }: { params: { categoria: string, slug: string } }) {
   const activitats = await getActivitats();
-  const activitat = activitats.find(a => a.slug === params.slug);
+  const normalizedSearchSlug = normalizeSlug(decodeURIComponent(params.slug));
+  const activitat = activitats.find(a => normalizeSlug(a.slug) === normalizedSearchSlug);
   if (!activitat) notFound();
 
   // Try to find center data

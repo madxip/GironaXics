@@ -110,14 +110,28 @@ export async function getActivitats(): Promise<Activitat[]> {
       }
       f.qui_imparteix = (r.fields.qui_imparteix as string) || (r.fields['Qui imparteix'] as string) || (r.fields['qui imparteix'] as string);
 
-      // Auto-generate a beautiful SEO-friendly slug: "nom-de-l-activitat-nom-del-barri"
+      // Auto-generate a beautiful SEO-friendly slug: "nom-activitat-nom-centre-nom-barri-girona"
       const customSlug = (r.fields.slug as string) || (r.fields.Slug as string);
       if (customSlug) {
-        f.slug = customSlug;
+        f.slug = normalizeSlug(customSlug);
       } else {
         const namePart = r.fields.nom ? normalizeSlug(r.fields.nom as string) : '';
-        const barriPart = f.barri ? normalizeSlug(f.barri) : '';
-        f.slug = barriPart ? `${namePart}-${barriPart}` : namePart;
+        let centrePart = f.centre ? normalizeSlug(f.centre) : '';
+        let barriPart = f.barri ? normalizeSlug(f.barri) : '';
+
+        // Strip intermediate trailing "-girona" to avoid duplicates
+        if (centrePart.endsWith('-girona')) {
+          centrePart = centrePart.slice(0, -7);
+        }
+        if (barriPart.endsWith('-girona')) {
+          barriPart = barriPart.slice(0, -7);
+        }
+
+        const parts = [namePart];
+        if (centrePart) parts.push(centrePart);
+        if (barriPart) parts.push(barriPart);
+
+        f.slug = parts.filter(Boolean).join('-');
         if (!f.slug) f.slug = r.id; // absolute fallback
       }
 
@@ -136,19 +150,22 @@ export async function getActivitats(): Promise<Activitat[]> {
 
 export async function getActivitatBySlug(slug: string): Promise<Activitat | null> {
   const all = await getActivitats();
-  return all.find(a => a.slug === slug) || null;
+  const normalizedSearchSlug = normalizeSlug(decodeURIComponent(slug));
+  return all.find(a => normalizeSlug(a.slug) === normalizedSearchSlug) || null;
 }
 
 export async function getActivitatsByCategoria(cat: string): Promise<Activitat[]> {
   const all = await getActivitats();
   // We assume 'cat' URL param is a slug, so we normalize the categoria from data to match.
   // Example: "Arts plàstiques" -> "arts-plastiques"
-  return all.filter(a => normalizeSlug(a.categoria) === cat);
+  const normalizedCat = normalizeSlug(decodeURIComponent(cat));
+  return all.filter(a => normalizeSlug(a.categoria) === normalizedCat);
 }
 
 export async function getActivitatsByBarri(barri: string): Promise<Activitat[]> {
   const all = await getActivitats();
-  return all.filter(a => normalizeSlug(a.barri) === barri);
+  const normalizedBarri = normalizeSlug(decodeURIComponent(barri));
+  return all.filter(a => normalizeSlug(a.barri) === normalizedBarri);
 }
 
 export async function getActivitatsDestacades(): Promise<Activitat[]> {
@@ -173,7 +190,8 @@ export async function getCentres(): Promise<Centre[]> {
       }
 
       // Robust slug fallback: use slug field (lowercase or uppercase) or generate from name or fallback to record ID
-      f.slug = (r.fields.slug as string) || (r.fields.Slug as string) || (r.fields.nom ? normalizeSlug(r.fields.nom as string) : r.id);
+      const customSlug = (r.fields.slug as string) || (r.fields.Slug as string);
+      f.slug = customSlug ? normalizeSlug(customSlug) : (r.fields.nom ? normalizeSlug(r.fields.nom as string) : r.id);
       return f;
     });
   } catch {
@@ -183,7 +201,8 @@ export async function getCentres(): Promise<Centre[]> {
 
 export async function getCentreBySlug(slug: string): Promise<Centre | null> {
   const all = await getCentres();
-  return all.find(c => c.slug === slug || (c.nom && normalizeSlug(c.nom) === slug)) || null;
+  const normalizedSearchSlug = normalizeSlug(decodeURIComponent(slug));
+  return all.find(c => normalizeSlug(c.slug) === normalizedSearchSlug || (c.nom && normalizeSlug(c.nom) === normalizedSearchSlug)) || null;
 }
 
 export function normalizeSlug(text: string): string {
