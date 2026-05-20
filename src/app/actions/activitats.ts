@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { createActivitat, updateActivitat, deleteActivitat } from "@/lib/airtable";
 import { revalidatePath } from "next/cache";
+import { normalizeSlug } from "@/lib/utils";
 
 // Helper to check authentication and ownership
 async function getAuthenticatedCentreId() {
@@ -81,8 +82,8 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
     // On-demand revalidation
     revalidatePath("/");
     revalidatePath("/dashboard");
-    revalidatePath(`/categories/${categoria.toLowerCase()}`);
-    revalidatePath(`/barris/${barri.toLowerCase()}`);
+    revalidatePath(`/categories/${normalizeSlug(categoria)}`);
+    revalidatePath(`/barris/${normalizeSlug(barri)}`);
     
     // Global router cache purge
     revalidatePath("/", "layout");
@@ -157,8 +158,8 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
     // On-demand revalidation
     revalidatePath("/");
     revalidatePath("/dashboard");
-    revalidatePath(`/categories/${categoria.toLowerCase()}`);
-    revalidatePath(`/barris/${barri.toLowerCase()}`);
+    revalidatePath(`/categories/${normalizeSlug(categoria)}`);
+    revalidatePath(`/barris/${normalizeSlug(barri)}`);
     
     // Global router cache purge
     revalidatePath("/", "layout");
