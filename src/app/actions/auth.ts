@@ -36,7 +36,6 @@ export async function registerCentreAction(prevState: unknown, formData: FormDat
       
       // Force path revalidation since the list of centers has changed
       revalidatePath("/registre");
-      revalidatePath("/", "layout");
     }
 
     // 3. Hash the password

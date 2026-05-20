@@ -100,12 +100,12 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
     } catch (e) {
       console.error(`[Revalidate] Error revalidating '/barris/${normalizeSlug(barri)}':`, e);
     }
-    
-    // Global router cache purge
     try {
-      revalidatePath("/", "layout");
+      if (result && result.slug) {
+        revalidatePath(`/activitats/${normalizeSlug(categoria)}/${result.slug}`);
+      }
     } catch (e) {
-      console.error("[Revalidate] Error revalidating layout '/':", e);
+      console.error("[Revalidate] Error revalidating activity page:", e);
     }
 
     return { success: true };
@@ -196,12 +196,12 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
     } catch (e) {
       console.error(`[Revalidate] Error revalidating '/barris/${normalizeSlug(barri)}':`, e);
     }
-    
-    // Global router cache purge
     try {
-      revalidatePath("/", "layout");
+      const baseSlug = normalizeSlug(nom);
+      const newSlug = baseSlug.endsWith('-girona') ? baseSlug : `${baseSlug}-girona`;
+      revalidatePath(`/activitats/${normalizeSlug(categoria)}/${newSlug}`);
     } catch (e) {
-      console.error("[Revalidate] Error revalidating layout '/':", e);
+      console.error("[Revalidate] Error revalidating activity page:", e);
     }
 
     return { success: true };
@@ -231,11 +231,6 @@ export async function deleteActivitatAction(id: string) {
       revalidatePath("/dashboard");
     } catch (e) {
       console.error("[Revalidate] Error revalidating '/dashboard':", e);
-    }
-    try {
-      revalidatePath("/", "layout");
-    } catch (e) {
-      console.error("[Revalidate] Error revalidating layout '/':", e);
     }
 
     return { success: true };

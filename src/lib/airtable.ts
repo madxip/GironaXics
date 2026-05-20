@@ -673,7 +673,6 @@ export async function updateCentre(id: string, data: Partial<Omit<Centre, 'id' |
     }
     if (data.adreca !== undefined) {
       fields.adreça = data.adreca;
-      fields.adreca = data.adreca;
     }
     if (data.telefon !== undefined) fields.telefon = data.telefon;
     if (data.email !== undefined) fields.email = data.email;

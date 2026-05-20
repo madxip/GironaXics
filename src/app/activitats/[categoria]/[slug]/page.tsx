@@ -15,10 +15,12 @@ import ContactModal from '@/components/ContactModal';
 
 export async function generateStaticParams() {
   const activitats = await getActivitats();
-  return activitats.map((activitat) => ({
-    categoria: normalizeSlug(activitat.categoria),
-    slug: activitat.slug,
-  }));
+  return activitats
+    .filter(a => a.categoria && a.slug)
+    .map((activitat) => ({
+      categoria: normalizeSlug(activitat.categoria),
+      slug: activitat.slug,
+    }));
 }
 
 export async function generateMetadata({ params }: { params: { categoria: string, slug: string } }): Promise<Metadata> {

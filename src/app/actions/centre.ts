@@ -72,11 +72,6 @@ export async function updateCentreAction(prevState: unknown, formData: FormData)
     } catch (e) {
       console.error("[Revalidate] Error revalidating '/dashboard/centre':", e);
     }
-    try {
-      revalidatePath("/", "layout");
-    } catch (e) {
-      console.error("[Revalidate] Error revalidating layout '/':", e);
-    }
 
     return { success: true };
   } catch (error) {
