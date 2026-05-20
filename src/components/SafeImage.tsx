@@ -10,6 +10,10 @@ const ALLOWED_DOMAINS = [
 ];
 
 export default function SafeImage({ src, alt, ...props }: ImageProps) {
+  if (!src || (typeof src === 'string' && (src.trim() === '' || src === 'undefined' || src === 'null'))) {
+    return null;
+  }
+
   if (typeof src === 'string') {
     try {
       const url = new URL(src);
