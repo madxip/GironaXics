@@ -1,7 +1,9 @@
 export interface Activitat {
+  id?: string;
   slug: string;
   nom: string;
   centre: string; // The text name or ID
+  centreId?: string; // The record ID of the center
   barri: string;
   categoria: string;
   edat: string;
@@ -23,6 +25,7 @@ export interface Activitat {
 }
 
 export interface Centre {
+  id?: string;
   slug: string;
   nom: string;
   adreça: string;
@@ -33,3 +36,4 @@ export interface Centre {
   descripcio: string;
   imatgeUrl?: string;
 }
+

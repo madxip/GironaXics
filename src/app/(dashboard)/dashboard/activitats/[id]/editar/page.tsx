@@ -1,0 +1,111 @@
+import React from "react";
+import { getActivitats } from "@/lib/airtable";
+import { updateActivitatAction } from "@/app/actions/activitats";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import ActivityForm from "../../ActivityForm";
+
+export const dynamic = "force-dynamic";
+
+const DEFAULT_CATEGORIES = [
+  "Arts plàstiques",
+  "Dansa i Teatre",
+  "Esports",
+  "Idiomes",
+  "Música",
+  "Reforç escolar",
+  "Tecnologia i Ciència"
+];
+
+const DEFAULT_BARRIS = [
+  "Barri Vell",
+  "Carme",
+  "Centre",
+  "Devesa-Güell",
+  "Eixample",
+  "Fontajau",
+  "Girona Est",
+  "Montilivi",
+  "Montjuïc",
+  "Pedret",
+  "Pont Major",
+  "Santa Eugènia",
+  "Sant Narcís",
+  "Taialà"
+];
+
+interface EditarActivitatPageProps {
+  params: {
+    id: string;
+  };
+}
+
+export default async function EditarActivitatPage({ params }: EditarActivitatPageProps) {
+  const session = await getServerSession(authOptions);
+  
+  if (!session || !session.user) {
+    redirect("/login");
+  }
+
+  const { id } = params;
+  const allActivitats = await getActivitats();
+  const activitat = allActivitats.find(a => a.id === id);
+
+  // Security check: Verify that the activity exists and belongs to the connected center
+  if (!activitat) {
+    return (
+      <div style={{
+        padding: "40px",
+        backgroundColor: "#FCE8E6",
+        border: "1px solid #F5C2C2",
+        color: "#C53929",
+        borderRadius: "8px",
+        textAlign: "center"
+      }}>
+        <h3 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "8px" }}>Activitat no trobada</h3>
+        <p>No s'ha trobat cap activitat amb aquest identificador.</p>
+      </div>
+    );
+  }
+
+  if (activitat.centreId !== session.user.centreId) {
+    return (
+      <div style={{
+        padding: "40px",
+        backgroundColor: "#FCE8E6",
+        border: "1px solid #F5C2C2",
+        color: "#C53929",
+        borderRadius: "8px",
+        textAlign: "center"
+      }}>
+        <h3 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "8px" }}>Accés No Autoritzat</h3>
+        <p>No tens permisos per gestionar o editar aquesta activitat.</p>
+      </div>
+    );
+  }
+
+  // Build options
+  const categories = Array.from(new Set([
+    ...allActivitats.map(a => a.categoria).filter(Boolean),
+    ...DEFAULT_CATEGORIES
+  ])).sort();
+
+  const barris = Array.from(new Set([
+    ...allActivitats.map(a => a.barri).filter(Boolean),
+    ...DEFAULT_BARRIS
+  ])).sort();
+
+  // Bind the ID to the server action so the form can just call it
+  const boundUpdateAction = updateActivitatAction.bind(null, id);
+
+  return (
+    <ActivityForm
+      initialData={activitat}
+      categories={categories}
+      barris={barris}
+      submitAction={boundUpdateAction}
+      title={`Editar Activitat: ${activitat.nom}`}
+    />
+  );
+}

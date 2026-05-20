@@ -159,6 +159,8 @@ export async function getActivitats(): Promise<Activitat[]> {
 
     const formattedActivitats = records.map((r: { id: string; fields: Record<string, unknown> }) => {
       const f = { ...r.fields } as unknown as Activitat;
+      f.id = r.id;
+      f.centreId = Array.isArray(r.fields.centre) && r.fields.centre.length > 0 ? (r.fields.centre[0] as string) : undefined;
 
       if (Array.isArray(r.fields.centre) && r.fields.centre.length > 0) {
         f.centre = centreMap.get(r.fields.centre[0] as string) || (r.fields.centre[0] as string);
@@ -298,6 +300,7 @@ export async function getCentres(): Promise<Centre[]> {
     const records = await fetchAllRecords('Centres');
     const formattedCentres = records.map((r: { id: string; fields: Record<string, unknown> }) => {
       const f = { ...r.fields } as unknown as Centre;
+      f.id = r.id;
 
       // Robust logo/image mapping from Airtable for Centre
       const attachmentField = r.fields.Imatge || r.fields.imatge || r.fields.Logo || r.fields.logo || r.fields.Logotip || r.fields.logotip;
@@ -335,4 +338,251 @@ export async function getCentreBySlug(slug: string): Promise<Centre | null> {
   const all = await getCentres();
   const normalizedSearchSlug = normalizeSlug(decodeURIComponent(slug));
   return all.find(c => normalizeSlug(c.slug) === normalizedSearchSlug || (c.nom && normalizeSlug(c.nom) === normalizedSearchSlug)) || null;
+}
+
+export async function getUserByEmail(email: string): Promise<{ id: string; nom: string; email: string; passwordHash: string; centreId: string | null; aprovat: boolean } | null> {
+  if (!API_KEY || !BASE_ID) return null;
+  try {
+    const filter = `LOWER({Email})="${email.toLowerCase().trim()}"`;
+    const records = await fetchAllRecords('Usuaris_Centres', filter);
+    if (records.length === 0) return null;
+    const r = records[0];
+    return {
+      id: r.id,
+      nom: r.fields.Nom as string,
+      email: r.fields.Email as string,
+      passwordHash: r.fields.PasswordHash as string,
+      centreId: Array.isArray(r.fields.Centre) && r.fields.Centre.length > 0 ? (r.fields.Centre[0] as string) : null,
+      aprovat: !!r.fields.Aprovat,
+    };
+  } catch (error) {
+    console.error("[Airtable API] Error en getUserByEmail:", error);
+    return null;
+  }
+}
+
+export async function createUser(data: { nom: string; email: string; passwordHash: string; centreId: string }): Promise<{ id: string; nom: string; email: string; centreId: string | null; aprovat: boolean } | null> {
+  if (!API_KEY || !BASE_ID) return null;
+  try {
+    const url = `https://api.airtable.com/v0/${BASE_ID}/Usuaris_Centres`;
+    const body = {
+      records: [
+        {
+          fields: {
+            Nom: data.nom,
+            Email: data.email.toLowerCase().trim(),
+            PasswordHash: data.passwordHash,
+            Centre: data.centreId ? [data.centreId] : undefined,
+            Aprovat: false
+          }
+        }
+      ]
+    };
+    const res = await fetchWithRetry(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Failed to create user: ${res.status} ${text}`);
+    }
+    const resData = await res.json();
+    if (resData.records && resData.records.length > 0) {
+      const r = resData.records[0];
+      return {
+        id: r.id,
+        nom: r.fields.Nom as string,
+        email: r.fields.Email as string,
+        centreId: Array.isArray(r.fields.Centre) && r.fields.Centre.length > 0 ? (r.fields.Centre[0] as string) : null,
+        aprovat: !!r.fields.Aprovat
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error("[Airtable API] Error en createUser:", error);
+    return null;
+  }
+}
+
+export async function getActivitatsByCentreId(centreId: string): Promise<Activitat[]> {
+  const all = await getActivitats();
+  return all.filter(a => a.centreId === centreId);
+}
+
+export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'centre'> & { centreId: string }): Promise<Activitat | null> {
+  if (!API_KEY || !BASE_ID) return null;
+  try {
+    const url = `https://api.airtable.com/v0/${BASE_ID}/Activitats`;
+    
+    const baseSlug = normalizeSlug(data.nom);
+    const slug = baseSlug.endsWith('-girona') ? baseSlug : `${baseSlug}-girona`;
+    
+    const body = {
+      records: [
+        {
+          fields: {
+            nom: data.nom,
+            slug: slug,
+            centre: [data.centreId],
+            barri: data.barri,
+            categoria: data.categoria,
+            edat: data.edat,
+            preu: data.preu != null ? String(data.preu) : undefined,
+            horari: data.horari,
+            dies: data.dies,
+            descripcio: data.descripcio,
+            durada: data.durada,
+            alumnes: data.alumnes,
+            material: data.material,
+            inici: data.inici,
+            idioma: data.idioma,
+            qui_imparteix: data.qui_imparteix,
+            publicada: true,
+            destacada: false
+          }
+        }
+      ]
+    };
+
+    const res = await fetchWithRetry(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Failed to create activity: ${res.status} ${text}`);
+    }
+
+    const resData = await res.json();
+    if (resData.records && resData.records.length > 0) {
+      const r = resData.records[0];
+      const cache = readCache();
+      delete cache.activitats;
+      writeCache(cache);
+      
+      return {
+        id: r.id,
+        nom: r.fields.nom as string,
+        slug: r.fields.slug as string,
+        centre: '',
+        centreId: data.centreId,
+        barri: r.fields.barri as string,
+        categoria: r.fields.categoria as string,
+        edat: r.fields.edat as string,
+        preu: r.fields.preu as string,
+        horari: r.fields.horari as string,
+        dies: r.fields.dies as string,
+        descripcio: r.fields.descripcio as string,
+        durada: r.fields.durada as string,
+        alumnes: r.fields.alumnes as string,
+        material: r.fields.material as string,
+        inici: r.fields.inici as string,
+        idioma: r.fields.idioma as string,
+        qui_imparteix: r.fields.qui_imparteix as string,
+        publicada: !!r.fields.publicada,
+        destacada: !!r.fields.destacada
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error("[Airtable API] Error en createActivitat:", error);
+    return null;
+  }
+}
+
+export async function updateActivitat(id: string, data: Partial<Omit<Activitat, 'id' | 'slug' | 'centre' | 'centreId'>>): Promise<boolean> {
+  if (!API_KEY || !BASE_ID) return false;
+  try {
+    const url = `https://api.airtable.com/v0/${BASE_ID}/Activitats`;
+    
+    const fields: Record<string, unknown> = {};
+    if (data.nom) {
+      fields.nom = data.nom;
+      const baseSlug = normalizeSlug(data.nom);
+      fields.slug = baseSlug.endsWith('-girona') ? baseSlug : `${baseSlug}-girona`;
+    }
+    if (data.barri) fields.barri = data.barri;
+    if (data.categoria) fields.categoria = data.categoria;
+    if (data.edat) fields.edat = data.edat;
+    if (data.preu !== undefined) fields.preu = data.preu != null ? String(data.preu) : null;
+    if (data.horari) fields.horari = data.horari;
+    if (data.dies) fields.dies = data.dies;
+    if (data.descripcio) fields.descripcio = data.descripcio;
+    if (data.durada) fields.durada = data.durada;
+    if (data.alumnes) fields.alumnes = data.alumnes;
+    if (data.material) fields.material = data.material;
+    if (data.inici) fields.inici = data.inici;
+    if (data.idioma) fields.idioma = data.idioma;
+    if (data.qui_imparteix !== undefined) fields.qui_imparteix = data.qui_imparteix;
+    if (data.publicada !== undefined) fields.publicada = data.publicada;
+
+    const body = {
+      records: [
+        {
+          id,
+          fields
+        }
+      ]
+    };
+
+    const res = await fetchWithRetry(url, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Failed to update activity: ${res.status} ${text}`);
+    }
+
+    const cache = readCache();
+    delete cache.activitats;
+    writeCache(cache);
+
+    return true;
+  } catch (error) {
+    console.error("[Airtable API] Error en updateActivitat:", error);
+    return false;
+  }
+}
+
+export async function deleteActivitat(id: string): Promise<boolean> {
+  if (!API_KEY || !BASE_ID) return false;
+  try {
+    const url = `https://api.airtable.com/v0/${BASE_ID}/Activitats?records[]=${id}`;
+    
+    const res = await fetchWithRetry(url, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${API_KEY}`
+      }
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Failed to delete activity: ${res.status} ${text}`);
+    }
+
+    const cache = readCache();
+    delete cache.activitats;
+    writeCache(cache);
+
+    return true;
+  } catch (error) {
+    console.error("[Airtable API] Error en deleteActivitat:", error);
+    return false;
+  }
 }
