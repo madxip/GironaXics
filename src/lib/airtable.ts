@@ -1,13 +1,72 @@
 import { Activitat, Centre } from './types';
 import activitatsSeed from '../../seed/activitats-inicials.json';
+import fs from 'fs';
+import path from 'path';
+import { normalizeSlug } from './utils';
 
 const API_KEY = process.env.AIRTABLE_API_KEY;
 const BASE_ID = process.env.AIRTABLE_BASE_ID;
+
+// Configurar memòria cau local (cache) per estalviar quota mensual i solucionar el 429 Rate Limit
+const CACHE_PATH = path.join(process.cwd(), 'src/lib/airtable-cache.json');
+const CACHE_TTL = 5 * 60 * 1000; // 5 minuts de validesa de la cache
+
+interface CacheStructure {
+  activitats?: {
+    timestamp: number;
+    data: Activitat[];
+  };
+  centres?: {
+    timestamp: number;
+    data: Centre[];
+  };
+}
+
+function readCache(): CacheStructure {
+  try {
+    if (fs.existsSync(CACHE_PATH)) {
+      const content = fs.readFileSync(CACHE_PATH, 'utf-8');
+      return JSON.parse(content);
+    }
+  } catch {
+    // Silenciós per no embullar el log, fallar en la lectura és segur
+  }
+  return {};
+}
+
+function writeCache(data: CacheStructure) {
+  try {
+    const dir = path.dirname(CACHE_PATH);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(CACHE_PATH, JSON.stringify(data, null, 2), 'utf-8');
+  } catch (error) {
+    console.error("[Airtable Cache] Error escrivint el fitxer de cache:", error);
+  }
+}
 
 // Fallback per desenvolupament si no hi ha Airtable configurat
 const getFallbackActivitats = (): Activitat[] => {
   return activitatsSeed as unknown as Activitat[];
 };
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Cridar a l'API amb suport de reintent automàtic amb retard exponencial (Backoff) si es rep un 429
+async function fetchWithRetry(url: string, options: RequestInit, retries = 5, delay = 300): Promise<Response> {
+  for (let i = 0; i < retries; i++) {
+    const res = await fetch(url, options);
+    if (res.status === 429) {
+      const waitTime = delay * Math.pow(2, i) + Math.random() * 100;
+      console.warn(`[Airtable API] Rate limit (429) detectat. Reintentant en ${Math.round(waitTime)}ms... (Intent ${i + 1}/${retries})`);
+      await sleep(waitTime);
+      continue;
+    }
+    return res;
+  }
+  return fetch(url, options);
+}
 
 async function fetchAllRecords(tableName: string, filterByFormula?: string): Promise<{ id: string; fields: Record<string, unknown> }[]> {
   let allRecords: { id: string; fields: Record<string, unknown> }[] = [];
@@ -20,7 +79,7 @@ async function fetchAllRecords(tableName: string, filterByFormula?: string): Pro
 
     const url = `https://api.airtable.com/v0/${BASE_ID}/${tableName}${params.toString() ? '?' + params.toString() : ''}`;
 
-    const res = await fetch(url, {
+    const res = await fetchWithRetry(url, {
       headers: { Authorization: `Bearer ${API_KEY}` },
       next: { revalidate: 3600 }
     });
@@ -62,6 +121,13 @@ export async function getActivitats(): Promise<Activitat[]> {
     });
   }
 
+  // 1. Intentar llegir la memòria cau local (cache) per reduir consum de crides a Airtable
+  const cache = readCache();
+  const now = Date.now();
+  if (cache.activitats && (now - cache.activitats.timestamp < CACHE_TTL)) {
+    return cache.activitats.data;
+  }
+
   try {
     const records = await fetchAllRecords('Activitats', '{publicada}=TRUE()');
 
@@ -91,7 +157,7 @@ export async function getActivitats(): Promise<Activitat[]> {
       }
     });
 
-    return records.map((r: { id: string; fields: Record<string, unknown> }) => {
+    const formattedActivitats = records.map((r: { id: string; fields: Record<string, unknown> }) => {
       const f = { ...r.fields } as unknown as Activitat;
 
       if (Array.isArray(r.fields.centre) && r.fields.centre.length > 0) {
@@ -169,8 +235,23 @@ export async function getActivitats(): Promise<Activitat[]> {
 
       return f;
     });
+
+    // 2. Desar les dades formatades a la memòria cau local
+    const updatedCache = readCache();
+    updatedCache.activitats = {
+      timestamp: Date.now(),
+      data: formattedActivitats
+    };
+    writeCache(updatedCache);
+
+    return formattedActivitats;
   } catch (error) {
-    console.error(error);
+    console.error("[Airtable API] Error en getActivitats:", error);
+    // 3. Fallback d'emergència: si Airtable falla o excedeix quota, fer servir la darrera cache existent si està disponible
+    if (cache.activitats) {
+      console.warn("[Airtable Cache] Fallback activat. Retornant cache anterior per evitar errors visualitzadors.");
+      return cache.activitats.data;
+    }
     return [];
   }
 }
@@ -205,9 +286,17 @@ export async function getCentres(): Promise<Centre[]> {
     // Return empty or mock
     return [];
   }
+
+  // 1. Intentar llegir la memòria cau local (cache) per reduir consum de crides a Airtable
+  const cache = readCache();
+  const now = Date.now();
+  if (cache.centres && (now - cache.centres.timestamp < CACHE_TTL)) {
+    return cache.centres.data;
+  }
+
   try {
     const records = await fetchAllRecords('Centres');
-    return records.map((r: { id: string; fields: Record<string, unknown> }) => {
+    const formattedCentres = records.map((r: { id: string; fields: Record<string, unknown> }) => {
       const f = { ...r.fields } as unknown as Centre;
 
       // Robust logo/image mapping from Airtable for Centre
@@ -221,7 +310,23 @@ export async function getCentres(): Promise<Centre[]> {
       f.slug = customSlug ? normalizeSlug(customSlug) : (r.fields.nom ? normalizeSlug(r.fields.nom as string) : r.id);
       return f;
     });
-  } catch {
+
+    // 2. Desar les dades formatades a la memòria cau local
+    const updatedCache = readCache();
+    updatedCache.centres = {
+      timestamp: Date.now(),
+      data: formattedCentres
+    };
+    writeCache(updatedCache);
+
+    return formattedCentres;
+  } catch (error) {
+    console.error("[Airtable API] Error en getCentres:", error);
+    // 3. Fallback d'emergència: si Airtable falla, fer servir la darrera cache de centres existent
+    if (cache.centres) {
+      console.warn("[Airtable Cache] Fallback activat. Retornant cache de centres anterior.");
+      return cache.centres.data;
+    }
     return [];
   }
 }
@@ -230,31 +335,4 @@ export async function getCentreBySlug(slug: string): Promise<Centre | null> {
   const all = await getCentres();
   const normalizedSearchSlug = normalizeSlug(decodeURIComponent(slug));
   return all.find(c => normalizeSlug(c.slug) === normalizedSearchSlug || (c.nom && normalizeSlug(c.nom) === normalizedSearchSlug)) || null;
-}
-
-export function normalizeSlug(text: string): string {
-  if (!text) return '';
-  return text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // Remove accents/diacritics
-    .replace(/&/g, ' i ')             // Replace ampersand with 'i' (Catalan 'and')
-    .replace(/[^a-z0-9\s-]/g, ' ')   // Replace punctuation and special characters with spaces
-    .replace(/[\s-]+/g, '-')         // Collapse multiple spaces/hyphens into a single hyphen
-    .replace(/^-+|-+$/g, '');        // Strip leading/trailing hyphens
-}
-
-export function generateFullSlug(baseSlug: string, barri: string): string {
-  if (!baseSlug || !barri) return baseSlug;
-  const barriSlug = normalizeSlug(barri);
-  return `${baseSlug}-${barriSlug}`;
-}
-
-export function extractBaseSlug(fullSlug: string, barri: string): string {
-  const barriSlug = normalizeSlug(barri);
-  const suffix = `-${barriSlug}`;
-  if (fullSlug.endsWith(suffix)) {
-    return fullSlug.slice(0, -suffix.length);
-  }
-  return fullSlug;
 }

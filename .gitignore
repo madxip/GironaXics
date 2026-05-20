@@ -41,3 +41,4 @@ next-env.d.ts
 # airtable dumps and images
 airtable_dump.json
 imatges airtable/
+src/lib/airtable-cache.json

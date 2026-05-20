@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
-import { getActivitats, normalizeSlug } from '@/lib/airtable';
+import { getActivitats } from '@/lib/airtable';
+import { normalizeSlug } from '@/lib/utils';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const activitats = await getActivitats();

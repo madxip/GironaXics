@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { getActivitatsDestacades, getActivitats, normalizeSlug } from '@/lib/airtable';
+import { getActivitatsDestacades, getActivitats } from '@/lib/airtable';
+import { normalizeSlug } from '@/lib/utils';
 
 export default async function Destacades() {
   let dest = await getActivitatsDestacades();

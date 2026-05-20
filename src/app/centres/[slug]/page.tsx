@@ -2,7 +2,8 @@ export const revalidate = 3600;
 
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getCentreBySlug, getActivitats, normalizeSlug } from '@/lib/airtable';
+import { getCentreBySlug, getActivitats } from '@/lib/airtable';
+import { normalizeSlug } from '@/lib/utils';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import ActivitatCard from '@/components/ActivitatCard';

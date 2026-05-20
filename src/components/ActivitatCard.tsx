@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Activitat } from '@/lib/types';
-import { normalizeSlug } from '@/lib/airtable';
+import { normalizeSlug } from '@/lib/utils';
 
 export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
   const catSlug = normalizeSlug(activitat.categoria);

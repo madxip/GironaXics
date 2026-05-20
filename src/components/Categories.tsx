@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useMemo } from 'react';
 import { Activitat } from '@/lib/types';
-import { normalizeSlug } from '@/lib/airtable';
+import { normalizeSlug } from '@/lib/utils';
 
 export default function Categories({ activitats = [] }: { activitats?: Activitat[] }) {
   const uniqueCats = useMemo(() => {
