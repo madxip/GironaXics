@@ -28,7 +28,7 @@ export interface Centre {
   id?: string;
   slug: string;
   nom: string;
-  adreça: string;
+  adreca: string;
   telefon: string;
   email: string;
   web: string;

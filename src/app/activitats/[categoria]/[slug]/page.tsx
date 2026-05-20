@@ -156,7 +156,7 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
                     </h3>
                     {centre ? (
                       <div style={{ fontSize: '14px', color: 'var(--muted)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        {centre.adreça && <div>{centre.adreça}</div>}
+                        {centre.adreca && <div>{centre.adreca}</div>}
                         {centre.telefon && <div>{centre.telefon}</div>}
                         {centre.email && <div>{centre.email}</div>}
                       </div>

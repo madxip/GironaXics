@@ -314,6 +314,7 @@ export async function getCentres(): Promise<Centre[]> {
     const formattedCentres = records.map((r: { id: string; fields: Record<string, unknown> }) => {
       const f = { ...r.fields } as unknown as Centre;
       f.id = r.id;
+      f.adreca = (r.fields.adreça || r.fields.adreca || "") as string;
 
       // Robust logo/image mapping from Airtable for Centre
       const attachmentField = r.fields.Imatge || r.fields.imatge || r.fields.Logo || r.fields.logo || r.fields.Logotip || r.fields.logotip;
@@ -670,7 +671,7 @@ export async function updateCentre(id: string, data: Partial<Omit<Centre, 'id' |
       fields.nom = data.nom;
       fields.slug = normalizeSlug(data.nom);
     }
-    if (data.adreça !== undefined) fields.adreça = data.adreça;
+    if (data.adreca !== undefined) fields.adreça = data.adreca;
     if (data.telefon !== undefined) fields.telefon = data.telefon;
     if (data.email !== undefined) fields.email = data.email;
     if (data.web !== undefined) fields.web = data.web;

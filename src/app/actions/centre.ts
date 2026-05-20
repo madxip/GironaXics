@@ -18,7 +18,7 @@ export async function updateCentreAction(prevState: unknown, formData: FormData)
     const centreId = await getAuthenticatedCentreId();
     
     const nom = formData.get("nom") as string;
-    const adreça = formData.get("adreça") as string;
+    const adreca = formData.get("adreca") as string;
     const telefon = formData.get("telefon") as string;
     const email = formData.get("email") as string;
     const web = formData.get("web") as string;
@@ -32,7 +32,7 @@ export async function updateCentreAction(prevState: unknown, formData: FormData)
 
     const success = await updateCentre(centreId, {
       nom,
-      adreça: adreça || "",
+      adreca: adreca || "",
       telefon: telefon || "",
       email: email || "",
       web: web || "",

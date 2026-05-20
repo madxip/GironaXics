@@ -50,10 +50,10 @@ export default async function CentrePage({ params }: { params: { slug: string } 
         <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: 'white', border: '1px solid var(--crema-fosca)', borderRadius: '4px' }}>
             <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--fosc)', marginBottom: '16px' }}>Dades de contacte</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '15px', color: 'var(--muted)' }}>
-                {centre.adreça && <div><strong>Adreça:</strong> {centre.adreça}</div>}
+                {centre.adreca && <div><strong>Adreça:</strong> {centre.adreca}</div>}
                 {centre.telefon && <div><strong>Telèfon:</strong> {centre.telefon}</div>}
                 {centre.email && <div><strong>Email:</strong> {centre.email}</div>}
-                {!centre.adreça && !centre.telefon && !centre.email && <div>Contacteu amb el centre per més informació.</div>}
+                {!centre.adreca && !centre.telefon && !centre.email && <div>Contacteu amb el centre per més informació.</div>}
             </div>
         </div>
 

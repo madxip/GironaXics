@@ -13,7 +13,7 @@ interface CentreFormProps {
 export default function CentreForm({ initialData, barris }: CentreFormProps) {
   const [nom, setNom] = useState(initialData.nom || "");
   const [barri, setBarri] = useState(initialData.barri || "");
-  const [adreça, setAdreça] = useState(initialData.adreça || "");
+  const [adreca, setAdreca] = useState(initialData.adreca || "");
   const [telefon, setTelefon] = useState(initialData.telefon || "");
   const [email, setEmail] = useState(initialData.email || "");
   const [web, setWeb] = useState(initialData.web || "");
@@ -78,7 +78,7 @@ export default function CentreForm({ initialData, barris }: CentreFormProps) {
     const formData = new FormData();
     formData.append("nom", nom);
     formData.append("barri", barri);
-    formData.append("adreça", adreça);
+    formData.append("adreca", adreca);
     formData.append("telefon", telefon);
     formData.append("email", email);
     formData.append("web", web);
@@ -357,8 +357,8 @@ export default function CentreForm({ initialData, barris }: CentreFormProps) {
                 <MapPin size={16} style={{ position: "absolute", left: "14px", top: "15px", color: "var(--muted)" }} />
                 <input
                   type="text"
-                  value={adreça}
-                  onChange={(e) => setAdreça(e.target.value)}
+                  value={adreca}
+                  onChange={(e) => setAdreca(e.target.value)}
                   placeholder="Carrer de l'Escola, 12, Girona"
                   style={{
                     width: "100%",
