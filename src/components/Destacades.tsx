@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import Image from 'next/image';
+import Image from './SafeImage';
 import { getActivitatsDestacades, getActivitats } from '@/lib/airtable';
 import { normalizeSlug } from '@/lib/utils';
 

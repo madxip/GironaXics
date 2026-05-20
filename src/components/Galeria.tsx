@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
+import Image from './SafeImage';
 
 export default function Galeria({ images, nom = '' }: { images?: string[], nom?: string }) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);

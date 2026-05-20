@@ -3,7 +3,7 @@ export const revalidate = 3600; // revalida cada hora
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
+import SafeImage from '@/components/SafeImage';
 import { getActivitatBySlug, getActivitats, getCentres } from '@/lib/airtable';
 import { normalizeSlug } from '@/lib/utils';
 import Nav from '@/components/Nav';
@@ -87,7 +87,7 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
       <main style={{ paddingBottom: '60px' }}>
         <div className="modal-hero" style={{ position: 'relative' }}>
           {/* Aprofitem la imatge pujada a Airtable, o deixem el placeholder de disseny si no n'hi ha cap */}
-          <Image src={activitat.imatgeUrl || "https://images.unsplash.com/photo-1516627145497-ae6968895b74?q=80&w=2000&auto=format&fit=crop"} alt={activitat.nom} fill style={{ objectFit: 'cover' }} priority />
+          <SafeImage src={activitat.imatgeUrl || "https://images.unsplash.com/photo-1516627145497-ae6968895b74?q=80&w=2000&auto=format&fit=crop"} alt={activitat.nom} fill style={{ objectFit: 'cover' }} priority />
           <div className="modal-hero-gradient">
             <h1 className="modal-hero-title">{activitat.nom}</h1>
           </div>
@@ -143,7 +143,7 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
                 <div style={{ paddingTop: '24px', borderTop: '1px solid var(--crema-fosca)', marginBottom: '24px', display: 'flex', gap: '20px', alignItems: 'center' }}>
                   {logoUrl && (
                     <div style={{ position: 'relative', width: '80px', height: '80px', flexShrink: 0, borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--crema-fosca)', backgroundColor: '#fcfcfc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Image src={logoUrl} alt={activitat.centre} fill style={{ objectFit: 'contain', padding: '6px' }} />
+                      <SafeImage src={logoUrl} alt={activitat.centre} fill style={{ objectFit: 'contain', padding: '6px' }} />
                     </div>
                   )}
                   <div style={{ flexGrow: 1 }}>

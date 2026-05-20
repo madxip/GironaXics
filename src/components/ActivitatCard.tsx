@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import Image from 'next/image';
+import Image from './SafeImage';
 import { Activitat } from '@/lib/types';
 import { normalizeSlug } from '@/lib/utils';
 
