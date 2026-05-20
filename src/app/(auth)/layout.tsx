@@ -15,9 +15,6 @@ export default function AuthLayout({
       padding: "24px",
       backgroundColor: "var(--crema)"
     }}>
-      {/* Texture Layer */}
-      <div className="texture" />
-
       {/* Logo Link */}
       <div style={{ marginBottom: "32px", zIndex: 10 }}>
         <Link href="/" style={{ textDecoration: "none" }} className="logo">
