@@ -49,14 +49,34 @@ export async function updateCentreAction(prevState: unknown, formData: FormData)
     const centres = await getCentres();
     const currentCentre = centres.find(c => c.id === centreId);
     if (currentCentre) {
-      revalidatePath(`/centres/${currentCentre.slug}`);
+      try {
+        revalidatePath(`/centres/${currentCentre.slug}`);
+      } catch (e) {
+        console.error(`[Revalidate] Error revalidating '/centres/${currentCentre.slug}':`, e);
+      }
     }
 
     // Purge other active pages
-    revalidatePath("/");
-    revalidatePath("/dashboard");
-    revalidatePath("/dashboard/centre");
-    revalidatePath("/", "layout");
+    try {
+      revalidatePath("/");
+    } catch (e) {
+      console.error("[Revalidate] Error revalidating '/':", e);
+    }
+    try {
+      revalidatePath("/dashboard");
+    } catch (e) {
+      console.error("[Revalidate] Error revalidating '/dashboard':", e);
+    }
+    try {
+      revalidatePath("/dashboard/centre");
+    } catch (e) {
+      console.error("[Revalidate] Error revalidating '/dashboard/centre':", e);
+    }
+    try {
+      revalidatePath("/", "layout");
+    } catch (e) {
+      console.error("[Revalidate] Error revalidating layout '/':", e);
+    }
 
     return { success: true };
   } catch (error) {

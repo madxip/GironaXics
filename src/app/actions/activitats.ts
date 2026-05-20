@@ -80,13 +80,33 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
     }
 
     // On-demand revalidation
-    revalidatePath("/");
-    revalidatePath("/dashboard");
-    revalidatePath(`/categories/${normalizeSlug(categoria)}`);
-    revalidatePath(`/barris/${normalizeSlug(barri)}`);
+    try {
+      revalidatePath("/");
+    } catch (e) {
+      console.error("[Revalidate] Error revalidating '/':", e);
+    }
+    try {
+      revalidatePath("/dashboard");
+    } catch (e) {
+      console.error("[Revalidate] Error revalidating '/dashboard':", e);
+    }
+    try {
+      revalidatePath(`/categories/${normalizeSlug(categoria)}`);
+    } catch (e) {
+      console.error(`[Revalidate] Error revalidating '/categories/${normalizeSlug(categoria)}':`, e);
+    }
+    try {
+      revalidatePath(`/barris/${normalizeSlug(barri)}`);
+    } catch (e) {
+      console.error(`[Revalidate] Error revalidating '/barris/${normalizeSlug(barri)}':`, e);
+    }
     
     // Global router cache purge
-    revalidatePath("/", "layout");
+    try {
+      revalidatePath("/", "layout");
+    } catch (e) {
+      console.error("[Revalidate] Error revalidating layout '/':", e);
+    }
 
     return { success: true };
   } catch (error) {
@@ -156,13 +176,33 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
     }
 
     // On-demand revalidation
-    revalidatePath("/");
-    revalidatePath("/dashboard");
-    revalidatePath(`/categories/${normalizeSlug(categoria)}`);
-    revalidatePath(`/barris/${normalizeSlug(barri)}`);
+    try {
+      revalidatePath("/");
+    } catch (e) {
+      console.error("[Revalidate] Error revalidating '/':", e);
+    }
+    try {
+      revalidatePath("/dashboard");
+    } catch (e) {
+      console.error("[Revalidate] Error revalidating '/dashboard':", e);
+    }
+    try {
+      revalidatePath(`/categories/${normalizeSlug(categoria)}`);
+    } catch (e) {
+      console.error(`[Revalidate] Error revalidating '/categories/${normalizeSlug(categoria)}':`, e);
+    }
+    try {
+      revalidatePath(`/barris/${normalizeSlug(barri)}`);
+    } catch (e) {
+      console.error(`[Revalidate] Error revalidating '/barris/${normalizeSlug(barri)}':`, e);
+    }
     
     // Global router cache purge
-    revalidatePath("/", "layout");
+    try {
+      revalidatePath("/", "layout");
+    } catch (e) {
+      console.error("[Revalidate] Error revalidating layout '/':", e);
+    }
 
     return { success: true };
   } catch (error) {
@@ -182,9 +222,21 @@ export async function deleteActivitatAction(id: string) {
     }
 
     // On-demand revalidation
-    revalidatePath("/");
-    revalidatePath("/dashboard");
-    revalidatePath("/", "layout");
+    try {
+      revalidatePath("/");
+    } catch (e) {
+      console.error("[Revalidate] Error revalidating '/':", e);
+    }
+    try {
+      revalidatePath("/dashboard");
+    } catch (e) {
+      console.error("[Revalidate] Error revalidating '/dashboard':", e);
+    }
+    try {
+      revalidatePath("/", "layout");
+    } catch (e) {
+      console.error("[Revalidate] Error revalidating layout '/':", e);
+    }
 
     return { success: true };
   } catch (error) {
