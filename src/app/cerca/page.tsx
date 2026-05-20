@@ -27,7 +27,7 @@ export default async function CercaPage({ searchParams }: { searchParams: { q?: 
         removeAccents((a.barri || '').toLowerCase()).includes(queryNormalized) ||
         removeAccents((a.categoria || '').toLowerCase()).includes(queryNormalized)
       )
-    : [];
+    : all;
 
   return (
     <>
@@ -42,11 +42,7 @@ export default async function CercaPage({ searchParams }: { searchParams: { q?: 
           {queryRaw ? <>Resultats per: &ldquo;{searchParams.q}&rdquo;</> : "Cerca"}
         </h1>
 
-        {queryRaw === '' ? (
-          <div className="results-empty" style={{ padding: '4rem 2rem', textAlign: 'center', background: 'var(--crema-fosca)', borderRadius: '4px' }}>
-             Si us plau, introdueix algun terme de cerca per buscar activitats.
-          </div>
-        ) : filtered.length === 0 ? (
+        {filtered.length === 0 ? (
           <div className="results-empty" style={{ padding: '4rem 2rem', textAlign: 'center', background: 'var(--crema-fosca)', borderRadius: '4px' }}>
              No hem trobat cap activitat que coincideixi amb &ldquo;{searchParams.q}&rdquo;.
              <div style={{ marginTop: '24px' }}>
