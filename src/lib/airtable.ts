@@ -68,7 +68,7 @@ async function fetchWithRetry(url: string, options: RequestInit, retries = 5, de
   return fetch(url, options);
 }
 
-async function fetchAllRecords(tableName: string, filterByFormula?: string): Promise<{ id: string; fields: Record<string, unknown> }[]> {
+async function fetchAllRecords(tableName: string, filterByFormula?: string, revalidate?: number): Promise<{ id: string; fields: Record<string, unknown> }[]> {
   let allRecords: { id: string; fields: Record<string, unknown> }[] = [];
   let offset: string | undefined;
 
@@ -79,10 +79,17 @@ async function fetchAllRecords(tableName: string, filterByFormula?: string): Pro
 
     const url = `https://api.airtable.com/v0/${BASE_ID}/${tableName}${params.toString() ? '?' + params.toString() : ''}`;
 
-    const res = await fetchWithRetry(url, {
+    const fetchOptions: RequestInit = {
       headers: { Authorization: `Bearer ${API_KEY}` },
-      next: { revalidate: 3600 }
-    });
+    };
+
+    if (revalidate === 0) {
+      fetchOptions.cache = 'no-store';
+    } else {
+      fetchOptions.next = { revalidate: revalidate ?? 3600 };
+    }
+
+    const res = await fetchWithRetry(url, fetchOptions);
 
     if (!res.ok) {
       const errorText = await res.text();
@@ -344,7 +351,7 @@ export async function getUserByEmail(email: string): Promise<{ id: string; nom: 
   if (!API_KEY || !BASE_ID) return null;
   try {
     const filter = `LOWER({Email})="${email.toLowerCase().trim()}"`;
-    const records = await fetchAllRecords('Usuaris_Centres', filter);
+    const records = await fetchAllRecords('Usuaris_Centres', filter, 0);
     if (records.length === 0) return null;
     const r = records[0];
     return {
