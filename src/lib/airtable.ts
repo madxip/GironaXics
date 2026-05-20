@@ -408,6 +408,50 @@ export async function createUser(data: { nom: string; email: string; passwordHas
   }
 }
 
+export async function createCentre(nom: string): Promise<{ id: string; nom: string } | null> {
+  if (!API_KEY || !BASE_ID) return null;
+  try {
+    const url = `https://api.airtable.com/v0/${BASE_ID}/Centres`;
+    const slug = normalizeSlug(nom);
+    const body = {
+      records: [
+        {
+          fields: {
+            nom: nom,
+            slug: slug,
+            descripcio: "",
+          }
+        }
+      ]
+    };
+    const res = await fetchWithRetry(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Failed to create centre: ${res.status} ${text}`);
+    }
+    const resData = await res.json();
+    if (resData.records && resData.records.length > 0) {
+      const r = resData.records[0];
+      return {
+        id: r.id,
+        nom: r.fields.nom as string,
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error("[Airtable API] Error en createCentre:", error);
+    return null;
+  }
+}
+
+
 export async function getActivitatsByCentreId(centreId: string): Promise<Activitat[]> {
   const all = await getActivitats();
   return all.filter(a => a.centreId === centreId);

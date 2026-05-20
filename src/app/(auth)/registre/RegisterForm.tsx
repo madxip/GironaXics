@@ -17,6 +17,7 @@ export default function RegisterForm({ centres }: RegisterFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [centreId, setCentreId] = useState("");
+  const [nouCentreNom, setNouCentreNom] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -31,12 +32,21 @@ export default function RegisterForm({ centres }: RegisterFormProps) {
       return;
     }
 
+    if (centreId === "nou-centre" && !nouCentreNom) {
+      setErrorMsg("Si us plau, escriu el nom del nou centre.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const formData = new FormData();
       formData.append("nom", nom);
       formData.append("email", email);
       formData.append("password", password);
       formData.append("centreId", centreId);
+      if (centreId === "nou-centre") {
+        formData.append("nouCentreNom", nouCentreNom);
+      }
 
       const res = await registerCentreAction(null, formData);
 
@@ -179,11 +189,42 @@ export default function RegisterForm({ centres }: RegisterFormProps) {
                 {c.nom}
               </option>
             ))}
+            <option value="nou-centre">-- El meu centre és nou (no surt a la llista) --</option>
           </select>
           <span style={{ fontSize: "12px", color: "var(--muted)", fontStyle: "italic" }}>
-            Si el teu centre no surt a la llista, posa't en contacte amb nosaltres.
+            Si el teu centre és nou, selecciona l'opció anterior per poder-ne crear la fitxa.
           </span>
         </div>
+
+        {centreId === "nou-centre" && (
+          <div className="form-group" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <label style={{
+              fontSize: "13px",
+              fontWeight: "700",
+              color: "var(--verd-fosc)",
+              textTransform: "uppercase",
+              letterSpacing: "0.05em"
+            }}>
+              Nom del Nou Centre
+            </label>
+            <input
+              type="text"
+              value={nouCentreNom}
+              onChange={(e) => setNouCentreNom(e.target.value)}
+              placeholder="Ex: Activa't Gimnàs, Escola Bressol..."
+              disabled={loading}
+              style={{
+                padding: "14px",
+                border: "1px solid rgba(26, 107, 58, 0.2)",
+                borderRadius: "8px",
+                fontSize: "15px",
+                outline: "none",
+                backgroundColor: "white",
+                color: "var(--fosc)"
+              }}
+            />
+          </div>
+        )}
 
         <div className="form-group" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           <label style={{
