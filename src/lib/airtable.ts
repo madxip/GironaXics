@@ -180,6 +180,12 @@ export async function getActivitats(): Promise<Activitat[]> {
       if (Array.isArray(r.fields.Imatge) && r.fields.Imatge.length > 0) {
         f.imatgeUrl = (r.fields.Imatge[0] as { url: string }).url;
       }
+      if (Array.isArray(r.fields.Galeria)) {
+        f.galeria = (r.fields.Galeria as { url: string }[]).map((img) => img.url);
+      } else {
+        f.galeria = [];
+      }
+      f.material = "";
       if (f.barri === 'Centro') {
         f.barri = 'Centre';
       }
@@ -472,29 +478,37 @@ export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'cen
     const baseSlug = normalizeSlug(data.nom);
     const slug = baseSlug.endsWith('-girona') ? baseSlug : `${baseSlug}-girona`;
     
+    const fields: Record<string, unknown> = {
+      nom: data.nom,
+      slug: slug,
+      centre: [data.centreId],
+      barri: data.barri,
+      categoria: data.categoria,
+      edat: data.edat,
+      preu: data.preu != null && data.preu !== '' ? String(data.preu) : undefined,
+      horari: data.horari,
+      dies: data.dies,
+      descripcio: data.descripcio || "",
+      durada: data.durada || "",
+      alumnes: data.alumnes || "",
+      inici: data.inici || "",
+      idioma: data.idioma || "",
+      "Qui imparteix": data.qui_imparteix || "",
+      publicada: true,
+      destacada: false
+    };
+
+    if (data.imatgeUrl) {
+      fields.Imatge = [{ url: data.imatgeUrl }];
+    }
+    if (Array.isArray(data.galeria) && data.galeria.length > 0) {
+      fields.Galeria = data.galeria.map(url => ({ url }));
+    }
+
     const body = {
       records: [
         {
-          fields: {
-            nom: data.nom,
-            slug: slug,
-            centre: [data.centreId],
-            barri: data.barri,
-            categoria: data.categoria,
-            edat: data.edat,
-            preu: data.preu != null ? String(data.preu) : undefined,
-            horari: data.horari,
-            dies: data.dies,
-            descripcio: data.descripcio,
-            durada: data.durada,
-            alumnes: data.alumnes,
-            material: data.material,
-            inici: data.inici,
-            idioma: data.idioma,
-            qui_imparteix: data.qui_imparteix,
-            publicada: true,
-            destacada: false
-          }
+          fields
         }
       ]
     };
@@ -535,12 +549,14 @@ export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'cen
         descripcio: r.fields.descripcio as string,
         durada: r.fields.durada as string,
         alumnes: r.fields.alumnes as string,
-        material: r.fields.material as string,
+        material: "",
         inici: r.fields.inici as string,
         idioma: r.fields.idioma as string,
-        qui_imparteix: r.fields.qui_imparteix as string,
+        qui_imparteix: (r.fields['Qui imparteix'] || r.fields.qui_imparteix) as string,
         publicada: !!r.fields.publicada,
-        destacada: !!r.fields.destacada
+        destacada: !!r.fields.destacada,
+        imatgeUrl: Array.isArray(r.fields.Imatge) && r.fields.Imatge.length > 0 ? (r.fields.Imatge[0] as { url: string }).url : undefined,
+        galeria: Array.isArray(r.fields.Galeria) ? (r.fields.Galeria as { url: string }[]).map((img) => img.url) : []
       };
     }
     return null;
@@ -564,17 +580,23 @@ export async function updateActivitat(id: string, data: Partial<Omit<Activitat, 
     if (data.barri) fields.barri = data.barri;
     if (data.categoria) fields.categoria = data.categoria;
     if (data.edat) fields.edat = data.edat;
-    if (data.preu !== undefined) fields.preu = data.preu != null ? String(data.preu) : null;
+    if (data.preu !== undefined) fields.preu = data.preu != null && data.preu !== '' ? String(data.preu) : null;
     if (data.horari) fields.horari = data.horari;
     if (data.dies) fields.dies = data.dies;
-    if (data.descripcio) fields.descripcio = data.descripcio;
-    if (data.durada) fields.durada = data.durada;
-    if (data.alumnes) fields.alumnes = data.alumnes;
-    if (data.material) fields.material = data.material;
-    if (data.inici) fields.inici = data.inici;
-    if (data.idioma) fields.idioma = data.idioma;
-    if (data.qui_imparteix !== undefined) fields.qui_imparteix = data.qui_imparteix;
+    if (data.descripcio !== undefined) fields.descripcio = data.descripcio;
+    if (data.durada !== undefined) fields.durada = data.durada;
+    if (data.alumnes !== undefined) fields.alumnes = data.alumnes;
+    if (data.inici !== undefined) fields.inici = data.inici;
+    if (data.idioma !== undefined) fields.idioma = data.idioma;
+    if (data.qui_imparteix !== undefined) fields["Qui imparteix"] = data.qui_imparteix;
     if (data.publicada !== undefined) fields.publicada = data.publicada;
+
+    if (data.imatgeUrl !== undefined) {
+      fields.Imatge = data.imatgeUrl ? [{ url: data.imatgeUrl }] : [];
+    }
+    if (data.galeria !== undefined) {
+      fields.Galeria = Array.isArray(data.galeria) ? data.galeria.map(url => ({ url })) : [];
+    }
 
     const body = {
       records: [
@@ -634,6 +656,63 @@ export async function deleteActivitat(id: string): Promise<boolean> {
     return true;
   } catch (error) {
     console.error("[Airtable API] Error en deleteActivitat:", error);
+    return false;
+  }
+}
+
+export async function updateCentre(id: string, data: Partial<Omit<Centre, 'id' | 'slug'>>): Promise<boolean> {
+  if (!API_KEY || !BASE_ID) return false;
+  try {
+    const url = `https://api.airtable.com/v0/${BASE_ID}/Centres`;
+    
+    const fields: Record<string, unknown> = {};
+    if (data.nom !== undefined) {
+      fields.nom = data.nom;
+      fields.slug = normalizeSlug(data.nom);
+    }
+    if (data.adreça !== undefined) fields.adreça = data.adreça;
+    if (data.telefon !== undefined) fields.telefon = data.telefon;
+    if (data.email !== undefined) fields.email = data.email;
+    if (data.web !== undefined) fields.web = data.web;
+    if (data.barri !== undefined) fields.barri = data.barri;
+    if (data.descripcio !== undefined) fields.descripcio = data.descripcio;
+
+    if (data.imatgeUrl !== undefined) {
+      fields.Logo = data.imatgeUrl ? [{ url: data.imatgeUrl }] : [];
+    }
+
+    const body = {
+      records: [
+        {
+          id,
+          fields
+        }
+      ]
+    };
+
+    const res = await fetchWithRetry(url, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Failed to update centre: ${res.status} ${text}`);
+    }
+
+    // Reset caches
+    const cache = readCache();
+    delete cache.centres;
+    delete cache.activitats;
+    writeCache(cache);
+
+    return true;
+  } catch (error) {
+    console.error("[Airtable API] Error en updateCentre:", error);
     return false;
   }
 }

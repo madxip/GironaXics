@@ -28,16 +28,28 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
     const descripcio = formData.get("descripcio") as string;
     const durada = formData.get("durada") as string;
     const alumnes = formData.get("alumnes") as string;
-    const material = formData.get("material") as string;
     const inici = formData.get("inici") as string;
     const idioma = formData.get("idioma") as string;
     const qui_imparteix = formData.get("qui_imparteix") as string;
+    const imatgeUrl = formData.get("imatgeUrl") as string;
+
+    // Parse galeria robustly
+    const galeriaRaw = formData.get("galeria");
+    let galeria: string[] = [];
+    if (galeriaRaw) {
+      try {
+        galeria = JSON.parse(galeriaRaw as string);
+      } catch {
+        galeria = formData.getAll("galeria") as string[];
+      }
+    } else {
+      galeria = formData.getAll("galeria") as string[];
+    }
 
     if (!nom || !barri || !categoria || !edat || !horari || !dies) {
       return { success: false, error: "Si us plau, omple com a mínim els camps obligatoris (Nom, Barri, Categoria, Edat, Horari i Dies)." };
     }
 
-    // Convert preu to number if valid, otherwise keep as string or leave empty
     const preu = preuStr ? Number(preuStr) : undefined;
 
     const result = await createActivitat({
@@ -51,13 +63,15 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
       descripcio: descripcio || "",
       durada: durada || "",
       alumnes: alumnes || "",
-      material: material || "",
+      material: "",
       inici: inici || "",
       idioma: idioma || "",
       qui_imparteix: qui_imparteix || "",
       publicada: true,
       destacada: false,
       centreId,
+      imatgeUrl: imatgeUrl || undefined,
+      galeria: galeria.length > 0 ? galeria : undefined
     });
 
     if (!result) {
@@ -83,8 +97,6 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
 
 export async function updateActivitatAction(id: string, prevState: unknown, formData: FormData) {
   try {
-    // Verify centre ownership in a real scenario
-    // We get centreId of the authenticated user to ensure they are logged in
     await getAuthenticatedCentreId();
 
     const nom = formData.get("nom") as string;
@@ -97,10 +109,22 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
     const descripcio = formData.get("descripcio") as string;
     const durada = formData.get("durada") as string;
     const alumnes = formData.get("alumnes") as string;
-    const material = formData.get("material") as string;
     const inici = formData.get("inici") as string;
     const idioma = formData.get("idioma") as string;
     const qui_imparteix = formData.get("qui_imparteix") as string;
+    const imatgeUrl = formData.get("imatgeUrl") as string;
+
+    const galeriaRaw = formData.get("galeria");
+    let galeria: string[] | undefined = undefined;
+    if (galeriaRaw !== null) {
+      try {
+        galeria = JSON.parse(galeriaRaw as string);
+      } catch {
+        galeria = formData.getAll("galeria") as string[];
+      }
+    } else if (formData.has("galeria")) {
+      galeria = formData.getAll("galeria") as string[];
+    }
 
     if (!nom || !barri || !categoria || !edat || !horari || !dies) {
       return { success: false, error: "Si us plau, omple com a mínim els camps obligatoris (Nom, Barri, Categoria, Edat, Horari i Dies)." };
@@ -119,10 +143,11 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
       descripcio: descripcio || "",
       durada: durada || "",
       alumnes: alumnes || "",
-      material: material || "",
       inici: inici || "",
       idioma: idioma || "",
       qui_imparteix: qui_imparteix || "",
+      imatgeUrl: imatgeUrl !== null ? imatgeUrl : undefined,
+      galeria: galeria !== undefined ? galeria : undefined
     });
 
     if (!success) {

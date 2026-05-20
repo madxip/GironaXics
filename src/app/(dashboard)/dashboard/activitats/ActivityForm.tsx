@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Upload, Trash2, Image as ImageIcon, Plus } from "lucide-react";
 import { Activitat } from "@/lib/types";
 
 interface ActivityFormProps {
@@ -37,9 +37,97 @@ export default function ActivityForm({
   const [inici, setInici] = useState(initialData?.inici || "");
   const [idioma, setIdioma] = useState(initialData?.idioma || "");
   const [qui_imparteix, setQuiImparteix] = useState(initialData?.qui_imparteix || "");
+  
+  // Imatges states i refs
+  const [imatgeUrl, setImatgeUrl] = useState(initialData?.imatgeUrl || "");
+  const [galeria, setGaleria] = useState<string[]>(initialData?.galeria || []);
+  const [isUploadingFeatured, setIsUploadingFeatured] = useState(false);
+  const [isUploadingGallery, setIsUploadingGallery] = useState(false);
+
+  const featuredInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+
+  const handleFeaturedUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingFeatured(true);
+    setErrorMsg("");
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        throw new Error("Error en pujar la imatge.");
+      }
+
+      const data = await res.json();
+      if (data.url) {
+        setImatgeUrl(data.url);
+      } else {
+        throw new Error(data.error || "No s'ha obtingut cap URL.");
+      }
+    } catch (err) {
+      console.error(err);
+      setErrorMsg("No s'ha pogut pujar la imatge destacada. Intenta-ho de nou.");
+    } finally {
+      setIsUploadingFeatured(false);
+      if (featuredInputRef.current) featuredInputRef.current.value = "";
+    }
+  };
+
+  const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploadingGallery(true);
+    setErrorMsg("");
+
+    const uploadPromises = Array.from(files).map(async (file) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) {
+        throw new Error(`Error en pujar ${file.name}`);
+      }
+      const data = await res.json();
+      if (!data.url) {
+        throw new Error(data.error || "No s'ha obtingut cap URL.");
+      }
+      return data.url as string;
+    });
+
+    try {
+      const urls = await Promise.all(uploadPromises);
+      setGaleria((prev) => [...prev, ...urls]);
+    } catch (err) {
+      console.error(err);
+      setErrorMsg("No s'han pogut pujar algunes imatges de la galeria. Intenta-ho de nou.");
+    } finally {
+      setIsUploadingGallery(false);
+      if (galleryInputRef.current) galleryInputRef.current.value = "";
+    }
+  };
+
+  const handleRemoveFeatured = () => {
+    setImatgeUrl("");
+  };
+
+  const handleRemoveGalleryImage = (indexToRemove: number) => {
+    setGaleria((prev) => prev.filter((_, i) => i !== indexToRemove));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,6 +156,8 @@ export default function ActivityForm({
       formData.append("inici", inici);
       formData.append("idioma", idioma);
       formData.append("qui_imparteix", qui_imparteix);
+      formData.append("imatgeUrl", imatgeUrl);
+      formData.append("galeria", JSON.stringify(galeria));
 
       const res = await submitAction(null, formData);
 
@@ -506,6 +596,245 @@ export default function ActivityForm({
                       color: "var(--fosc)"
                     }}
                   />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 4: Imatges de l'Activitat */}
+          <div>
+            <h3 style={{
+              fontSize: "16px",
+              fontWeight: 700,
+              color: "var(--verd)",
+              borderBottom: "1px solid var(--crema-fosca)",
+              paddingBottom: "8px",
+              marginBottom: "20px",
+              textTransform: "uppercase",
+              letterSpacing: "0.05em"
+            }}>
+              4. Imatges de l'Activitat
+            </h3>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+              {/* Part A: Imatge Destacada */}
+              <div>
+                <label style={{ display: "block", fontSize: "13px", fontWeight: "700", color: "var(--verd-fosc)", textTransform: "uppercase", marginBottom: "8px" }}>
+                  Imatge Destacada (Principal)
+                </label>
+                <p style={{ fontSize: "12px", color: "var(--muted)", marginTop: "-4px", marginBottom: "12px" }}>
+                  Aquesta imatge es mostrarà com a capçalera principal a la fitxa detallada de l'activitat.
+                </p>
+
+                <div style={{ display: "flex", gap: "24px", alignItems: "center", flexWrap: "wrap" }}>
+                  <div style={{
+                    width: "240px",
+                    height: "150px",
+                    borderRadius: "12px",
+                    border: "2px dashed var(--crema-fosca, #eae2d1)",
+                    backgroundColor: "#fbfcfb",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    overflow: "hidden",
+                    position: "relative"
+                  }}>
+                    {imatgeUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={imatgeUrl}
+                        alt="Imatge destacada previsualització"
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      />
+                    ) : (
+                      <div style={{ textAlign: "center", color: "var(--muted)", padding: "12px" }}>
+                        <ImageIcon size={32} style={{ margin: "0 auto 8px", opacity: 0.4 }} />
+                        <span style={{ fontSize: "12px", display: "block" }}>Sense Imatge</span>
+                      </div>
+                    )}
+                    {isUploadingFeatured && (
+                      <div style={{
+                        position: "absolute",
+                        inset: 0,
+                        backgroundColor: "rgba(255, 255, 255, 0.8)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center"
+                      }}>
+                        <Loader2 className="animate-spin" size={24} style={{ color: "var(--verd)" }} />
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    <div style={{ display: "flex", gap: "10px" }}>
+                      <input
+                        type="file"
+                        ref={featuredInputRef}
+                        onChange={handleFeaturedUpload}
+                        accept="image/*"
+                        style={{ display: "none" }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => featuredInputRef.current?.click()}
+                        disabled={isUploadingFeatured || loading}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          padding: "10px 16px",
+                          borderRadius: "8px",
+                          border: "1px solid var(--verd)",
+                          backgroundColor: "transparent",
+                          color: "var(--verd)",
+                          fontSize: "14px",
+                          fontWeight: 600,
+                          cursor: "pointer",
+                          transition: "all 0.2s"
+                        }}
+                      >
+                        <Upload size={16} />
+                        Puja Imatge
+                      </button>
+
+                      {imatgeUrl && (
+                        <button
+                          type="button"
+                          onClick={handleRemoveFeatured}
+                          disabled={isUploadingFeatured || loading}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            padding: "10px 16px",
+                            borderRadius: "8px",
+                            border: "1px solid #dc2626",
+                            backgroundColor: "transparent",
+                            color: "#dc2626",
+                            fontSize: "14px",
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            transition: "all 0.2s"
+                          }}
+                        >
+                          <Trash2 size={16} />
+                          Eliminar
+                        </button>
+                      )}
+                    </div>
+                    <p style={{ fontSize: "12px", color: "var(--muted)", margin: 0 }}>
+                      Format horitzontal recomanat (recomanat 1200x800). Màxim 4MB.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Part B: Galeria d'Imatges */}
+              <div>
+                <label style={{ display: "block", fontSize: "13px", fontWeight: "700", color: "var(--verd-fosc)", textTransform: "uppercase", marginBottom: "8px" }}>
+                  Galeria de Fotos
+                </label>
+                <p style={{ fontSize: "12px", color: "var(--muted)", marginTop: "-4px", marginBottom: "12px" }}>
+                  Pots afegir diverses imatges per mostrar la vida diària de l'activitat en un carrusel.
+                </p>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                  {/* Grid of gallery items */}
+                  {galeria.length > 0 && (
+                    <div style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
+                      gap: "12px"
+                    }}>
+                      {galeria.map((url, idx) => (
+                        <div
+                          key={idx}
+                          style={{
+                            aspectRatio: "1",
+                            borderRadius: "8px",
+                            overflow: "hidden",
+                            border: "1px solid var(--crema-fosca, #eae2d1)",
+                            position: "relative",
+                            backgroundColor: "#fbfcfb"
+                          }}
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={url}
+                            alt={`Galeria ${idx + 1}`}
+                            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveGalleryImage(idx)}
+                            style={{
+                              position: "absolute",
+                              top: "4px",
+                              right: "4px",
+                              backgroundColor: "rgba(220, 38, 38, 0.9)",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "50%",
+                              width: "24px",
+                              height: "24px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              cursor: "pointer",
+                              transition: "background-color 0.2s"
+                            }}
+                            title="Eliminar imatge"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Add button */}
+                  <div>
+                    <input
+                      type="file"
+                      ref={galleryInputRef}
+                      onChange={handleGalleryUpload}
+                      accept="image/*"
+                      multiple
+                      style={{ display: "none" }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => galleryInputRef.current?.click()}
+                      disabled={isUploadingGallery || loading}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        padding: "10px 16px",
+                        borderRadius: "8px",
+                        border: "1px dashed var(--verd)",
+                        backgroundColor: "#fbfcfb",
+                        color: "var(--verd)",
+                        fontSize: "14px",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        transition: "all 0.2s"
+                      }}
+                    >
+                      {isUploadingGallery ? (
+                        <>
+                          <Loader2 className="animate-spin" size={16} />
+                          Pujant imatges...
+                        </>
+                      ) : (
+                        <>
+                          <Plus size={16} />
+                          Afegir fotos a la galeria
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

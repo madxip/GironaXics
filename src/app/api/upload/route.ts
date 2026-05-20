@@ -1,0 +1,71 @@
+import { NextRequest, NextResponse } from "next/server";
+
+export const dynamic = "force-dynamic";
+
+export async function POST(req: NextRequest) {
+  try {
+    const formData = await req.formData();
+    const file = formData.get("file") as File | null;
+
+    if (!file) {
+      return NextResponse.json({ error: "No s'ha proporcionat cap fitxer." }, { status: 400 });
+    }
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+
+    // 1. Intentar pujar a Catbox (permanent i ràpid)
+    try {
+      const catboxForm = new FormData();
+      catboxForm.append("reqtype", "fileupload");
+      const blob = new Blob([buffer], { type: file.type });
+      catboxForm.append("fileToUpload", blob, file.name);
+
+      const response = await fetch("https://catbox.moe/user/api.php", {
+        method: "POST",
+        body: catboxForm,
+        // Short timeout for fallback safety
+        signal: AbortSignal.timeout(10000) 
+      });
+
+      if (response.ok) {
+        const fileUrl = await response.text();
+        if (fileUrl.startsWith("http")) {
+          return NextResponse.json({ url: fileUrl.trim() });
+        }
+      }
+    } catch (catboxErr) {
+      console.warn("[Upload API] Error amb Catbox, intentant fallback a Tmpfiles:", catboxErr);
+    }
+
+    // 2. Fallback: Pujar a TmpFiles (Airtable importarà la imatge immediatament abans de l'expiració de 60 minuts)
+    try {
+      const tmpForm = new FormData();
+      const blob = new Blob([buffer], { type: file.type });
+      tmpForm.append("file", blob, file.name);
+
+      const response = await fetch("https://tmpfiles.org/api/v1/upload", {
+        method: "POST",
+        body: tmpForm,
+        signal: AbortSignal.timeout(10000)
+      });
+
+      if (response.ok) {
+        const resData = await response.json();
+        if (resData.status === "success" && resData.data?.url) {
+          // Converteix la URL de visualització a la URL de descàrrega directa requerida per Airtable
+          // Visualització: https://tmpfiles.org/123456/imatge.png
+          // Directe: https://tmpfiles.org/dl/123456/imatge.png
+          const directUrl = resData.data.url.replace("tmpfiles.org/", "tmpfiles.org/dl/");
+          return NextResponse.json({ url: directUrl });
+        }
+      }
+    } catch (tmpErr) {
+      console.error("[Upload API] Error amb Tmpfiles:", tmpErr);
+    }
+
+    return NextResponse.json({ error: "Tots els serveis de pujada d'imatges han fallat." }, { status: 500 });
+  } catch (error) {
+    console.error("[Upload API] Error general:", error);
+    return NextResponse.json({ error: "S'ha produït un error al servidor." }, { status: 500 });
+  }
+}

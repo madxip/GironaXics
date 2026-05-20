@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getCentres } from "@/lib/airtable";
-import { Plus, Activity, Globe } from "lucide-react";
+import { Plus, Activity, Globe, Building } from "lucide-react";
 import SignOutButton from "./SignOutButton";
 
 export const dynamic = "force-dynamic";
@@ -87,6 +87,26 @@ export default async function DashboardLayout({
             >
               <Activity size={18} />
               Les meves Activitats
+            </Link>
+
+            <Link
+              href="/dashboard/centre"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                padding: "12px 16px",
+                borderRadius: "8px",
+                color: "var(--muted)",
+                textDecoration: "none",
+                fontWeight: 500,
+                fontSize: "15px",
+                transition: "all 0.2s"
+              }}
+              className="dashboard-nav-link"
+            >
+              <Building size={18} />
+              Dades del Centre
             </Link>
 
             <Link
