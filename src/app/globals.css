@@ -1655,3 +1655,8 @@
         .btn-submit:hover {
             background-color: var(--verd);
         }
+
+        .dashboard-nav-link:hover {
+            background-color: rgba(26, 107, 58, 0.03) !important;
+            color: var(--verd) !important;
+        }

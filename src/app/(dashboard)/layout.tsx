@@ -4,8 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getCentres } from "@/lib/airtable";
-import { Plus, Activity, Globe, Building } from "lucide-react";
 import SignOutButton from "./SignOutButton";
+import DashboardNav from "./DashboardNav";
 
 export const dynamic = "force-dynamic";
 
@@ -68,88 +68,7 @@ export default async function DashboardLayout({
           </div>
 
           {/* Navigation Links */}
-          <nav style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            <Link
-              href="/dashboard"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                padding: "12px 16px",
-                borderRadius: "8px",
-                color: "var(--verd-fosc)",
-                backgroundColor: "rgba(26, 107, 58, 0.05)",
-                textDecoration: "none",
-                fontWeight: 600,
-                fontSize: "15px",
-                transition: "all 0.2s"
-              }}
-            >
-              <Activity size={18} />
-              Les meves Activitats
-            </Link>
-
-            <Link
-              href="/dashboard/centre"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                padding: "12px 16px",
-                borderRadius: "8px",
-                color: "var(--muted)",
-                textDecoration: "none",
-                fontWeight: 500,
-                fontSize: "15px",
-                transition: "all 0.2s"
-              }}
-              className="dashboard-nav-link"
-            >
-              <Building size={18} />
-              Dades del Centre
-            </Link>
-
-            <Link
-              href="/dashboard/activitats/nova"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                padding: "12px 16px",
-                borderRadius: "8px",
-                color: "var(--muted)",
-                textDecoration: "none",
-                fontWeight: 500,
-                fontSize: "15px",
-                transition: "all 0.2s"
-              }}
-              className="dashboard-nav-link"
-            >
-              <Plus size={18} />
-              Afegir Activitat
-            </Link>
-
-            <Link
-              href="/"
-              target="_blank"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                padding: "12px 16px",
-                borderRadius: "8px",
-                color: "var(--muted)",
-                textDecoration: "none",
-                fontWeight: 500,
-                fontSize: "15px",
-                transition: "all 0.2s"
-              }}
-              className="dashboard-nav-link"
-            >
-              <Globe size={18} />
-              Veure Web Pública
-            </Link>
-          </nav>
+          <DashboardNav />
         </div>
 
         {/* User profile / Logout */}
