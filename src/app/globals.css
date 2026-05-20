@@ -976,7 +976,7 @@
                 grid-column: span 1;
                 grid-row: span 1;
                 position: relative;
-                min-height: 280px; /* Estàndard 10€ - Com la 1a que hi havia abans, amb foto de fons complet */
+                min-height: 240px; /* Estàndard 10€ - Com la 1a que hi havia abans, amb foto de fons complet */
                 background-color: var(--fosc);
                 color: white;
                 display: flex;
