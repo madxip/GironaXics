@@ -514,6 +514,7 @@
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.2) 60%, transparent 100%);
         }
 
         .card-large-title {
@@ -546,6 +547,11 @@
             font-size: 16px;
             margin-bottom: 4px;
             color: var(--verd-fosc);
+        }
+
+        .card-normal-info {
+            font-size: 13px;
+            color: var(--muted);
         }
 
         .card-text {
@@ -960,8 +966,61 @@
                 grid-auto-rows: auto;
             }
 
-            .card-large,
-            .card-normal,
+            .card-large {
+                grid-column: span 1;
+                grid-row: span 1;
+                min-height: 420px; /* Premium 15€ - Força més gran a mòbil per destacar dominantment */
+            }
+
+            .card-normal {
+                grid-column: span 1;
+                grid-row: span 1;
+                position: relative;
+                min-height: 280px; /* Estàndard 10€ - Com la 1a que hi havia abans, amb foto de fons complet */
+                background-color: var(--fosc);
+                color: white;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .card-normal .card-normal-img {
+                position: absolute !important;
+                top: 0;
+                left: 0;
+                width: 100% !important;
+                height: 100% !important;
+                z-index: 1;
+            }
+
+            .card-normal .card-normal-img img {
+                opacity: 0.6;
+                object-fit: cover;
+            }
+
+            .card-normal-content {
+                position: relative;
+                z-index: 2;
+                padding: 28px !important;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-end;
+                background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.2) 60%, transparent 100%);
+            }
+
+            .card-normal-title {
+                font-family: var(--font-serif);
+                font-style: italic;
+                font-size: 24px;
+                color: white;
+                margin-bottom: 4px;
+            }
+
+            .card-normal-info {
+                font-size: 14px;
+                color: rgba(255, 255, 255, 0.8);
+            }
+
             .card-text,
             .card-slant {
                 grid-column: span 1;

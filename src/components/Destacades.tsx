@@ -28,39 +28,39 @@ export default async function Destacades() {
             </div>
         </Link>
         <Link href={`/activitats/${normalizeSlug(dest[1].categoria)}/${dest[1].slug}`} className="card card-normal hoverable" style={{ textDecoration: 'none' }}>
-            <div className="card-normal-img" style={{ position: 'relative', width: '100%', height: '100%' }}>
+            <div className="card-normal-img" style={{ position: 'relative', width: '100%', height: '140px' }}>
               <Image src={dest[1].imatgeUrl || getMockImg('F5A623')} alt={dest[1].nom || "Imatge destacada 2"} fill style={{ objectFit: 'cover' }} />
             </div>
             <div className="card-normal-content">
                 <div className="card-normal-title">{dest[1].nom}</div>
-                <div style={{ fontSize: '13px', color: 'var(--muted)' }}>{dest[1].edat} · {dest[1].preu != null && dest[1].preu !== '' ? `${dest[1].preu}€` : 'A consultar'}</div>
+                <div className="card-normal-info">{dest[1].edat} · {dest[1].preu != null && dest[1].preu !== '' ? `${dest[1].preu}€` : 'A consultar'}</div>
             </div>
         </Link>
         <Link href={`/activitats/${normalizeSlug(dest[2].categoria)}/${dest[2].slug}`} className="card card-normal hoverable" style={{ textDecoration: 'none' }}>
-            <div className="card-normal-img" style={{ position: 'relative', width: '100%', height: '100%' }}>
+            <div className="card-normal-img" style={{ position: 'relative', width: '100%', height: '140px' }}>
               <Image src={dest[2].imatgeUrl || getMockImg('D4EDD9')} alt={dest[2].nom || "Imatge destacada 3"} fill style={{ objectFit: 'cover' }} />
             </div>
             <div className="card-normal-content">
                 <div className="card-normal-title">{dest[2].nom}</div>
-                <div style={{ fontSize: '13px', color: 'var(--muted)' }}>{dest[2].edat} · {dest[2].preu != null && dest[2].preu !== '' ? `${dest[2].preu}€` : 'A consultar'}</div>
+                <div className="card-normal-info">{dest[2].edat} · {dest[2].preu != null && dest[2].preu !== '' ? `${dest[2].preu}€` : 'A consultar'}</div>
             </div>
         </Link>
         <Link href={`/activitats/${normalizeSlug(dest[3].categoria)}/${dest[3].slug}`} className="card card-normal hoverable" style={{ textDecoration: 'none' }}>
-            <div className="card-normal-img" style={{ position: 'relative', width: '100%', height: '100%' }}>
+            <div className="card-normal-img" style={{ position: 'relative', width: '100%', height: '140px' }}>
               <Image src={dest[3].imatgeUrl || getMockImg('1A6B3A')} alt={dest[3].nom || "Imatge destacada 4"} fill style={{ objectFit: 'cover' }} />
             </div>
             <div className="card-normal-content">
                 <div className="card-normal-title">{dest[3].nom}</div>
-                <div style={{ fontSize: '13px', color: 'var(--muted)' }}>{dest[3].edat} · {dest[3].preu != null && dest[3].preu !== '' ? `${dest[3].preu}€` : 'A consultar'}</div>
+                <div className="card-normal-info">{dest[3].edat} · {dest[3].preu != null && dest[3].preu !== '' ? `${dest[3].preu}€` : 'A consultar'}</div>
             </div>
         </Link>
         <Link href={`/activitats/${normalizeSlug(dest[4].categoria)}/${dest[4].slug}`} className="card card-normal hoverable" style={{ textDecoration: 'none' }}>
-            <div className="card-normal-img" style={{ position: 'relative', width: '100%', height: '100%' }}>
+            <div className="card-normal-img" style={{ position: 'relative', width: '100%', height: '140px' }}>
               <Image src={dest[4].imatgeUrl || getMockImg('F5A623')} alt={dest[4].nom || "Imatge destacada 5"} fill style={{ objectFit: 'cover' }} />
             </div>
             <div className="card-normal-content">
                 <div className="card-normal-title">{dest[4].nom}</div>
-                <div style={{ fontSize: '13px', color: 'var(--muted)' }}>{dest[4].edat} · {dest[4].preu != null && dest[4].preu !== '' ? `${dest[4].preu}€` : 'A consultar'}</div>
+                <div className="card-normal-info">{dest[4].edat} · {dest[4].preu != null && dest[4].preu !== '' ? `${dest[4].preu}€` : 'A consultar'}</div>
             </div>
         </Link>
       </div>
