@@ -468,7 +468,10 @@ export async function getActivitatsByCentreId(centreId: string): Promise<Activit
     return getFallbackActivitats().filter(a => a.centreId === centreId);
   }
   try {
-    const records = await fetchAllRecords('Activitats', `SEARCH("${centreId}", {centre})`, 0);
+    // Obtenim totes les activitats per filtrar-les posteriorment en memòria,
+    // ja que Airtable avalua el camp de relació {centre} com a cadena de text (nom) en les seves fórmules,
+    // fent que filterByFormula amb l'ID de centre falli o no retorni resultats de manera consistent.
+    const records = await fetchAllRecords('Activitats', undefined, 0);
 
     let centresRecords: { id: string; fields: Record<string, unknown> }[] = [];
     try {
@@ -488,7 +491,7 @@ export async function getActivitatsByCentreId(centreId: string): Promise<Activit
       }
     });
 
-    return records.map((r) => {
+    const mapped = records.map((r) => {
       const f = { ...r.fields } as unknown as Activitat;
       f.id = r.id;
       f.centreId = Array.isArray(r.fields.centre) && r.fields.centre.length > 0 ? (r.fields.centre[0] as string) : undefined;
@@ -539,6 +542,9 @@ export async function getActivitatsByCentreId(centreId: string): Promise<Activit
 
       return f;
     });
+
+    // Filtrem en memòria per assegurar consistència i evitar falles de fórmules d'Airtable
+    return mapped.filter((a) => a.centreId === centreId);
   } catch (error) {
     console.error("[Airtable API] Error en getActivitatsByCentreId:", error);
     return [];
