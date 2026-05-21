@@ -32,6 +32,7 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
     const inici = formData.get("inici") as string;
     const idioma = formData.get("idioma") as string;
     const qui_imparteix = formData.get("qui_imparteix") as string;
+    const subcategoria = formData.get("subcategoria") as string;
     const imatgeUrl = formData.get("imatgeUrl") as string;
 
     // Parse galeria robustly
@@ -57,6 +58,7 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
       nom,
       barri,
       categoria,
+      subcategoria: subcategoria || undefined,
       edat,
       preu,
       horari,
@@ -133,6 +135,7 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
     const inici = formData.get("inici") as string;
     const idioma = formData.get("idioma") as string;
     const qui_imparteix = formData.get("qui_imparteix") as string;
+    const subcategoria = formData.get("subcategoria") as string;
     const imatgeUrl = formData.get("imatgeUrl") as string;
 
     const galeriaRaw = formData.get("galeria");
@@ -157,6 +160,7 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
       nom,
       barri,
       categoria,
+      subcategoria: subcategoria !== null ? subcategoria : undefined,
       edat,
       preu,
       horari,

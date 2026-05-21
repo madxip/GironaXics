@@ -34,6 +34,8 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
           <div className="result-meta" style={{ margin: 0 }}>
               <span>{activitat.centre}</span>
               <span>·</span>
+              <span>{activitat.subcategoria || activitat.categoria}</span>
+              <span>·</span>
               <span>{activitat.edat}</span>
               <span>·</span>
               <span style={{ color: 'var(--taronja)', fontWeight: 700 }}>

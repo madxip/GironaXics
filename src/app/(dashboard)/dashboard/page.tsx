@@ -214,7 +214,7 @@ export default async function DashboardPage() {
                         border: "1px solid #dcfce7"
                       }}>
                         <Tag size={12} />
-                        {act.categoria}
+                        {act.subcategoria ? `${act.categoria} • ${act.subcategoria}` : act.categoria}
                       </span>
                     </td>
 

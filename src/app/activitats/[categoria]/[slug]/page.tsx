@@ -93,13 +93,20 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
           <div className="modal-hero-gradient">
             <h1 className="modal-hero-title">{activitat.nom}</h1>
           </div>
-          <div className="modal-badge">{activitat.categoria}</div>
+          <div className="modal-badge">
+            {activitat.subcategoria ? `${activitat.categoria} · ${activitat.subcategoria}` : activitat.categoria}
+          </div>
         </div>
 
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 20px 0' }}>
           <div style={{ fontFamily: 'var(--font-sans)', fontSize: '14px', marginBottom: '24px', opacity: 0.6 }}>
             <Link href="/" style={{ color: 'inherit', textDecoration: 'none' }}>Inici</Link> /
             <Link href={`/categories/${params.categoria}`} style={{ color: 'inherit', textDecoration: 'none', marginLeft: '8px' }}>{activitat.categoria}</Link> /
+            {activitat.subcategoria && (
+              <>
+                <span style={{ marginLeft: '8px', marginRight: '8px' }}>{activitat.subcategoria}</span> /
+              </>
+            )}
             <span style={{ marginLeft: '8px' }}>{activitat.nom}</span>
           </div>
 

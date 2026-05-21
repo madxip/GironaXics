@@ -14,6 +14,16 @@ interface ActivityFormProps {
   title: string;
 }
 
+const PREDEFINED_SUBCATEGORIES: Record<string, string[]> = {
+  "Esports": ["Futbol", "Bàsquet", "Ciclisme", "Natació", "Atletisme", "Patinatge", "Arts marcials", "Gimnàstica", "Tennis / Pàdel"],
+  "Dansa i Teatre": ["Teatre", "Dansa contemporània", "Ballet", "Hip Hop / Urbà", "Expressió corporal"],
+  "Arts plàstiques": ["Pintura", "Dibuix", "Escultura", "Ceràmica", "Manualitats"],
+  "Música": ["Instrument", "Cant / Coral", "Llenguatge musical", "Sensibilització"],
+  "Idiomes": ["Anglès", "Francès", "Alemany"],
+  "Tecnologia i Ciència": ["Robòtica", "Programació", "Ciències / Experiments", "Disseny 3D"],
+  "Reforç escolar": ["Primària", "Secundària", "Tècniques d'estudi"]
+};
+
 export default function ActivityForm({
   initialData,
   categories,
@@ -26,6 +36,24 @@ export default function ActivityForm({
   const [nom, setNom] = useState(initialData?.nom || "");
   const [barri, setBarri] = useState(initialData?.barri || "");
   const [categoria, setCategoria] = useState(initialData?.categoria || "");
+
+  // Subcategories states
+  const initialSub = initialData?.subcategoria || "";
+  const hasPredefined = PREDEFINED_SUBCATEGORIES[initialData?.categoria || ""];
+  const isPredefined = hasPredefined && hasPredefined.includes(initialSub);
+
+  const [subSelectValue, setSubSelectValue] = useState(
+    !initialSub ? "" : (isPredefined ? initialSub : "Altres")
+  );
+  const [customSubValue, setCustomSubValue] = useState(
+    isPredefined ? "" : initialSub
+  );
+
+  const handleCategoriaChange = (newCat: string) => {
+    setCategoria(newCat);
+    setSubSelectValue("");
+    setCustomSubValue("");
+  };
   const [edat, setEdat] = useState(initialData?.edat || "");
   const [preu, setPreu] = useState(initialData?.preu !== undefined ? String(initialData.preu) : "");
   const [horari, setHorari] = useState(initialData?.horari || "");
@@ -145,6 +173,11 @@ export default function ActivityForm({
       formData.append("nom", nom);
       formData.append("barri", barri);
       formData.append("categoria", categoria);
+      
+      const subcategoria = PREDEFINED_SUBCATEGORIES[categoria] 
+        ? (subSelectValue === "Altres" ? customSubValue : subSelectValue)
+        : customSubValue;
+      formData.append("subcategoria", subcategoria);
       formData.append("edat", edat);
       formData.append("preu", preu);
       formData.append("horari", horari);
@@ -282,7 +315,7 @@ export default function ActivityForm({
                 </label>
                 <select
                   value={categoria}
-                  onChange={(e) => setCategoria(e.target.value)}
+                  onChange={(e) => handleCategoriaChange(e.target.value)}
                   disabled={loading}
                   style={{
                     padding: "12px 14px",
@@ -301,6 +334,79 @@ export default function ActivityForm({
                   ))}
                 </select>
               </div>
+
+              {categoria && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <label style={{ fontSize: "13px", fontWeight: "700", color: "var(--verd-fosc)", textTransform: "uppercase" }}>
+                    Subcategoria / Subsecció
+                  </label>
+                  
+                  {PREDEFINED_SUBCATEGORIES[categoria] ? (
+                    <>
+                      <select
+                        value={subSelectValue}
+                        onChange={(e) => {
+                          setSubSelectValue(e.target.value);
+                          if (e.target.value !== "Altres") {
+                            setCustomSubValue("");
+                          }
+                        }}
+                        disabled={loading}
+                        style={{
+                          padding: "12px 14px",
+                          border: "1px solid rgba(26, 107, 58, 0.2)",
+                          borderRadius: "8px",
+                          fontSize: "15px",
+                          outline: "none",
+                          cursor: "pointer",
+                          color: "var(--fosc)",
+                          backgroundColor: "white"
+                        }}
+                      >
+                        <option value="">-- Tria una subcategoria --</option>
+                        {PREDEFINED_SUBCATEGORIES[categoria].map((sub) => (
+                          <option key={sub} value={sub}>{sub}</option>
+                        ))}
+                        <option value="Altres">Altra subcategoria...</option>
+                      </select>
+
+                      {subSelectValue === "Altres" && (
+                        <input
+                          type="text"
+                          placeholder="Introdueix la subcategoria personalitzada..."
+                          value={customSubValue}
+                          onChange={(e) => setCustomSubValue(e.target.value)}
+                          disabled={loading}
+                          style={{
+                            padding: "12px 14px",
+                            border: "1px solid rgba(26, 107, 58, 0.2)",
+                            borderRadius: "8px",
+                            fontSize: "15px",
+                            outline: "none",
+                            color: "var(--fosc)"
+                          }}
+                        />
+                      )}
+                    </>
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder="Introdueix una subcategoria (opcional)..."
+                      value={customSubValue}
+                      onChange={(e) => setCustomSubValue(e.target.value)}
+                      disabled={loading}
+                      style={{
+                        padding: "12px 14px",
+                        border: "1px solid rgba(26, 107, 58, 0.2)",
+                        borderRadius: "8px",
+                        fontSize: "15px",
+                        outline: "none",
+                        color: "var(--fosc)"
+                      }}
+                    />
+                  )}
+                </div>
+              )}
 
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 <label style={{ fontSize: "13px", fontWeight: "700", color: "var(--verd-fosc)", textTransform: "uppercase" }}>

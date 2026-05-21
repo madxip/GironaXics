@@ -23,6 +23,7 @@ export interface Activitat {
   imatgeUrl?: string;
   galeria?: string[];
   centreImatgeUrl?: string;
+  subcategoria?: string;
 }
 
 export interface Centre {

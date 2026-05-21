@@ -239,6 +239,7 @@ export async function getActivitats(): Promise<Activitat[]> {
       }
 
       f.destacada_gran = !!r.fields.destacada_gran || !!r.fields['Destacada gran'] || !!r.fields['Destacada Gran'];
+      f.subcategoria = (r.fields.subcategoria || r.fields.Subcategoria || r.fields['Sub-categoria'] || r.fields['sub-categoria']) as string;
 
       return f;
     });
@@ -539,6 +540,7 @@ export async function getActivitatsByCentreId(centreId: string): Promise<Activit
       f.publicada = !!r.fields.publicada;
       f.destacada = !!r.fields.destacada;
       f.destacada_gran = !!r.fields.destacada_gran || !!r.fields['destacada_gran'] || !!r.fields['Destacada gran'] || !!r.fields['Destacada Gran'];
+      f.subcategoria = (r.fields.subcategoria || r.fields.Subcategoria || r.fields['Sub-categoria'] || r.fields['sub-categoria']) as string;
 
       return f;
     });
@@ -565,6 +567,7 @@ export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'cen
       centre: [data.centreId],
       barri: data.barri,
       categoria: data.categoria,
+      subcategoria: data.subcategoria || "",
       edat: data.edat,
       preu: data.preu != null && data.preu !== '' ? String(data.preu) : undefined,
       horari: data.horari,
@@ -621,6 +624,7 @@ export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'cen
         centreId: data.centreId,
         barri: r.fields.barri as string,
         categoria: r.fields.categoria as string,
+        subcategoria: (r.fields.subcategoria || r.fields.Subcategoria) as string,
         edat: r.fields.edat as string,
         preu: r.fields.preu as string,
         horari: r.fields.horari as string,
@@ -658,6 +662,7 @@ export async function updateActivitat(id: string, data: Partial<Omit<Activitat, 
     }
     if (data.barri) fields.barri = data.barri;
     if (data.categoria) fields.categoria = data.categoria;
+    if (data.subcategoria !== undefined) fields.subcategoria = data.subcategoria;
     if (data.edat) fields.edat = data.edat;
     if (data.preu !== undefined) fields.preu = data.preu != null && data.preu !== '' ? String(data.preu) : null;
     if (data.horari) fields.horari = data.horari;

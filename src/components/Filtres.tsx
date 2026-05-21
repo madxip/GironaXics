@@ -59,11 +59,15 @@ export default function Filtres({ activitats }: { activitats: Activitat[] }) {
   const searchParams = useSearchParams();
 
   const selectedCategoria = searchParams.get('categoria') || 'Totes';
+  const selectedSubcategoria = searchParams.get('subcategoria') || 'Totes';
   const selectedEdat = searchParams.get('edat') || 'Totes';
   const selectedBarri = searchParams.get('barri') || 'Totes';
 
   const updateFilter = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
+    if (key === 'categoria') {
+      params.delete('subcategoria'); // Reset subcategory when category changes
+    }
     if (value === 'Totes') {
       params.delete(key);
     } else {
@@ -78,6 +82,19 @@ export default function Filtres({ activitats }: { activitats: Activitat[] }) {
     return ['Totes', ...Array.from(set).sort()];
   }, [activitats]);
 
+  const subcategories = useMemo(() => {
+    if (selectedCategoria === 'Totes') return ['Totes'];
+    const set = new Set<string>();
+    activitats.forEach(a => {
+      if (a.categoria === selectedCategoria && a.subcategoria) {
+        set.add(a.subcategoria);
+      }
+    });
+    return ['Totes', ...Array.from(set).sort()];
+  }, [activitats, selectedCategoria]);
+
+  const hasSubcategories = subcategories.length > 1;
+
   const barris = useMemo(() => {
     const set = new Set<string>();
     activitats.forEach(a => { if (a.barri) set.add(a.barri); });
@@ -87,11 +104,12 @@ export default function Filtres({ activitats }: { activitats: Activitat[] }) {
   const filtered = useMemo(() => {
     return activitats.filter(a => {
       const matchCat = selectedCategoria === 'Totes' || a.categoria === selectedCategoria;
+      const matchSubcat = selectedCategoria === 'Totes' || selectedSubcategoria === 'Totes' || a.subcategoria === selectedSubcategoria;
       const matchEdat = matchEdatGroup(a.edat, selectedEdat);
       const matchBarri = selectedBarri === 'Totes' || a.barri === selectedBarri;
-      return matchCat && matchEdat && matchBarri;
+      return matchCat && matchSubcat && matchEdat && matchBarri;
     });
-  }, [activitats, selectedCategoria, selectedEdat, selectedBarri]);
+  }, [activitats, selectedCategoria, selectedSubcategoria, selectedEdat, selectedBarri]);
 
   const grouped = useMemo(() => {
     return filtered.reduce((acc, a) => {
@@ -120,6 +138,19 @@ export default function Filtres({ activitats }: { activitats: Activitat[] }) {
                         {categories.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                 </div>
+
+                {hasSubcategories && (
+                  <div style={{ animation: 'fadeIn 0.3s ease' }}>
+                      <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', color: 'var(--verd)', marginBottom: '8px' }}>PER SUBCATEGORIA</label>
+                      <select 
+                          value={selectedSubcategoria} 
+                          onChange={e => updateFilter('subcategoria', e.target.value)}
+                          style={{ width: '100%', padding: '12px 16px', borderRadius: '0', border: '1px solid var(--verd)', backgroundColor: 'transparent', color: 'var(--fosc)', fontFamily: 'var(--font-sans)', fontSize: '16px', outline: 'none', cursor: 'pointer' }}
+                      >
+                          {subcategories.map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                  </div>
+                )}
                 
                 <div>
                     <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', color: 'var(--verd)', marginBottom: '8px' }}>PER EDATS</label>
