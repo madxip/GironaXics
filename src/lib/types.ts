@@ -9,6 +9,7 @@ export interface Activitat {
   edat: string;
   preu?: number | string;
   destacada: boolean;
+  destacada_gran?: boolean;
   horari: string;
   dies: string;
   descripcio: string;

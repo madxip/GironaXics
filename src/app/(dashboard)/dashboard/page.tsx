@@ -5,6 +5,7 @@ import { getActivitatsByCentreId, getCentres } from "@/lib/airtable";
 import Link from "next/link";
 import { Plus, Edit2, MapPin, Calendar, CircleDollarSign, Tag, Info, Activity } from "lucide-react";
 import DeleteButton from "./DeleteButton";
+import TogglePublicada from "./TogglePublicada";
 
 export const dynamic = "force-dynamic";
 
@@ -110,7 +111,7 @@ export default async function DashboardPage() {
             color: "var(--verd-fosc)",
             marginBottom: "12px"
           }}>
-            Cap activitat publicada encara
+            Cap activitat registrada encara
           </h3>
           <p style={{
             fontSize: "15px",
@@ -118,7 +119,7 @@ export default async function DashboardPage() {
             lineHeight: "1.6",
             marginBottom: "32px"
           }}>
-            El teu centre encara no té cap activitat extraescolar registrada. Comença ara mateix afegint la primera activitat per fer-la visible a milers de famílies de Girona.
+            El teu centre encara no té cap activitat extraescolar registrada. Comença ara mateix afegint la primera activitat perquè les famílies de Girona la puguin conèixer.
           </p>
           <Link
             href="/dashboard/activitats/nova"
@@ -168,6 +169,7 @@ export default async function DashboardPage() {
                   <th style={{ padding: "20px 24px", fontWeight: 700, color: "var(--verd-fosc)" }}>Barri</th>
                   <th style={{ padding: "20px 24px", fontWeight: 700, color: "var(--verd-fosc)" }}>Edats</th>
                   <th style={{ padding: "20px 24px", fontWeight: 700, color: "var(--verd-fosc)" }}>Preu</th>
+                  <th style={{ padding: "20px 24px", fontWeight: 700, color: "var(--verd-fosc)" }}>Estat</th>
                   <th style={{ padding: "20px 24px", fontWeight: 700, color: "var(--verd-fosc)", textAlign: "center" }}>Accions</th>
                 </tr>
               </thead>
@@ -235,6 +237,11 @@ export default async function DashboardPage() {
                         <CircleDollarSign size={14} style={{ color: "var(--verd)" }} />
                         {act.preu ? `${act.preu}€` : "N/A"}
                       </span>
+                    </td>
+
+                    {/* Estat */}
+                    <td style={{ padding: "20px 24px" }}>
+                      <TogglePublicada id={act.id!} initialPublicada={act.publicada} nom={act.nom} />
                     </td>
 
                     {/* Accions */}

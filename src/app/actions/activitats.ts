@@ -240,3 +240,33 @@ export async function deleteActivitatAction(id: string) {
     return { success: false, error: message };
   }
 }
+
+export async function togglePublicadaAction(id: string, publicada: boolean) {
+  try {
+    await getAuthenticatedCentreId();
+
+    const success = await updateActivitat(id, { publicada });
+    if (!success) {
+      return { success: false, error: "No s'ha pogut canviar l'estat de publicació." };
+    }
+
+    // Revalidar memòria cau a Vercel on-demand per a que es reflecteixi immediatament
+    try {
+      revalidatePath("/");
+    } catch (e) {
+      console.error("[Revalidate] Error revalidating '/':", e);
+    }
+    try {
+      revalidatePath("/dashboard");
+    } catch (e) {
+      console.error("[Revalidate] Error revalidating '/dashboard':", e);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("[Toggle Publicada Action] Error:", error);
+    const message = error instanceof Error ? error.message : "S'ha produït un error inesperat.";
+    return { success: false, error: message };
+  }
+}
+

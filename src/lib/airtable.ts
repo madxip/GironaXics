@@ -238,6 +238,8 @@ export async function getActivitats(): Promise<Activitat[]> {
         f.slug = `${f.slug}-girona`;
       }
 
+      f.destacada_gran = !!r.fields.destacada_gran || !!r.fields['Destacada gran'] || !!r.fields['Destacada Gran'];
+
       return f;
     });
 
@@ -283,7 +285,12 @@ export async function getActivitatsByBarri(barri: string): Promise<Activitat[]> 
 
 export async function getActivitatsDestacades(): Promise<Activitat[]> {
   const all = await getActivitats();
-  return all.filter(a => a.destacada);
+  const destacades = all.filter(a => a.destacada);
+  return destacades.sort((a, b) => {
+    const aGran = a.destacada_gran ? 1 : 0;
+    const bGran = b.destacada_gran ? 1 : 0;
+    return bGran - aGran;
+  });
 }
 
 export async function getCentres(): Promise<Centre[]> {
@@ -457,8 +464,85 @@ export async function createCentre(nom: string): Promise<{ id: string; nom: stri
 
 
 export async function getActivitatsByCentreId(centreId: string): Promise<Activitat[]> {
-  const all = await getActivitats();
-  return all.filter(a => a.centreId === centreId);
+  if (!API_KEY || !BASE_ID) {
+    return getFallbackActivitats().filter(a => a.centreId === centreId);
+  }
+  try {
+    const records = await fetchAllRecords('Activitats', `SEARCH("${centreId}", {centre})`, 0);
+
+    let centresRecords: { id: string; fields: Record<string, unknown> }[] = [];
+    try {
+      centresRecords = await fetchAllRecords('Centres');
+    } catch {}
+    const centreMap = new Map<string, string>();
+    const centreImatgeMap = new Map<string, string>();
+    centresRecords.forEach((c) => {
+      if (c.fields && c.fields.nom) centreMap.set(c.id, c.fields.nom as string);
+      if (c.fields) {
+        const attachmentField = c.fields.Imatge || c.fields.imatge || c.fields.Logo || c.fields.logo || c.fields.Logotip || c.fields.logotip;
+        if (Array.isArray(attachmentField) && attachmentField.length > 0) {
+          const url = (attachmentField[0] as { url: string }).url;
+          centreImatgeMap.set(c.id, url);
+          if (c.fields.nom) centreImatgeMap.set(c.fields.nom as string, url);
+        }
+      }
+    });
+
+    return records.map((r) => {
+      const f = { ...r.fields } as unknown as Activitat;
+      f.id = r.id;
+      f.centreId = Array.isArray(r.fields.centre) && r.fields.centre.length > 0 ? (r.fields.centre[0] as string) : undefined;
+      if (Array.isArray(r.fields.centre) && r.fields.centre.length > 0) {
+        f.centre = centreMap.get(r.fields.centre[0] as string) || (r.fields.centre[0] as string);
+        f.centreImatgeUrl = centreImatgeMap.get(r.fields.centre[0] as string);
+      }
+      if (Array.isArray(r.fields.Imatge) && r.fields.Imatge.length > 0) {
+        f.imatgeUrl = (r.fields.Imatge[0] as { url: string }).url;
+      }
+      if (Array.isArray(r.fields.Galeria)) {
+        f.galeria = (r.fields.Galeria as { url: string }[]).map((img) => img.url);
+      } else {
+        f.galeria = [];
+      }
+      f.material = "";
+      if (f.barri === 'Centro') f.barri = 'Centre';
+      f.qui_imparteix = (r.fields.qui_imparteix as string) || (r.fields['Qui imparteix'] as string) || (r.fields['qui imparteix'] as string);
+
+      const customSlug = (r.fields.slug as string) || (r.fields.Slug as string);
+      if (customSlug) {
+        let tempSlug = normalizeSlug(customSlug);
+        if (tempSlug.endsWith('-girona')) tempSlug = tempSlug.slice(0, -7);
+        let centrePart = f.centre ? normalizeSlug(f.centre) : '';
+        let barriPart = f.barri ? normalizeSlug(f.barri) : '';
+        if (centrePart.endsWith('-girona')) centrePart = centrePart.slice(0, -7);
+        if (barriPart.endsWith('-girona')) barriPart = barriPart.slice(0, -7);
+        const parts = [tempSlug];
+        if (centrePart && !tempSlug.includes(centrePart)) parts.push(centrePart);
+        if (barriPart && !tempSlug.includes(barriPart)) parts.push(barriPart);
+        f.slug = parts.filter(Boolean).join('-');
+      } else {
+        const namePart = r.fields.nom ? normalizeSlug(r.fields.nom as string) : '';
+        let centrePart = f.centre ? normalizeSlug(f.centre) : '';
+        let barriPart = f.barri ? normalizeSlug(f.barri) : '';
+        if (centrePart.endsWith('-girona')) centrePart = centrePart.slice(0, -7);
+        if (barriPart.endsWith('-girona')) barriPart = barriPart.slice(0, -7);
+        const parts = [namePart];
+        if (centrePart) parts.push(centrePart);
+        if (barriPart) parts.push(barriPart);
+        f.slug = parts.filter(Boolean).join('-');
+      }
+      if (f.slug && !f.slug.endsWith('-girona')) f.slug = `${f.slug}-girona`;
+
+      f.publicada = !!r.fields.publicada;
+      f.destacada = !!r.fields.destacada;
+      f.destacada_gran = !!r.fields.destacada_gran || !!r.fields['destacada_gran'] || !!r.fields['Destacada gran'] || !!r.fields['Destacada Gran'];
+
+      return f;
+    });
+  } catch (error) {
+    console.error("[Airtable API] Error en getActivitatsByCentreId:", error);
+    return [];
+  }
 }
 
 export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'centre'> & { centreId: string }): Promise<Activitat | null> {
