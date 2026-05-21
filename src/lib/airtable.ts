@@ -1,14 +1,12 @@
 import { Activitat, Centre } from './types';
 import activitatsSeed from '../../seed/activitats-inicials.json';
-import fs from 'fs';
-import path from 'path';
 import { normalizeSlug } from './utils';
 
 const API_KEY = process.env.AIRTABLE_API_KEY;
 const BASE_ID = process.env.AIRTABLE_BASE_ID;
 
-// Configurar memòria cau local (cache) per estalviar quota mensual i solucionar el 429 Rate Limit
-const CACHE_PATH = path.join(process.cwd(), 'src/lib/airtable-cache.json');
+// Cache en memòria compatible amb entorns serverless (Vercel, etc.)
+// El sistema de cache basat en fitxers (fs) no funciona en serverless perquè el FS és read-only.
 const CACHE_TTL = 5 * 60 * 1000; // 5 minuts de validesa de la cache
 
 interface CacheStructure {
@@ -22,27 +20,19 @@ interface CacheStructure {
   };
 }
 
+// Cache global en memòria (es reinicia amb cada cold start del servidor)
+const memoryCache: CacheStructure = {};
+
 function readCache(): CacheStructure {
-  try {
-    if (fs.existsSync(CACHE_PATH)) {
-      const content = fs.readFileSync(CACHE_PATH, 'utf-8');
-      return JSON.parse(content);
-    }
-  } catch {
-    // Silenciós per no embullar el log, fallar en la lectura és segur
-  }
-  return {};
+  return memoryCache;
 }
 
 function writeCache(data: CacheStructure) {
-  try {
-    const dir = path.dirname(CACHE_PATH);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    fs.writeFileSync(CACHE_PATH, JSON.stringify(data, null, 2), 'utf-8');
-  } catch (error) {
-    console.error("[Airtable Cache] Error escrivint el fitxer de cache:", error);
+  if (data.activitats !== undefined) {
+    memoryCache.activitats = data.activitats;
+  }
+  if (data.centres !== undefined) {
+    memoryCache.centres = data.centres;
   }
 }
 
@@ -531,9 +521,7 @@ export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'cen
     const resData = await res.json();
     if (resData.records && resData.records.length > 0) {
       const r = resData.records[0];
-      const cache = readCache();
-      delete cache.activitats;
-      writeCache(cache);
+      delete memoryCache.activitats;
       
       return {
         id: r.id,
@@ -622,9 +610,7 @@ export async function updateActivitat(id: string, data: Partial<Omit<Activitat, 
       throw new Error(`Failed to update activity: ${res.status} ${text}`);
     }
 
-    const cache = readCache();
-    delete cache.activitats;
-    writeCache(cache);
+    delete memoryCache.activitats;
 
     return true;
   } catch (error) {
@@ -650,9 +636,7 @@ export async function deleteActivitat(id: string): Promise<boolean> {
       throw new Error(`Failed to delete activity: ${res.status} ${text}`);
     }
 
-    const cache = readCache();
-    delete cache.activitats;
-    writeCache(cache);
+    delete memoryCache.activitats;
 
     return true;
   } catch (error) {
@@ -708,10 +692,8 @@ export async function updateCentre(id: string, data: Partial<Omit<Centre, 'id' |
     }
 
     // Reset caches
-    const cache = readCache();
-    delete cache.centres;
-    delete cache.activitats;
-    writeCache(cache);
+    delete memoryCache.centres;
+    delete memoryCache.activitats;
 
     return true;
   } catch (error) {
