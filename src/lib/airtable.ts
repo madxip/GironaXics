@@ -239,7 +239,8 @@ export async function getActivitats(): Promise<Activitat[]> {
       }
 
       f.destacada_gran = !!r.fields.destacada_gran || !!r.fields['Destacada gran'] || !!r.fields['Destacada Gran'];
-      f.subcategoria = (r.fields.subcategoria || r.fields.Subcategoria || r.fields['Sub-categoria'] || r.fields['sub-categoria']) as string;
+      const rawSub = r.fields.subcategoria || r.fields.Subcategoria || r.fields['Sub-categoria'] || r.fields['sub-categoria'];
+      f.subcategoria = Array.isArray(rawSub) ? (rawSub[0] as string) : (rawSub as string);
 
       return f;
     });
@@ -540,7 +541,8 @@ export async function getActivitatsByCentreId(centreId: string): Promise<Activit
       f.publicada = !!r.fields.publicada;
       f.destacada = !!r.fields.destacada;
       f.destacada_gran = !!r.fields.destacada_gran || !!r.fields['destacada_gran'] || !!r.fields['Destacada gran'] || !!r.fields['Destacada Gran'];
-      f.subcategoria = (r.fields.subcategoria || r.fields.Subcategoria || r.fields['Sub-categoria'] || r.fields['sub-categoria']) as string;
+      const rawSub = r.fields.subcategoria || r.fields.Subcategoria || r.fields['Sub-categoria'] || r.fields['sub-categoria'];
+      f.subcategoria = Array.isArray(rawSub) ? (rawSub[0] as string) : (rawSub as string);
 
       return f;
     });
