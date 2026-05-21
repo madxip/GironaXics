@@ -7,10 +7,9 @@ import { useRouter } from "next/navigation";
 interface TogglePublicadaProps {
   id: string;
   initialPublicada: boolean;
-  nom?: string;
 }
 
-export default function TogglePublicada({ id, initialPublicada, nom }: TogglePublicadaProps) {
+export default function TogglePublicada({ id, initialPublicada }: TogglePublicadaProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [publicada, setPublicada] = useState(initialPublicada);
