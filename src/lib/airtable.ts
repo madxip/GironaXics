@@ -126,11 +126,11 @@ export async function getActivitats(): Promise<Activitat[]> {
   }
 
   try {
-    const records = await fetchAllRecords('Activitats', '{publicada}=TRUE()');
+    const records = await fetchAllRecords('Activitats', '{publicada}=TRUE()', 0);
 
     let centresRecords: { id: string; fields: Record<string, unknown> }[] = [];
     try {
-      centresRecords = await fetchAllRecords('Centres');
+      centresRecords = await fetchAllRecords('Centres', undefined, 0);
     } catch {
       // Ignore
     }
@@ -307,7 +307,7 @@ export async function getCentres(): Promise<Centre[]> {
   }
 
   try {
-    const records = await fetchAllRecords('Centres');
+    const records = await fetchAllRecords('Centres', undefined, 0);
     const formattedCentres = records.map((r: { id: string; fields: Record<string, unknown> }) => {
       const f = { ...r.fields } as unknown as Centre;
       f.id = r.id;
