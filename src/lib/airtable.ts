@@ -285,7 +285,7 @@ export async function getActivitatsByBarri(barri: string): Promise<Activitat[]> 
 
 export async function getActivitatsDestacades(): Promise<Activitat[]> {
   const all = await getActivitats();
-  const destacades = all.filter(a => a.destacada);
+  const destacades = all.filter(a => a.destacada || a.destacada_gran);
   return destacades.sort((a, b) => {
     const aGran = a.destacada_gran ? 1 : 0;
     const bGran = b.destacada_gran ? 1 : 0;
