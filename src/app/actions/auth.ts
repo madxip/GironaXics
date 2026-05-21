@@ -3,6 +3,7 @@
 import bcrypt from "bcryptjs";
 import { getUserByEmail, createUser, createCentre } from "@/lib/airtable";
 import { revalidatePath } from "next/cache";
+import { sendInternalEmail } from "./sendEmail";
 
 export async function registerCentreAction(prevState: unknown, formData: FormData) {
   const nom = formData.get("nom") as string;
@@ -23,7 +24,7 @@ export async function registerCentreAction(prevState: unknown, formData: FormDat
     // 1. Check if user already exists
     const existingUser = await getUserByEmail(email);
     if (existingUser) {
-      return { success: false, error: "Aquest correu ja està registrat en un altre compte." };
+      return { success: false, error: "Aquest correu ja està registrat en un compte existent." };
     }
 
     // 2. If it's a new center, create it in Airtable first
@@ -52,6 +53,28 @@ export async function registerCentreAction(prevState: unknown, formData: FormDat
 
     if (!newUser) {
       return { success: false, error: "S'ha produït un error al registrar el compte a Airtable. Torna-ho a provar." };
+    }
+
+    // 5. Send notification email to the administrator (hola@gironaxics.cat)
+    try {
+      await sendInternalEmail({
+        type: 'centre',
+        nom: nom,
+        email: email,
+        centreNom: nouCentreNom || "Centre Existent (ID: " + centreId + ")",
+        missatge: `S'ha registrat un nou compte de centre a la plataforma GironaXics.
+
+Dades del registre:
+- Nom del contacte: ${nom}
+- Correu electrònic: ${email}
+- Nom del centre: ${nouCentreNom || "Enllaçat a centre existent"}
+- ID del centre: ${centreId}
+
+Si us plau, accedeix a Airtable per validar el centre o l'usuari i activar el compte si cal.`,
+      });
+    } catch (mailError) {
+      // Don't block registration if email notification fails
+      console.error("[Register Action] Error sending admin notification email:", mailError);
     }
 
     return { success: true };
