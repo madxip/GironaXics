@@ -241,7 +241,7 @@ export default async function DashboardPage() {
 
                     {/* Estat */}
                     <td style={{ padding: "20px 24px" }}>
-                      <TogglePublicada id={act.id!} initialPublicada={act.publicada} nom={act.nom} />
+                      <TogglePublicada id={act.id!} initialPublicada={act.publicada} />
                     </td>
 
                     {/* Accions */}
