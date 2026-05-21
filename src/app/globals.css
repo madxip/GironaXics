@@ -1660,3 +1660,34 @@
             background-color: rgba(26, 107, 58, 0.03) !important;
             color: var(--verd) !important;
         }
+
+        .dashboard-action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            border-radius: 6px;
+            background-color: transparent;
+            border: 1px solid rgba(26, 107, 58, 0.15);
+            color: var(--verd);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .dashboard-action-btn:hover {
+            background-color: rgba(26, 107, 58, 0.05);
+            border-color: var(--verd);
+        }
+
+        .dashboard-primary-btn:hover {
+            background-color: var(--verd-fosc) !important;
+        }
+
+        .dashboard-table-row:hover {
+            background-color: rgba(26, 107, 58, 0.01);
+        }
+
+        .back-btn:hover {
+            color: var(--verd) !important;
+        }

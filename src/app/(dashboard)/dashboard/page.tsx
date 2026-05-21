@@ -243,26 +243,7 @@ export default async function DashboardPage() {
                         <Link
                           href={`/dashboard/activitats/${act.id}/editar`}
                           title="Editar activitat"
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            padding: "8px",
-                            borderRadius: "6px",
-                            backgroundColor: "transparent",
-                            border: "1px solid rgba(26, 107, 58, 0.15)",
-                            color: "var(--verd)",
-                            cursor: "pointer",
-                            transition: "all 0.2s"
-                          }}
-                          onMouseOver={(e) => {
-                            e.currentTarget.style.backgroundColor = "rgba(26, 107, 58, 0.05)";
-                            e.currentTarget.style.borderColor = "var(--verd)";
-                          }}
-                          onMouseOut={(e) => {
-                            e.currentTarget.style.backgroundColor = "transparent";
-                            e.currentTarget.style.borderColor = "rgba(26, 107, 58, 0.15)";
-                          }}
+                          className="dashboard-action-btn"
                         >
                           <Edit2 size={16} />
                         </Link>
