@@ -33,9 +33,31 @@ export default async function CentrePage({ params }: { params: { slug: string } 
   const allActivitats = await getActivitats();
   const activitatsCentre = allActivitats.filter(a => normalizeSlug(a.centre) === params.slug);
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": centre.nom,
+    "description": centre.descripcio || `Centre d'activitats extraescolars a Girona: ${centre.nom}`,
+    "url": centre.web || `https://gironaxics.cat/centres/${centre.slug}`,
+    ...(centre.adreca && {
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": centre.adreca,
+        "addressLocality": "Girona",
+        "addressRegion": "Girona",
+        "postalCode": "17001",
+        "addressCountry": "ES"
+      }
+    }),
+    ...(centre.telefon && { "telephone": centre.telefon }),
+    ...(centre.email && { "email": centre.email }),
+    ...(centre.imatgeUrl && { "image": centre.imatgeUrl })
+  };
+
   return (
     <>
       <Nav />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <main style={{ padding: '120px 20px 60px', maxWidth: '1200px', margin: '0 auto', minHeight: '60vh' }}>
         <div style={{ fontFamily: 'var(--font-sans)', fontSize: '14px', marginBottom: '24px', opacity: 0.6 }}>
             <Link href="/" style={{ color: 'inherit', textDecoration: 'none' }}>Inici</Link> / 
