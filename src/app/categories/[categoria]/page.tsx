@@ -18,7 +18,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: { categoria: string } }): Promise<Metadata> {
   const catDisplay = params.categoria.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   return {
-    title: `Extraescolars de ${catDisplay} a Girona | GironaXics`,
+    title: `Activitats i extraescolars de ${catDisplay} a Girona | GironaXics`,
     description: `Totes les extraescolars de ${catDisplay} per a nens a Girona. Troba la millor opció.`
   };
 }
@@ -27,9 +27,31 @@ export default async function CategoriaPage({ params }: { params: { categoria: s
   const activitats = await getActivitatsByCategoria(params.categoria);
   const catDisplay = params.categoria.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": `Activitats i extraescolars de ${catDisplay} a Girona`,
+    "description": `Llista completa de cursos i activitats de ${catDisplay} per a nens i joves a Girona.`,
+    "numberOfItems": activitats.length,
+    "itemListElement": activitats.map((a, index) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "item": {
+        "@type": "Course",
+        "name": a.nom,
+        "description": a.descripcio || `Curs de ${a.nom} a Girona.`,
+        "provider": {
+          "@type": "LocalBusiness",
+          "name": a.centre
+        }
+      }
+    }))
+  };
+
   return (
     <>
       <Nav />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <main style={{ padding: '120px 20px 60px', maxWidth: '1200px', margin: '0 auto', minHeight: '60vh' }}>
         <div style={{ fontFamily: 'var(--font-sans)', fontSize: '14px', marginBottom: '24px', opacity: 0.6 }}>
             <Link href="/" style={{ color: 'inherit', textDecoration: 'none' }}>Inici</Link> / 

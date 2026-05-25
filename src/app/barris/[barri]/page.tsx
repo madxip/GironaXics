@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: { params: { barri: string } }
     .replace(/\bLes\b/g, 'les');
 
   return {
-    title: `Extraescolars al barri de ${barriDisplay} a Girona | GironaXics`,
+    title: `Activitats i extraescolars al barri de ${barriDisplay} a Girona | GironaXics`,
     description: `Descobreix totes les activitats extraescolars per a nens i joves al barri de ${barriDisplay} a Girona. Troba els millors centres i activitats.`
   };
 }
@@ -44,9 +44,36 @@ export default async function BarriPage({ params }: { params: { barri: string } 
     .replace(/\bEls\b/g, 'els')
     .replace(/\bLes\b/g, 'les');
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": `Activitats i extraescolars al barri de ${barriDisplay}, Girona`,
+    "description": `Llista de totes les activitats extraescolars per a nens i joves al barri de ${barriDisplay} a Girona.`,
+    "numberOfItems": activitats.length,
+    "itemListElement": activitats.map((a, index) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "item": {
+        "@type": "Course",
+        "name": a.nom,
+        "description": a.descripcio || `Activitat de ${a.nom} al barri de ${barriDisplay}.`,
+        "provider": {
+          "@type": "LocalBusiness",
+          "name": a.centre,
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Girona",
+            "addressRegion": "Girona"
+          }
+        }
+      }
+    }))
+  };
+
   return (
     <>
       <Nav />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <main style={{ padding: '120px 20px 60px', maxWidth: '1200px', margin: '0 auto', minHeight: '60vh' }}>
         {/* Breadcrumbs */}
         <div style={{ fontFamily: 'var(--font-sans)', fontSize: '14px', marginBottom: '24px', opacity: 0.6 }}>

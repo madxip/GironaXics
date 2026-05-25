@@ -28,10 +28,10 @@ export async function generateMetadata({ params }: { params: { categoria: string
   if (!activitat) return {};
 
   return {
-    title: `${activitat.nom} a ${activitat.barri}, Girona | GironaXics`,
+    title: `Activitats i extraescolars de ${activitat.nom} a ${activitat.barri}, Girona | GironaXics`,
     description: `Aprèn ${activitat.nom} a ${activitat.centre}. Per a nens de ${activitat.edat}. ${activitat.preu != null && activitat.preu !== '' ? activitat.preu + '€/mes' : 'Preu a consultar'}. Troba totes les extraescolars de Girona a GironaXics.`.slice(0, 150),
     openGraph: {
-      title: `${activitat.nom} a ${activitat.barri}, Girona | GironaXics`,
+      title: `Activitats i extraescolars de ${activitat.nom} a ${activitat.barri}, Girona | GironaXics`,
       description: `Aprèn ${activitat.nom} a ${activitat.centre}. Per a nens de ${activitat.edat}. ${activitat.preu != null && activitat.preu !== '' ? activitat.preu + '€/mes' : 'Preu a consultar'}. Troba totes les extraescolars de Girona a GironaXics.`.slice(0, 150),
       type: 'article',
       locale: 'ca_ES',
