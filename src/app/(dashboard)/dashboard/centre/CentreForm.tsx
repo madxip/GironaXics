@@ -75,13 +75,19 @@ export default function CentreForm({ initialData, barris }: CentreFormProps) {
     setIsSubmitting(true);
     setMessage(null);
 
+    let formattedWeb = web.trim();
+    if (formattedWeb && !/^https?:\/\//i.test(formattedWeb)) {
+      formattedWeb = `https://${formattedWeb}`;
+      setWeb(formattedWeb);
+    }
+
     const formData = new FormData();
     formData.append("nom", nom);
     formData.append("barri", barri);
     formData.append("adreca", adreca);
     formData.append("telefon", telefon);
     formData.append("email", email);
-    formData.append("web", web);
+    formData.append("web", formattedWeb);
     formData.append("descripcio", descripcio);
     formData.append("imatgeUrl", imatgeUrl);
 
@@ -431,10 +437,10 @@ export default function CentreForm({ initialData, barris }: CentreFormProps) {
               <div style={{ position: "relative" }}>
                 <Globe size={16} style={{ position: "absolute", left: "14px", top: "15px", color: "var(--muted)" }} />
                 <input
-                  type="url"
+                  type="text"
                   value={web}
                   onChange={(e) => setWeb(e.target.value)}
-                  placeholder="https://www.teucentre.com"
+                  placeholder="gironaxics.cat o https://www.teucentre.com"
                   style={{
                     width: "100%",
                     padding: "12px 16px 12px 40px",

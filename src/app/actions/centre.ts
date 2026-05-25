@@ -21,7 +21,13 @@ export async function updateCentreAction(prevState: unknown, formData: FormData)
     const adreca = formData.get("adreca") as string;
     const telefon = formData.get("telefon") as string;
     const email = formData.get("email") as string;
-    const web = formData.get("web") as string;
+    let web = formData.get("web") as string;
+    if (web && web.trim() !== "") {
+      web = web.trim();
+      if (!/^https?:\/\//i.test(web)) {
+        web = `https://${web}`;
+      }
+    }
     const barri = formData.get("barri") as string;
     const descripcio = formData.get("descripcio") as string;
     const imatgeUrl = formData.get("imatgeUrl") as string;
