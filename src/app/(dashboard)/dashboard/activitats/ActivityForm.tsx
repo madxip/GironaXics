@@ -24,6 +24,45 @@ const PREDEFINED_SUBCATEGORIES: Record<string, string[]> = {
   "Reforç escolar": ["Primària", "Secundària", "Tècniques d'estudi"]
 };
 
+const safeGetSubcategories = (cat: string | undefined): string[] | undefined => {
+  if (!cat || typeof cat !== "string") return undefined;
+  if (cat === "__proto__" || cat === "constructor" || cat === "prototype") return undefined;
+  if (Object.prototype.hasOwnProperty.call(PREDEFINED_SUBCATEGORIES, cat)) {
+    return PREDEFINED_SUBCATEGORIES[cat];
+  }
+  return undefined;
+};
+
+const TXT_FORM_DESC = "Omple els detalls de l'activitat extraescolar per publicar-la a la guia.";
+const TXT_NOM_ACTIVITAT = "Nom de l'Activitat *";
+const TXT_CATEGORIA = "Categoria *";
+const TXT_SUBCATEGORIA = "Subcategoria / Subsecció";
+const TXT_ALTRA_SUBCATEGORIA = "Altra subcategoria...";
+const TXT_BARRI_GIRONA = "Barri de Girona *";
+const TXT_DIES = "Dies *";
+const TXT_HORARI = "Horari *";
+const TXT_EDAT = "Franja d'Edats *";
+const TXT_PREU_FACTURACIO = "Preu i Facturació";
+const TXT_MENSUAL = "Mensual (€/mes)";
+const TXT_TRIMESTRAL = "Trimestral (€/trimestre)";
+const TXT_ANUAL = "Anual (€/any)";
+const TXT_GRATUIT = "Gratuït";
+const TXT_ALTRES_TEXT = "Altres / Text personalitzat";
+const TXT_DESCRIPCIO = "Descripció detallada";
+const TXT_DURADA = "Durada de la sessió";
+const TXT_MATERIAL = "Material";
+const TXT_DATA_INICI = "Data d'Inici";
+const TXT_IDIOMA = "Idioma";
+const TXT_QUI_IMPARTEIX = "Qui ho imparteix?";
+const TXT_IMATGE_DESTACADA = "Imatge Destacada (Principal)";
+const TXT_IMATGE_DESC = "Aquesta imatge es mostrarà com a capçalera principal a la fitxa detallada de l'activitat.";
+const TXT_SENSE_IMATGE = "Sense Imatge";
+const TXT_FORMAT_RECOMENAT = "Format horitzontal recomanat (recomanat 1200x800). Màxim 4MB.";
+const TXT_GALERIA = "Galeria de Fotos";
+const TXT_GALERIA_DESC = "Pots afegir diverses imatges per mostrar la vida diària de l'activitat en un carrusel.";
+const TXT_CANCELAR = "Cancel·lar";
+const TXT_ACTIVITAT_GRATUITA = "L'activitat es publicarà com a gratuïta";
+
 export default function ActivityForm({
   initialData,
   categories,
@@ -39,8 +78,8 @@ export default function ActivityForm({
 
   // Subcategories states
   const initialSub = initialData?.subcategoria || "";
-  const hasPredefined = PREDEFINED_SUBCATEGORIES[initialData?.categoria || ""];
-  const isPredefined = hasPredefined && hasPredefined.includes(initialSub);
+  const hasPredefined = safeGetSubcategories(initialData?.categoria);
+  const isPredefined = !!(hasPredefined && hasPredefined.includes(initialSub));
 
   const [subSelectValue, setSubSelectValue] = useState(
     !initialSub ? "" : (isPredefined ? initialSub : "Altres")
@@ -54,6 +93,7 @@ export default function ActivityForm({
     setSubSelectValue("");
     setCustomSubValue("");
   };
+  const predefinedSubs = safeGetSubcategories(categoria);
   const [edat, setEdat] = useState(initialData?.edat || "");
   // Parse the initial price for unit dropdown and inputs
   const getInitialPriceState = () => {
@@ -303,7 +343,7 @@ export default function ActivityForm({
           color: "var(--muted)",
           marginBottom: "32px"
         }}>
-          Omple els detalls de l'activitat extraescolar per publicar-la a la guia.
+          {TXT_FORM_DESC}
         </p>
 
         {errorMsg && (
@@ -341,7 +381,7 @@ export default function ActivityForm({
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: "8px", gridColumn: "span 2" }}>
                 <label style={{ fontSize: "13px", fontWeight: "700", color: "var(--verd-fosc)", textTransform: "uppercase" }}>
-                  Nom de l'Activitat *
+                  {TXT_NOM_ACTIVITAT}
                 </label>
                 <input
                   type="text"
@@ -363,7 +403,7 @@ export default function ActivityForm({
 
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 <label style={{ fontSize: "13px", fontWeight: "700", color: "var(--verd-fosc)", textTransform: "uppercase" }}>
-                  Categoria *
+                  {TXT_CATEGORIA}
                 </label>
                 <select
                   value={categoria}
@@ -390,10 +430,10 @@ export default function ActivityForm({
               {categoria && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                   <label style={{ fontSize: "13px", fontWeight: "700", color: "var(--verd-fosc)", textTransform: "uppercase" }}>
-                    Subcategoria / Subsecció
+                    {TXT_SUBCATEGORIA}
                   </label>
                   
-                  {PREDEFINED_SUBCATEGORIES[categoria] ? (
+                  {predefinedSubs ? (
                     <>
                       <select
                         value={subSelectValue}
@@ -416,10 +456,10 @@ export default function ActivityForm({
                         }}
                       >
                         <option value="">-- Tria una subcategoria --</option>
-                        {PREDEFINED_SUBCATEGORIES[categoria].map((sub) => (
+                        {predefinedSubs.map((sub) => (
                           <option key={sub} value={sub}>{sub}</option>
                         ))}
-                        <option value="Altres">Altra subcategoria...</option>
+                        <option value="Altres">{TXT_ALTRA_SUBCATEGORIA}</option>
                       </select>
 
                       {subSelectValue === "Altres" && (
@@ -462,7 +502,7 @@ export default function ActivityForm({
 
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 <label style={{ fontSize: "13px", fontWeight: "700", color: "var(--verd-fosc)", textTransform: "uppercase" }}>
-                  Barri de Girona *
+                  {TXT_BARRI_GIRONA}
                 </label>
                 <select
                   value={barri}
@@ -506,7 +546,7 @@ export default function ActivityForm({
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "20px" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 <label style={{ fontSize: "13px", fontWeight: "700", color: "var(--verd-fosc)", textTransform: "uppercase" }}>
-                  Dies *
+                  {TXT_DIES}
                 </label>
                 <input
                   type="text"
@@ -527,7 +567,7 @@ export default function ActivityForm({
 
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 <label style={{ fontSize: "13px", fontWeight: "700", color: "var(--verd-fosc)", textTransform: "uppercase" }}>
-                  Horari *
+                  {TXT_HORARI}
                 </label>
                 <input
                   type="text"
@@ -548,7 +588,7 @@ export default function ActivityForm({
 
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 <label style={{ fontSize: "13px", fontWeight: "700", color: "var(--verd-fosc)", textTransform: "uppercase" }}>
-                  Franja d'Edats *
+                  {TXT_EDAT}
                 </label>
                 <input
                   type="text"
@@ -569,7 +609,7 @@ export default function ActivityForm({
 
               <div style={{ display: "flex", flexDirection: "column", gap: "8px", gridColumn: "span 2" }}>
                 <label style={{ fontSize: "13px", fontWeight: "700", color: "var(--verd-fosc)", textTransform: "uppercase" }}>
-                  Preu i Facturació
+                  {TXT_PREU_FACTURACIO}
                 </label>
                 
                 <div style={{ display: "flex", gap: "12px", alignItems: "flex-start", flexWrap: "wrap" }}>
@@ -597,11 +637,11 @@ export default function ActivityForm({
                         width: "100%"
                       }}
                     >
-                      <option value="/mes">Mensual (€/mes)</option>
-                      <option value="/trimestre">Trimestral (€/trimestre)</option>
-                      <option value="/any">Anual (€/any)</option>
-                      <option value="gratuit">Gratuït</option>
-                      <option value="personalitzat">Altres / Text personalitzat</option>
+                      <option value="/mes">{TXT_MENSUAL}</option>
+                      <option value="/trimestre">{TXT_TRIMESTRAL}</option>
+                      <option value="/any">{TXT_ANUAL}</option>
+                      <option value="gratuit">{TXT_GRATUIT}</option>
+                      <option value="personalitzat">{TXT_ALTRES_TEXT}</option>
                     </select>
                   </div>
 
@@ -654,7 +694,7 @@ export default function ActivityForm({
                   {priceUnit === "gratuit" && (
                     <div style={{ flex: "2 1 200px", alignSelf: "center" }}>
                       <span style={{ fontSize: "14px", color: "var(--verd)", fontWeight: "600", fontStyle: "italic" }}>
-                        L'activitat es publicarà com a gratuïta
+                        {TXT_ACTIVITAT_GRATUITA}
                       </span>
                     </div>
                   )}
@@ -681,7 +721,7 @@ export default function ActivityForm({
             <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 <label style={{ fontSize: "13px", fontWeight: "700", color: "var(--verd-fosc)", textTransform: "uppercase" }}>
-                  Descripció detallada
+                  {TXT_DESCRIPCIO}
                 </label>
                 <textarea
                   value={descripcio}
@@ -705,7 +745,7 @@ export default function ActivityForm({
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "20px" }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                   <label style={{ fontSize: "13px", fontWeight: "700", color: "var(--verd-fosc)", textTransform: "uppercase" }}>
-                    Durada de la sessió
+                    {TXT_DURADA}
                   </label>
                   <input
                     type="text"
@@ -747,7 +787,7 @@ export default function ActivityForm({
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                   <label style={{ fontSize: "13px", fontWeight: "700", color: "var(--verd-fosc)", textTransform: "uppercase" }}>
-                    Material
+                    {TXT_MATERIAL}
                   </label>
                   <input
                     type="text"
@@ -768,7 +808,7 @@ export default function ActivityForm({
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                   <label style={{ fontSize: "13px", fontWeight: "700", color: "var(--verd-fosc)", textTransform: "uppercase" }}>
-                    Data d'Inici
+                    {TXT_DATA_INICI}
                   </label>
                   <input
                     type="text"
@@ -789,7 +829,7 @@ export default function ActivityForm({
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                   <label style={{ fontSize: "13px", fontWeight: "700", color: "var(--verd-fosc)", textTransform: "uppercase" }}>
-                    Idioma
+                    {TXT_IDIOMA}
                   </label>
                   <input
                     type="text"
@@ -810,7 +850,7 @@ export default function ActivityForm({
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                   <label style={{ fontSize: "13px", fontWeight: "700", color: "var(--verd-fosc)", textTransform: "uppercase" }}>
-                    Qui ho imparteix?
+                    {TXT_QUI_IMPARTEIX}
                   </label>
                   <input
                     type="text"
@@ -851,10 +891,10 @@ export default function ActivityForm({
               {/* Part A: Imatge Destacada */}
               <div>
                 <label style={{ display: "block", fontSize: "13px", fontWeight: "700", color: "var(--verd-fosc)", textTransform: "uppercase", marginBottom: "8px" }}>
-                  Imatge Destacada (Principal)
+                  {TXT_IMATGE_DESTACADA}
                 </label>
                 <p style={{ fontSize: "12px", color: "var(--muted)", marginTop: "-4px", marginBottom: "12px" }}>
-                  Aquesta imatge es mostrarà com a capçalera principal a la fitxa detallada de l'activitat.
+                  {TXT_IMATGE_DESC}
                 </p>
 
                 <div style={{ display: "flex", gap: "24px", alignItems: "center", flexWrap: "wrap" }}>
@@ -880,7 +920,7 @@ export default function ActivityForm({
                     ) : (
                       <div style={{ textAlign: "center", color: "var(--muted)", padding: "12px" }}>
                         <ImageIcon size={32} style={{ margin: "0 auto 8px", opacity: 0.4 }} />
-                        <span style={{ fontSize: "12px", display: "block" }}>Sense Imatge</span>
+                        <span style={{ fontSize: "12px", display: "block" }}>{TXT_SENSE_IMATGE}</span>
                       </div>
                     )}
                     {isUploadingFeatured && (
@@ -955,7 +995,7 @@ export default function ActivityForm({
                       )}
                     </div>
                     <p style={{ fontSize: "12px", color: "var(--muted)", margin: 0 }}>
-                      Format horitzontal recomanat (recomanat 1200x800). Màxim 4MB.
+                      {TXT_FORMAT_RECOMENAT}
                     </p>
                   </div>
                 </div>
@@ -964,10 +1004,10 @@ export default function ActivityForm({
               {/* Part B: Galeria d'Imatges */}
               <div>
                 <label style={{ display: "block", fontSize: "13px", fontWeight: "700", color: "var(--verd-fosc)", textTransform: "uppercase", marginBottom: "8px" }}>
-                  Galeria de Fotos
+                  {TXT_GALERIA}
                 </label>
                 <p style={{ fontSize: "12px", color: "var(--muted)", marginTop: "-4px", marginBottom: "12px" }}>
-                  Pots afegir diverses imatges per mostrar la vida diària de l'activitat en un carrusel.
+                  {TXT_GALERIA_DESC}
                 </p>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
@@ -1096,7 +1136,7 @@ export default function ActivityForm({
                 cursor: loading ? "not-allowed" : "pointer"
               }}
             >
-              Cancel·lar
+              {TXT_CANCELAR}
             </Link>
 
             <button
