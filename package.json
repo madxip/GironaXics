@@ -19,6 +19,12 @@
     "react-dom": "^18",
     "resend": "^6.12.3"
   },
+  "browserslist": [
+    "chrome >= 93",
+    "edge >= 93",
+    "firefox >= 92",
+    "safari >= 15.4"
+  ],
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
