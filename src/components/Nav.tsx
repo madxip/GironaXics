@@ -50,8 +50,15 @@ export default function Nav() {
   return (
     <>
       {/* Mobile Menu */}
-      <div className={`mobile-menu ${menuOpen ? 'open' : ''}`} id="mobile-menu">
-        <div className="mobile-menu-close hoverable" onClick={() => setMenuOpen(false)}>✕</div>
+      <div className={`mobile-menu ${menuOpen ? 'open' : ''}`} id="mobile-menu" role="dialog" aria-modal="true" aria-label="Menú de navegació mòbil">
+        <button
+          className="mobile-menu-close hoverable"
+          onClick={() => setMenuOpen(false)}
+          aria-label="Tanca el menú de navegació"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', font: 'inherit', color: 'inherit', padding: 0 }}
+        >
+          ✕
+        </button>
         <Link href="/#filtres" className="hoverable" onClick={() => setMenuOpen(false)}>Activitats</Link>
         <Link href="/per-a-centres" className="hoverable" onClick={() => setMenuOpen(false)}>Centres</Link>
       </div>
@@ -121,7 +128,16 @@ export default function Nav() {
               </svg>
             </button>
         </div>
-        <div className="hamburger hoverable" onClick={() => setMenuOpen(true)}>☰</div>
+        <button
+          className="hamburger hoverable"
+          onClick={() => setMenuOpen(true)}
+          aria-label="Obre el menú de navegació"
+          aria-controls="mobile-menu"
+          aria-expanded={menuOpen}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', font: 'inherit', color: 'inherit', padding: 0 }}
+        >
+          ☰
+        </button>
       </nav>
 
       <style>{`

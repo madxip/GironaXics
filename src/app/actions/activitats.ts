@@ -2,7 +2,7 @@
 
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { createActivitat, updateActivitat, deleteActivitat } from "@/lib/airtable";
+import { createActivitat, updateActivitat, deleteActivitat, getActivitats } from "@/lib/airtable";
 import { revalidatePath } from "next/cache";
 import { normalizeSlug } from "@/lib/utils";
 
@@ -120,7 +120,17 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
 
 export async function updateActivitatAction(id: string, prevState: unknown, formData: FormData) {
   try {
-    await getAuthenticatedCentreId();
+    const centreId = await getAuthenticatedCentreId();
+
+    // Ownership check (IDOR/BOLA prevention)
+    const activitats = await getActivitats();
+    const activitat = activitats.find(a => a.id === id);
+    if (!activitat) {
+      return { success: false, error: "L'activitat no existeix." };
+    }
+    if (activitat.centreId !== centreId) {
+      return { success: false, error: "No tens permís per modificar aquesta activitat." };
+    }
 
     const nom = formData.get("nom") as string;
     const barri = formData.get("barri") as string;
@@ -218,7 +228,17 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
 
 export async function deleteActivitatAction(id: string) {
   try {
-    await getAuthenticatedCentreId();
+    const centreId = await getAuthenticatedCentreId();
+
+    // Ownership check (IDOR/BOLA prevention)
+    const activitats = await getActivitats();
+    const activitat = activitats.find(a => a.id === id);
+    if (!activitat) {
+      return { success: false, error: "L'activitat no existeix o ja ha estat eliminada." };
+    }
+    if (activitat.centreId !== centreId) {
+      return { success: false, error: "No tens permís per eliminar aquesta activitat." };
+    }
 
     const success = await deleteActivitat(id);
     if (!success) {
@@ -247,7 +267,17 @@ export async function deleteActivitatAction(id: string) {
 
 export async function togglePublicadaAction(id: string, publicada: boolean) {
   try {
-    await getAuthenticatedCentreId();
+    const centreId = await getAuthenticatedCentreId();
+
+    // Ownership check (IDOR/BOLA prevention)
+    const activitats = await getActivitats();
+    const activitat = activitats.find(a => a.id === id);
+    if (!activitat) {
+      return { success: false, error: "L'activitat no existeix." };
+    }
+    if (activitat.centreId !== centreId) {
+      return { success: false, error: "No tens permís per canviar l'estat d'aquesta activitat." };
+    }
 
     const success = await updateActivitat(id, { publicada });
     if (!success) {
