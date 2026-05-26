@@ -52,7 +52,7 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
       return { success: false, error: "Si us plau, omple com a mínim els camps obligatoris (Nom, Barri, Categoria, Edat, Horari i Dies)." };
     }
 
-    const preu = preuStr ? Number(preuStr) : undefined;
+    const preu = preuStr ? preuStr.trim() : undefined;
 
     const result = await createActivitat({
       nom,
@@ -154,7 +154,7 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
       return { success: false, error: "Si us plau, omple com a mínim els camps obligatoris (Nom, Barri, Categoria, Edat, Horari i Dies)." };
     }
 
-    const preu = preuStr ? Number(preuStr) : undefined;
+    const preu = preuStr ? preuStr.trim() : undefined;
 
     const success = await updateActivitat(id, {
       nom,

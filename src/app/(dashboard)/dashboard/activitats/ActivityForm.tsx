@@ -55,7 +55,47 @@ export default function ActivityForm({
     setCustomSubValue("");
   };
   const [edat, setEdat] = useState(initialData?.edat || "");
-  const [preu, setPreu] = useState(initialData?.preu !== undefined ? String(initialData.preu) : "");
+  // Parse the initial price for unit dropdown and inputs
+  const getInitialPriceState = () => {
+    const rawPreu = initialData?.preu !== undefined ? String(initialData.preu).trim() : "";
+    if (!rawPreu) return { val: "", unit: "/mes", custom: "" };
+
+    const lower = rawPreu.toLowerCase();
+    if (lower === "gratuït" || lower === "gratuit") {
+      return { val: "", unit: "gratuit", custom: "" };
+    }
+
+    // Check if it's purely numeric
+    if (/^[0-9\s.,]+$/.test(rawPreu)) {
+      return { val: rawPreu, unit: "/mes", custom: "" };
+    }
+
+    // Check if it matches "X/unit" (e.g. "120/trimestre" or "120/any")
+    const clean = rawPreu.replace(/€/g, '').trim();
+    if (clean.includes('/')) {
+      const parts = clean.split('/');
+      const cleanVal = parts[0].trim();
+      const cleanUnit = parts.slice(1).join('/').trim().toLowerCase();
+      
+      if (cleanUnit === 'mes' || cleanUnit === 'mensual') {
+        return { val: cleanVal, unit: "/mes", custom: "" };
+      }
+      if (cleanUnit === 'trimestre' || cleanUnit === 'trimestral') {
+        return { val: cleanVal, unit: "/trimestre", custom: "" };
+      }
+      if (cleanUnit === 'any' || cleanUnit === 'anual') {
+        return { val: cleanVal, unit: "/any", custom: "" };
+      }
+    }
+
+    // Fallback: it's a custom text
+    return { val: "", unit: "personalitzat", custom: rawPreu };
+  };
+
+  const initialPriceState = getInitialPriceState();
+  const [priceVal, setPriceVal] = useState(initialPriceState.val);
+  const [priceUnit, setPriceUnit] = useState(initialPriceState.unit);
+  const [customPrice, setCustomPrice] = useState(initialPriceState.custom);
   const [horari, setHorari] = useState(initialData?.horari || "");
   const [dies, setDies] = useState(initialData?.dies || "");
   const [descripcio, setDescripcio] = useState(initialData?.descripcio || "");
@@ -179,7 +219,19 @@ export default function ActivityForm({
         : customSubValue;
       formData.append("subcategoria", subcategoria);
       formData.append("edat", edat);
-      formData.append("preu", preu);
+      let finalPreu = "";
+      if (priceUnit === "/mes") {
+        finalPreu = priceVal;
+      } else if (priceUnit === "/trimestre") {
+        finalPreu = priceVal ? `${priceVal}/trimestre` : "";
+      } else if (priceUnit === "/any") {
+        finalPreu = priceVal ? `${priceVal}/any` : "";
+      } else if (priceUnit === "gratuit") {
+        finalPreu = "Gratuït";
+      } else if (priceUnit === "personalitzat") {
+        finalPreu = customPrice;
+      }
+      formData.append("preu", finalPreu);
       formData.append("horari", horari);
       formData.append("dies", dies);
       formData.append("descripcio", descripcio);
@@ -515,25 +567,98 @@ export default function ActivityForm({
                 />
               </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px", gridColumn: "span 2" }}>
                 <label style={{ fontSize: "13px", fontWeight: "700", color: "var(--verd-fosc)", textTransform: "uppercase" }}>
-                  Preu (€ mensuals)
+                  Preu i Facturació
                 </label>
-                <input
-                  type="number"
-                  value={preu}
-                  onChange={(e) => setPreu(e.target.value)}
-                  placeholder="Ex: 45 (deixar buit si no aplica)"
-                  disabled={loading}
-                  style={{
-                    padding: "12px 14px",
-                    border: "1px solid rgba(26, 107, 58, 0.2)",
-                    borderRadius: "8px",
-                    fontSize: "15px",
-                    outline: "none",
-                    color: "var(--fosc)"
-                  }}
-                />
+                
+                <div style={{ display: "flex", gap: "12px", alignItems: "flex-start", flexWrap: "wrap" }}>
+                  {/* Select unitat */}
+                  <div style={{ flex: "1 1 200px" }}>
+                    <select
+                      value={priceUnit}
+                      onChange={(e) => {
+                        setPriceUnit(e.target.value);
+                        if (e.target.value === "gratuit") {
+                          setPriceVal("");
+                          setCustomPrice("");
+                        }
+                      }}
+                      disabled={loading}
+                      style={{
+                        padding: "12px 14px",
+                        border: "1px solid rgba(26, 107, 58, 0.2)",
+                        borderRadius: "8px",
+                        fontSize: "15px",
+                        outline: "none",
+                        cursor: "pointer",
+                        color: "var(--fosc)",
+                        backgroundColor: "white",
+                        width: "100%"
+                      }}
+                    >
+                      <option value="/mes">Mensual (€/mes)</option>
+                      <option value="/trimestre">Trimestral (€/trimestre)</option>
+                      <option value="/any">Anual (€/any)</option>
+                      <option value="gratuit">Gratuït</option>
+                      <option value="personalitzat">Altres / Text personalitzat</option>
+                    </select>
+                  </div>
+
+                  {/* Input de preu segons la unitat triada */}
+                  {priceUnit !== "gratuit" && priceUnit !== "personalitzat" && (
+                    <div style={{ flex: "2 1 200px", display: "flex", alignItems: "center", gap: "8px" }}>
+                      <input
+                        type="number"
+                        value={priceVal}
+                        onChange={(e) => setPriceVal(e.target.value)}
+                        placeholder="Ex: 45 (deixar buit si no aplica)"
+                        disabled={loading}
+                        style={{
+                          padding: "12px 14px",
+                          border: "1px solid rgba(26, 107, 58, 0.2)",
+                          borderRadius: "8px",
+                          fontSize: "15px",
+                          outline: "none",
+                          color: "var(--fosc)",
+                          flexGrow: 1
+                        }}
+                      />
+                      <span style={{ fontSize: "15px", fontWeight: "600", color: "var(--muted)" }}>
+                        € {priceUnit}
+                      </span>
+                    </div>
+                  )}
+
+                  {priceUnit === "personalitzat" && (
+                    <div style={{ flex: "2 1 200px" }}>
+                      <input
+                        type="text"
+                        value={customPrice}
+                        onChange={(e) => setCustomPrice(e.target.value)}
+                        placeholder="Ex: 15 €/sessió, 150 € per curs"
+                        disabled={loading}
+                        style={{
+                          padding: "12px 14px",
+                          border: "1px solid rgba(26, 107, 58, 0.2)",
+                          borderRadius: "8px",
+                          fontSize: "15px",
+                          outline: "none",
+                          color: "var(--fosc)",
+                          width: "100%"
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  {priceUnit === "gratuit" && (
+                    <div style={{ flex: "2 1 200px", alignSelf: "center" }}>
+                      <span style={{ fontSize: "14px", color: "var(--verd)", fontWeight: "600", fontStyle: "italic" }}>
+                        L'activitat es publicarà com a gratuïta
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
