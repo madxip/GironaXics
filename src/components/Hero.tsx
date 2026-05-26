@@ -36,7 +36,7 @@ export default function Hero() {
         <a href="#filtres" className="hoverable" style={{ display: 'inline-block', backgroundColor: 'var(--verd-fosc)', color: 'white', padding: '12px 28px', fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '14px', letterSpacing: '0.05em', textDecoration: 'none', borderRadius: '2px', transition: 'background-color 0.3s' }}>
           Veure totes les activitats
         </a>
-        <a href="#categories" className="hoverable" style={{ display: 'inline-block', color: 'var(--fosc)', fontFamily: 'var(--font-sans)', fontSize: '14px', textDecoration: 'none', borderBottom: '1px solid currentColor', opacity: 0.6 }}>
+        <a href="#categories" className="hoverable" style={{ display: 'inline-block', color: 'var(--muted)', fontFamily: 'var(--font-sans)', fontSize: '14px', textDecoration: 'none', borderBottom: '1px solid currentColor' }}>
           Explorar per categoria
         </a>
       </div>

@@ -25,6 +25,7 @@
             --verd-fosc: #0D3D20;
             --verd-pallid: #D4EDD9;
             --taronja: #F5A623;
+            --taronja-text: #8A5C00;
             --crema: #F7F4EE;
             --crema-fosca: #EDE8DF;
             --fosc: #1A1A18;
@@ -109,7 +110,7 @@
 
         .logo span:nth-child(2) {
             font-weight: 200;
-            color: var(--taronja);
+            color: var(--taronja-text);
         }
 
         .nav-right {

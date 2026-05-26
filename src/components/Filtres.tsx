@@ -129,9 +129,10 @@ export default function Filtres({ activitats }: { activitats: Activitat[] }) {
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 <div>
-                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', color: 'var(--verd)', marginBottom: '8px' }}>PER CATEGORIA</label>
-                    <select 
-                        value={selectedCategoria} 
+                    <label htmlFor="filtre-categoria" style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', color: 'var(--verd)', marginBottom: '8px' }}>PER CATEGORIA</label>
+                    <select
+                        id="filtre-categoria"
+                        value={selectedCategoria}
                         onChange={e => updateFilter('categoria', e.target.value)}
                         style={{ width: '100%', padding: '12px 16px', borderRadius: '0', border: '1px solid var(--verd)', backgroundColor: 'transparent', color: 'var(--fosc)', fontFamily: 'var(--font-sans)', fontSize: '16px', outline: 'none', cursor: 'pointer' }}
                     >
@@ -141,9 +142,10 @@ export default function Filtres({ activitats }: { activitats: Activitat[] }) {
 
                 {hasSubcategories && (
                   <div style={{ animation: 'fadeIn 0.3s ease' }}>
-                      <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', color: 'var(--verd)', marginBottom: '8px' }}>PER SUBCATEGORIA</label>
-                      <select 
-                          value={selectedSubcategoria} 
+                      <label htmlFor="filtre-subcategoria" style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', color: 'var(--verd)', marginBottom: '8px' }}>PER SUBCATEGORIA</label>
+                      <select
+                          id="filtre-subcategoria"
+                          value={selectedSubcategoria}
                           onChange={e => updateFilter('subcategoria', e.target.value)}
                           style={{ width: '100%', padding: '12px 16px', borderRadius: '0', border: '1px solid var(--verd)', backgroundColor: 'transparent', color: 'var(--fosc)', fontFamily: 'var(--font-sans)', fontSize: '16px', outline: 'none', cursor: 'pointer' }}
                       >
@@ -151,22 +153,24 @@ export default function Filtres({ activitats }: { activitats: Activitat[] }) {
                       </select>
                   </div>
                 )}
-                
+
                 <div>
-                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', color: 'var(--verd)', marginBottom: '8px' }}>PER EDATS</label>
-                    <select 
-                        value={selectedEdat} 
+                    <label htmlFor="filtre-edat" style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', color: 'var(--verd)', marginBottom: '8px' }}>PER EDATS</label>
+                    <select
+                        id="filtre-edat"
+                        value={selectedEdat}
                         onChange={e => updateFilter('edat', e.target.value)}
                         style={{ width: '100%', padding: '12px 16px', borderRadius: '0', border: '1px solid var(--verd)', backgroundColor: 'transparent', color: 'var(--fosc)', fontFamily: 'var(--font-sans)', fontSize: '16px', outline: 'none', cursor: 'pointer' }}
                     >
                         {EDAT_GROUPS.map(e => <option key={e} value={e}>{e}</option>)}
                     </select>
                 </div>
-                
+
                 <div>
-                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', color: 'var(--verd)', marginBottom: '8px' }}>PER BARRI</label>
-                    <select 
-                        value={selectedBarri} 
+                    <label htmlFor="filtre-barri" style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', color: 'var(--verd)', marginBottom: '8px' }}>PER BARRI</label>
+                    <select
+                        id="filtre-barri"
+                        value={selectedBarri}
                         onChange={e => updateFilter('barri', e.target.value)}
                         style={{ width: '100%', padding: '12px 16px', borderRadius: '0', border: '1px solid var(--verd)', backgroundColor: 'transparent', color: 'var(--fosc)', fontFamily: 'var(--font-sans)', fontSize: '16px', outline: 'none', cursor: 'pointer' }}
                     >

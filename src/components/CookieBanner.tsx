@@ -55,9 +55,9 @@ export default function CookieBanner() {
       aria-live="polite"
     >
       <div>
-        <h4 style={{ margin: '0 0 6px', fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: '18px', color: 'var(--verd-fosc)', fontWeight: 700 }}>
+        <p style={{ margin: '0 0 6px', fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: '18px', color: 'var(--verd-fosc)', fontWeight: 700 }}>
           El respecte a la teva privacitat
-        </h4>
+        </p>
         <p style={{ margin: 0, fontSize: '13px', lineHeight: '1.5', color: 'var(--muted)' }}>
           GironaXics utilitza cookies de tercers (Google Analytics) amb finalitats exclusivament analítiques, per mesurar i avaluar de forma anònima el trànsit i el rendiment del nostre portal. Pots triar si acceptes o rebutges aquest seguiment. Trobaràs tots els detalls a la nostra <a href="/privacitat" style={{ color: 'var(--verd-fosc)', fontWeight: 700, textDecoration: 'underline' }}>Política de Privacitat</a>.
         </p>

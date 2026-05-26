@@ -40,7 +40,7 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
               <span>·</span>
               <span>{activitat.edat}</span>
               <span>·</span>
-              <span style={{ color: 'var(--taronja)', fontWeight: 700 }}>
+              <span style={{ color: 'var(--taronja-text)', fontWeight: 700 }}>
                 {formatPreu(activitat.preu)}
               </span>
           </div>
