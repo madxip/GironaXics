@@ -14,23 +14,19 @@ interface ActivityFormProps {
   title: string;
 }
 
-const PREDEFINED_SUBCATEGORIES: Record<string, string[]> = {
-  "Esports": ["Futbol", "Bàsquet", "Ciclisme", "Natació", "Atletisme", "Patinatge", "Arts marcials", "Gimnàstica", "Tennis / Pàdel"],
-  "Dansa i Teatre": ["Teatre", "Dansa contemporània", "Ballet", "Hip Hop / Urbà", "Expressió corporal"],
-  "Arts plàstiques": ["Pintura", "Dibuix", "Escultura", "Ceràmica", "Manualitats"],
-  "Música": ["Instrument", "Cant / Coral", "Llenguatge musical", "Sensibilització"],
-  "Idiomes": ["Anglès", "Francès", "Alemany"],
-  "Tecnologia i Ciència": ["Robòtica", "Programació", "Ciències / Experiments", "Disseny 3D"],
-  "Reforç escolar": ["Primària", "Secundària", "Tècniques d'estudi"]
-};
+const PREDEFINED_SUBCATEGORIES: Map<string, string[]> = new Map([
+  ["Esports", ["Futbol", "Bàsquet", "Ciclisme", "Natació", "Atletisme", "Patinatge", "Arts marcials", "Gimnàstica", "Tennis / Pàdel"]],
+  ["Dansa i Teatre", ["Teatre", "Dansa contemporània", "Ballet", "Hip Hop / Urbà", "Expressió corporal"]],
+  ["Arts plàstiques", ["Pintura", "Dibuix", "Escultura", "Ceràmica", "Manualitats"]],
+  ["Música", ["Instrument", "Cant / Coral", "Llenguatge musical", "Sensibilització"]],
+  ["Idiomes", ["Anglès", "Francès", "Alemany"]],
+  ["Tecnologia i Ciència", ["Robòtica", "Programació", "Ciències / Experiments", "Disseny 3D"]],
+  ["Reforç escolar", ["Primària", "Secundària", "Tècniques d'estudi"]]
+]);
 
 const safeGetSubcategories = (cat: string | undefined): string[] | undefined => {
   if (!cat || typeof cat !== "string") return undefined;
-  if (cat === "__proto__" || cat === "constructor" || cat === "prototype") return undefined;
-  if (Object.prototype.hasOwnProperty.call(PREDEFINED_SUBCATEGORIES, cat)) {
-    return PREDEFINED_SUBCATEGORIES[cat];
-  }
-  return undefined;
+  return PREDEFINED_SUBCATEGORIES.get(cat);
 };
 
 const TXT_FORM_DESC = "Omple els detalls de l'activitat extraescolar per publicar-la a la guia.";
@@ -254,7 +250,7 @@ export default function ActivityForm({
       formData.append("barri", barri);
       formData.append("categoria", categoria);
       
-      const subcategoria = PREDEFINED_SUBCATEGORIES[categoria] 
+      const subcategoria = predefinedSubs 
         ? (subSelectValue === "Altres" ? customSubValue : subSelectValue)
         : customSubValue;
       formData.append("subcategoria", subcategoria);
