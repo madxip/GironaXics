@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import SafeImage from '@/components/SafeImage';
 import { getActivitatBySlug, getActivitats, getCentres } from '@/lib/airtable';
-import { normalizeSlug } from '@/lib/utils';
+import { normalizeSlug, safeJsonLd, formatPreu } from '@/lib/utils';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import ActivitatCard from '@/components/ActivitatCard';
@@ -38,6 +38,20 @@ export async function generateMetadata({ params }: { params: { categoria: string
     }
   };
 }
+
+const TXT_INICI = 'Inici';
+const TXT_SENSE_DESCRIPCIO = 'Aquesta activitat no té cap descripció detallada encara. El centre pot afegir-ne més aviat.';
+const TXT_PREU = 'Preu:';
+const TXT_IMPARTIT_PER = 'Impartit per';
+const TXT_HORARI = 'Horari';
+const TXT_DIES = 'Dies';
+const TXT_DURADA = 'Durada';
+const TXT_IDIOMA = 'Idioma';
+const TXT_SENSE_CONTACTE = 'Contacteu amb el centre per més informació.';
+const TXT_WEB_CENTRE = 'Visita la web del centre ↗';
+const TXT_SENSE_CONTACTE_DADES = 'Sense dades de contacte';
+const TXT_MES_ACTIVITATS_A = 'Més activitats a ';
+const TXT_ALTRES_ACTIVITATS_A = 'Altres activitats a ';
 
 export default async function ActivitatPage({ params }: { params: { categoria: string, slug: string } }) {
   const activitats = await getActivitats();
@@ -84,7 +98,7 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
     <>
       <Nav />
       <CloseButton />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json">{safeJsonLd(jsonLd)}</script>
 
       <main style={{ paddingBottom: '60px' }}>
         <div className="modal-hero" style={{ position: 'relative' }}>
@@ -100,7 +114,7 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
 
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 20px 0' }}>
           <div style={{ fontFamily: 'var(--font-sans)', fontSize: '14px', marginBottom: '24px', opacity: 0.6 }}>
-            <Link href="/" style={{ color: 'inherit', textDecoration: 'none' }}>Inici</Link> /
+            <Link href="/" style={{ color: 'inherit', textDecoration: 'none' }}>{TXT_INICI}</Link> /
             <Link href={`/categories/${params.categoria}`} style={{ color: 'inherit', textDecoration: 'none', marginLeft: '8px' }}>{activitat.categoria}</Link> /
             {activitat.subcategoria && (
               <>
@@ -125,7 +139,7 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
           <div className="grid-12 detail-grid" style={{ marginBottom: '60px' }}>
             <div className="detail-col-left" style={{ gridColumn: 'span 6', paddingRight: '40px' }}>
               <div style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', lineHeight: 1.6, color: 'var(--fosc)', whiteSpace: 'pre-line' }}>
-                {activitat.descripcio || "Aquesta activitat no té cap descripció detallada encara. El centre pot afegir-ne més aviat."}
+                {activitat.descripcio || TXT_SENSE_DESCRIPCIO}
               </div>
               <Galeria images={activitat.galeria} nom={activitat.nom} />
             </div>
@@ -133,20 +147,25 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
             <div className="detail-col-right" style={{ gridColumn: 'span 6' }}>
               <div style={{ backgroundColor: 'white', padding: '32px', borderRadius: '4px', border: '1px solid var(--crema-fosca)' }}>
                 <div style={{ fontSize: '32px', fontWeight: 700, color: 'var(--verd-fosc)', marginBottom: '24px' }}>
-                  <strong style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', opacity: 0.5, marginBottom: '6px', letterSpacing: '0.05em', fontWeight: 700, color: 'var(--muted)' }}>Preu:</strong>
-                  {activitat.preu != null && activitat.preu !== '' ? (
-                    <>{activitat.preu}€ <span style={{ fontSize: '16px', fontWeight: 400, opacity: 0.6 }}>/mes</span></>
-                  ) : (
-                    "A consultar"
-                  )}
+                  <strong style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', opacity: 0.5, marginBottom: '6px', letterSpacing: '0.05em', fontWeight: 700, color: 'var(--muted)' }}>{TXT_PREU}</strong>
+                  {(() => {
+                    const formatted = formatPreu(activitat.preu);
+                    if (formatted.includes('/')) {
+                      const [priceVal, priceUnit] = formatted.split('/');
+                      return (
+                        <>{priceVal} <span style={{ fontSize: '16px', fontWeight: 400, opacity: 0.6 }}>/{priceUnit}</span></>
+                      );
+                    }
+                    return <>{formatted}</>;
+                  })()}
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
-                  {activitat.qui_imparteix && <div><strong style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', opacity: 0.5 }}>Impartit per</strong>{activitat.qui_imparteix}</div>}
-                  <div><strong style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', opacity: 0.5 }}>Horari</strong>{activitat.horari}</div>
-                  <div><strong style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', opacity: 0.5 }}>Dies</strong>{activitat.dies}</div>
-                  <div><strong style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', opacity: 0.5 }}>Durada</strong>{activitat.durada}</div>
-                  <div><strong style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', opacity: 0.5 }}>Idioma</strong>{activitat.idioma}</div>
+                  {activitat.qui_imparteix && <div><strong style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', opacity: 0.5 }}>{TXT_IMPARTIT_PER}</strong>{activitat.qui_imparteix}</div>}
+                  <div><strong style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', opacity: 0.5 }}>{TXT_HORARI}</strong>{activitat.horari}</div>
+                  <div><strong style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', opacity: 0.5 }}>{TXT_DIES}</strong>{activitat.dies}</div>
+                  <div><strong style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', opacity: 0.5 }}>{TXT_DURADA}</strong>{activitat.durada}</div>
+                  <div><strong style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', opacity: 0.5 }}>{TXT_IDIOMA}</strong>{activitat.idioma}</div>
                 </div>
 
                 <div style={{ paddingTop: '24px', borderTop: '1px solid var(--crema-fosca)', marginBottom: '24px', display: 'flex', gap: '20px', alignItems: 'center' }}>
@@ -170,7 +189,7 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
                         {centre.email && <div>{centre.email}</div>}
                       </div>
                     ) : (
-                      <div style={{ fontSize: '14px', color: 'var(--muted)' }}>Contacteu amb el centre per més informació.</div>
+                      <div style={{ fontSize: '14px', color: 'var(--muted)' }}>{TXT_SENSE_CONTACTE}</div>
                     )}
                   </div>
                 </div>
@@ -189,11 +208,11 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
                     />
                   ) : safeWeb ? (
                     <a href={safeWeb} target="_blank" rel="noopener noreferrer" className="hoverable" style={{ display: 'block', backgroundColor: 'var(--verd-fosc)', color: 'white', padding: '16px', textAlign: 'center', borderRadius: '4px', textDecoration: 'none', fontWeight: 700 }}>
-                      Visita la web del centre ↗
+                      {TXT_WEB_CENTRE}
                     </a>
                   ) : !contactTelefon ? (
                     <div style={{ backgroundColor: 'var(--crema-fosca)', color: 'var(--muted)', padding: '16px', textAlign: 'center', borderRadius: '4px', fontWeight: 700, fontSize: '14px' }}>
-                      Sense dades de contacte
+                      {TXT_SENSE_CONTACTE_DADES}
                     </div>
                   ) : null}
                 </div>
@@ -204,7 +223,7 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
           {altresCentre.length > 0 && (
             <div id="activitats-centre" style={{ borderTop: '1px solid var(--crema-fosca)', paddingTop: '60px', paddingBottom: '60px' }}>
               <h2 style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: '32px', color: 'var(--verd-fosc)', marginBottom: '32px' }}>
-                Més activitats a {activitat.centre}
+                {TXT_MES_ACTIVITATS_A}{activitat.centre}
               </h2>
               <div className="modal-related-grid">
                 {altresCentre.map(a => (
@@ -217,7 +236,7 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
           {altresBarri.length > 0 && (
             <div style={{ borderTop: '1px solid var(--crema-fosca)', paddingTop: '60px' }}>
               <h2 style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: '32px', color: 'var(--verd-fosc)', marginBottom: '32px' }}>
-                Altres activitats a {activitat.barri}
+                {TXT_ALTRES_ACTIVITATS_A}{activitat.barri}
               </h2>
               <div className="modal-related-grid">
                 {altresBarri.map(a => (
@@ -228,6 +247,7 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
           )}
         </div>
       </main>
+
 
       <Footer />
     </>

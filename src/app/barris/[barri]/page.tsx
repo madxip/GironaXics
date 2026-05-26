@@ -2,7 +2,7 @@ export const revalidate = 3600; // revalida cada hora
 
 import { Metadata } from 'next';
 import { getActivitatsByBarri, getActivitats } from '@/lib/airtable';
-import { normalizeSlug } from '@/lib/utils';
+import { normalizeSlug, safeJsonLd } from '@/lib/utils';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import ActivitatCard from '@/components/ActivitatCard';
@@ -30,6 +30,11 @@ export async function generateMetadata({ params }: { params: { barri: string } }
     description: `Descobreix totes les activitats extraescolars per a nens i joves al barri de ${barriDisplay} a Girona. Troba els millors centres i activitats.`
   };
 }
+
+const TXT_INICI = 'Inici';
+const TXT_BARRIS = 'Barris';
+const TXT_ACTIVITATS_A = 'Activitats a ';
+const TXT_SENSE_ACTIVITATS = 'No hi ha activitats llistades per aquest barri encara.';
 
 export default async function BarriPage({ params }: { params: { barri: string } }) {
   const activitats = await getActivitatsByBarri(params.barri);
@@ -73,18 +78,18 @@ export default async function BarriPage({ params }: { params: { barri: string } 
   return (
     <>
       <Nav />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json">{safeJsonLd(jsonLd)}</script>
       <main style={{ padding: '120px 20px 60px', maxWidth: '1200px', margin: '0 auto', minHeight: '60vh' }}>
         {/* Breadcrumbs */}
         <div style={{ fontFamily: 'var(--font-sans)', fontSize: '14px', marginBottom: '24px', opacity: 0.6 }}>
-          <Link href="/" style={{ color: 'inherit', textDecoration: 'none' }}>Inici</Link> / 
-          <span style={{ marginLeft: '8px' }}>Barris</span> / 
+          <Link href="/" style={{ color: 'inherit', textDecoration: 'none' }}>{TXT_INICI}</Link> / 
+          <span style={{ marginLeft: '8px' }}>{TXT_BARRIS}</span> / 
           <span style={{ marginLeft: '8px' }}>{barriDisplay}</span>
         </div>
         
         {/* Title */}
         <h1 style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: '48px', color: 'var(--verd-fosc)', lineHeight: 1.1, marginBottom: '40px' }}>
-          Activitats a {barriDisplay}
+          {TXT_ACTIVITATS_A}{barriDisplay}
         </h1>
 
         {/* Results List */}
@@ -94,7 +99,7 @@ export default async function BarriPage({ params }: { params: { barri: string } 
               <ActivitatCard key={a.slug} activitat={a} />
             ))
           ) : (
-            <div className="results-empty" style={{ gridColumn: '1 / -1' }}>No hi ha activitats llistades per aquest barri encara.</div>
+            <div className="results-empty" style={{ gridColumn: '1 / -1' }}>{TXT_SENSE_ACTIVITATS}</div>
           )}
         </div>
       </main>

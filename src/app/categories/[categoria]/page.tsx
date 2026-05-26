@@ -2,7 +2,7 @@ export const revalidate = 3600; // revalida cada hora
 
 import { Metadata } from 'next';
 import { getActivitatsByCategoria, getActivitats } from '@/lib/airtable';
-import { normalizeSlug } from '@/lib/utils';
+import { normalizeSlug, safeJsonLd } from '@/lib/utils';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import ActivitatCard from '@/components/ActivitatCard';
@@ -22,6 +22,11 @@ export async function generateMetadata({ params }: { params: { categoria: string
     description: `Totes les extraescolars de ${catDisplay} per a nens a Girona. Troba la millor opció.`
   };
 }
+
+const TXT_INICI = 'Inici';
+const TXT_CATEGORIES = 'Categories';
+const TXT_ACTIVITATS_DE = 'Activitats de ';
+const TXT_SENSE_ACTIVITATS = 'No hi ha activitats llistades per aquesta categoria encara.';
 
 export default async function CategoriaPage({ params }: { params: { categoria: string } }) {
   const activitats = await getActivitatsByCategoria(params.categoria);
@@ -51,16 +56,16 @@ export default async function CategoriaPage({ params }: { params: { categoria: s
   return (
     <>
       <Nav />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json">{safeJsonLd(jsonLd)}</script>
       <main style={{ padding: '120px 20px 60px', maxWidth: '1200px', margin: '0 auto', minHeight: '60vh' }}>
         <div style={{ fontFamily: 'var(--font-sans)', fontSize: '14px', marginBottom: '24px', opacity: 0.6 }}>
-            <Link href="/" style={{ color: 'inherit', textDecoration: 'none' }}>Inici</Link> / 
-            <span style={{ marginLeft: '8px' }}>Categories</span> / 
+            <Link href="/" style={{ color: 'inherit', textDecoration: 'none' }}>{TXT_INICI}</Link> / 
+            <span style={{ marginLeft: '8px' }}>{TXT_CATEGORIES}</span> / 
             <span style={{ marginLeft: '8px' }}>{catDisplay}</span>
         </div>
         
         <h1 style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: '48px', color: 'var(--verd-fosc)', lineHeight: 1.1, marginBottom: '40px' }}>
-            Activitats de {catDisplay}
+            {TXT_ACTIVITATS_DE}{catDisplay}
         </h1>
 
         <div className="results-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
@@ -69,7 +74,7 @@ export default async function CategoriaPage({ params }: { params: { categoria: s
                     <ActivitatCard key={a.slug} activitat={a} />
                 ))
             ) : (
-                <div className="results-empty" style={{ gridColumn: '1 / -1' }}>No hi ha activitats llistades per aquesta categoria encara.</div>
+                <div className="results-empty" style={{ gridColumn: '1 / -1' }}>{TXT_SENSE_ACTIVITATS}</div>
             )}
         </div>
       </main>

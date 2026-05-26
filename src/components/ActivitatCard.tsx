@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import Image from './SafeImage';
 import { Activitat } from '@/lib/types';
-import { normalizeSlug } from '@/lib/utils';
+import { normalizeSlug, formatPreu } from '@/lib/utils';
+
+const TXT_SENSE_IMG = 'Sense img';
 
 export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
   const catSlug = normalizeSlug(activitat.categoria);
@@ -23,7 +25,7 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
           </div>
         ) : (
           <div style={{ width: '80px', height: '80px', flexShrink: 0, borderRadius: '8px', backgroundColor: 'var(--crema-fosca)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: '10px', textTransform: 'uppercase' }}>
-            Sense img
+            {TXT_SENSE_IMG}
           </div>
         )}
         
@@ -39,7 +41,7 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
               <span>{activitat.edat}</span>
               <span>·</span>
               <span style={{ color: 'var(--taronja)', fontWeight: 700 }}>
-                {activitat.preu != null && activitat.preu !== '' ? `${activitat.preu}€/mes` : 'A consultar'}
+                {formatPreu(activitat.preu)}
               </span>
           </div>
         </div>
