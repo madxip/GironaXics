@@ -43,8 +43,8 @@ const nextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            // Allow scripts from self and Google Analytics/GTM; images from self and allowed CDNs; connect to APIs and GA
-            value: "default-src 'self'; img-src 'self' data: https://images.unsplash.com https://files.catbox.moe https://tmpfiles.org https://www.google-analytics.com; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://v5.airtableusercontent.com https://dl.airtable.com https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com; object-src 'none'; frame-ancestors 'none';"
+            // Next.js requires 'unsafe-inline' for its hydration scripts; nonce-based CSP would need middleware refactoring
+            value: "default-src 'self'; img-src 'self' data: https://images.unsplash.com https://files.catbox.moe https://tmpfiles.org https://www.google-analytics.com; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://v5.airtableusercontent.com https://dl.airtable.com https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com; object-src 'none'; frame-ancestors 'none';"
           },
         ],
       },
