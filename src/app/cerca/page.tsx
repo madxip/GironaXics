@@ -32,7 +32,7 @@ export default async function CercaPage({ searchParams }: { searchParams: { q?: 
   return (
     <>
       <Nav />
-      <main style={{ padding: '140px 5vw 80px', minHeight: '80vh', maxWidth: '1400px', margin: '0 auto' }}>
+      <main id="main-content" style={{ padding: '140px 5vw 80px', minHeight: '80vh', maxWidth: '1400px', margin: '0 auto' }}>
         <div style={{ fontFamily: 'var(--font-sans)', fontSize: '14px', marginBottom: '24px', opacity: 0.6 }}>
             <Link href="/" style={{ color: 'inherit', textDecoration: 'none' }}>Inici</Link> /
             <span style={{ marginLeft: '8px' }}>Cerca</span>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from 'react';
 import Nav from '@/components/Nav';
@@ -35,7 +35,7 @@ export default function Contacte() {
   return (
     <>
       <Nav />
-      <main className="info-page">
+      <main id="main-content" className="info-page">
         <header className="info-header">
           <span className="info-subtitle">Parlem-ne</span>
           <h1 className="info-title">Contacte</h1>

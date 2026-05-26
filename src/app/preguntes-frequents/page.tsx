@@ -1,4 +1,4 @@
-import Nav from '@/components/Nav';
+﻿import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
 
@@ -11,7 +11,7 @@ export default function PreguntesFrequents() {
   return (
     <>
       <Nav />
-      <main className="info-page">
+      <main id="main-content" className="info-page">
         <header className="info-header">
           <span className="info-subtitle">FAQ</span>
           <h1 className="info-title">Preguntes freqüents</h1>

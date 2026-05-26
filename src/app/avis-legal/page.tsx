@@ -1,4 +1,4 @@
-import Nav from '@/components/Nav';
+﻿import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 
 export const metadata = {
@@ -10,7 +10,7 @@ export default function AvisLegal() {
   return (
     <>
       <Nav />
-      <main className="info-page">
+      <main id="main-content" className="info-page">
         <header className="info-header">
           <span className="info-subtitle">Termes legals</span>
           <h1 className="info-title">Avís legal</h1>

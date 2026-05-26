@@ -194,7 +194,7 @@ export default function ContactModal({ centreEmail, centreNom, activitatNom }: P
                 </div>
 
                 {status === 'error' && (
-                  <p style={{ color: '#c0392b', fontSize: '13px', background: '#fde8e8', padding: '10px 14px', borderRadius: '4px' }}>
+                  <p role="alert" style={{ color: '#c0392b', fontSize: '13px', background: '#fde8e8', padding: '10px 14px', borderRadius: '4px' }}>
                     Hi ha hagut un error enviant el missatge. Prova-ho de nou o contacta directament a {centreEmail}.
                   </p>
                 )}

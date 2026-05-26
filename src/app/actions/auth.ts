@@ -16,6 +16,10 @@ export async function registerCentreAction(prevState: unknown, formData: FormDat
     return { success: false, error: "Si us plau, omple tots els camps del formulari." };
   }
 
+  if (password.length < 8) {
+    return { success: false, error: "La contrasenya ha de tenir com a mínim 8 caràcters." };
+  }
+
   if (centreId === "nou-centre" && !nouCentreNom) {
     return { success: false, error: "Si us plau, especifica el nom del nou centre." };
   }

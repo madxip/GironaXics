@@ -87,7 +87,7 @@ export default function RegisterForm({ centres }: RegisterFormProps) {
 
       {/* Error message */}
       {errorMsg && (
-        <div style={{
+        <div role="alert" style={{
           backgroundColor: "#FCE8E6",
           border: "1px solid #F5C2C2",
           color: "#C53929",
@@ -103,7 +103,7 @@ export default function RegisterForm({ centres }: RegisterFormProps) {
 
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
         <div className="form-group" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          <label style={{
+          <label htmlFor="reg-nom" style={{
             fontSize: "13px",
             fontWeight: "700",
             color: "var(--verd-fosc)",
@@ -113,10 +113,12 @@ export default function RegisterForm({ centres }: RegisterFormProps) {
             Nom de Contacte
           </label>
           <input
+            id="reg-nom"
             type="text"
             value={nom}
             onChange={(e) => setNom(e.target.value)}
             placeholder="El teu nom i cognoms"
+            autoComplete="name"
             disabled={loading}
             style={{
               padding: "14px",
@@ -131,7 +133,7 @@ export default function RegisterForm({ centres }: RegisterFormProps) {
         </div>
 
         <div className="form-group" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          <label style={{
+          <label htmlFor="reg-email" style={{
             fontSize: "13px",
             fontWeight: "700",
             color: "var(--verd-fosc)",
@@ -141,10 +143,12 @@ export default function RegisterForm({ centres }: RegisterFormProps) {
             Correu Electrònic
           </label>
           <input
+            id="reg-email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="correu@teucentre.com"
+            autoComplete="email"
             disabled={loading}
             style={{
               padding: "14px",
@@ -159,7 +163,7 @@ export default function RegisterForm({ centres }: RegisterFormProps) {
         </div>
 
         <div className="form-group" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          <label style={{
+          <label htmlFor="reg-centre" style={{
             fontSize: "13px",
             fontWeight: "700",
             color: "var(--verd-fosc)",
@@ -169,6 +173,7 @@ export default function RegisterForm({ centres }: RegisterFormProps) {
             Selecciona el teu Centre
           </label>
           <select
+            id="reg-centre"
             value={centreId}
             onChange={(e) => setCentreId(e.target.value)}
             disabled={loading}
@@ -198,7 +203,7 @@ export default function RegisterForm({ centres }: RegisterFormProps) {
 
         {centreId === "nou-centre" && (
           <div className="form-group" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            <label style={{
+            <label htmlFor="reg-nou-centre" style={{
               fontSize: "13px",
               fontWeight: "700",
               color: "var(--verd-fosc)",
@@ -208,6 +213,7 @@ export default function RegisterForm({ centres }: RegisterFormProps) {
               Nom del Nou Centre
             </label>
             <input
+              id="reg-nou-centre"
               type="text"
               value={nouCentreNom}
               onChange={(e) => setNouCentreNom(e.target.value)}
@@ -227,7 +233,7 @@ export default function RegisterForm({ centres }: RegisterFormProps) {
         )}
 
         <div className="form-group" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          <label style={{
+          <label htmlFor="reg-password" style={{
             fontSize: "13px",
             fontWeight: "700",
             color: "var(--verd-fosc)",
@@ -237,10 +243,12 @@ export default function RegisterForm({ centres }: RegisterFormProps) {
             Contrasenya
           </label>
           <input
+            id="reg-password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Mínim 6 caràcters"
+            placeholder="Mínim 8 caràcters"
+            autoComplete="new-password"
             disabled={loading}
             style={{
               padding: "14px",

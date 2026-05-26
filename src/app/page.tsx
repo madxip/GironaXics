@@ -20,9 +20,10 @@ export default async function Home() {
   return (
     <>
       <Nav />
+      <main id="main-content">
       <Hero />
       <Stats numCentres={centres.length} numActivitats={activitats.length} />
-      
+
       <div id="filtres" className="editorial-sep">
         <div className="sep-num">01 · FILTRES</div>
         <div className="sep-line"></div>
@@ -50,6 +51,7 @@ export default async function Home() {
       <ComFunciona />
 
       <BannerCentres />
+      </main>
       <Footer />
     </>
   );

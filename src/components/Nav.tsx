@@ -50,17 +50,25 @@ export default function Nav() {
   return (
     <>
       {/* Mobile Menu */}
-      <div className={`mobile-menu ${menuOpen ? 'open' : ''}`} id="mobile-menu" role="dialog" aria-modal="true" aria-label="Menú de navegació mòbil">
+      <div
+        className={`mobile-menu ${menuOpen ? 'open' : ''}`}
+        id="mobile-menu"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Menú de navegació mòbil"
+        aria-hidden={!menuOpen}
+      >
         <button
           className="mobile-menu-close hoverable"
           onClick={() => setMenuOpen(false)}
           aria-label="Tanca el menú de navegació"
+          tabIndex={menuOpen ? undefined : -1}
           style={{ background: 'none', border: 'none', cursor: 'pointer', font: 'inherit', color: 'inherit', padding: 0 }}
         >
           ✕
         </button>
-        <Link href="/#filtres" className="hoverable" onClick={() => setMenuOpen(false)}>Activitats</Link>
-        <Link href="/per-a-centres" className="hoverable" onClick={() => setMenuOpen(false)}>Centres</Link>
+        <Link href="/#filtres" className="hoverable" onClick={() => setMenuOpen(false)} tabIndex={menuOpen ? undefined : -1}>Activitats</Link>
+        <Link href="/per-a-centres" className="hoverable" onClick={() => setMenuOpen(false)} tabIndex={menuOpen ? undefined : -1}>Centres</Link>
       </div>
 
       {/* Nav */}

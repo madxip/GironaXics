@@ -1,4 +1,4 @@
-import Nav from '@/components/Nav';
+﻿import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 
 
@@ -11,7 +11,7 @@ export default function SobreNosaltres() {
   return (
     <>
       <Nav />
-      <main className="info-page">
+      <main id="main-content" className="info-page">
         <header className="info-header">
           <span className="info-subtitle">Qui som</span>
           <h1 className="info-title">Sobre GironaXics</h1>

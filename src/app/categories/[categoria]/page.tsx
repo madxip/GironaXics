@@ -58,7 +58,7 @@ export default async function CategoriaPage({ params }: { params: { categoria: s
     <>
       <Nav />
       <JsonLd data={jsonLd} />
-      <main style={{ padding: '120px 20px 60px', maxWidth: '1200px', margin: '0 auto', minHeight: '60vh' }}>
+      <main id="main-content" style={{ padding: '120px 20px 60px', maxWidth: '1200px', margin: '0 auto', minHeight: '60vh' }}>
         <div style={{ fontFamily: 'var(--font-sans)', fontSize: '14px', marginBottom: '24px', opacity: 0.6 }}>
             <Link href="/" style={{ color: 'inherit', textDecoration: 'none' }}>{TXT_INICI}</Link> / 
             <span style={{ marginLeft: '8px' }}>{TXT_CATEGORIES}</span> / 

@@ -58,6 +58,9 @@ export default function RootLayout({
   return (
     <html lang="ca" className={`${dmSans.variable} ${playfair.variable}`}>
       <body>
+        <a href="#main-content" className="skip-link">
+          Salta al contingut principal
+        </a>
         {children}
         <AnalyticsTracker />
         <Analytics />

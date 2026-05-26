@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from 'react';
 import Nav from '@/components/Nav';
@@ -36,7 +36,7 @@ export default function PerACentres() {
   return (
     <>
       <Nav />
-      <main className="info-page">
+      <main id="main-content" className="info-page">
         <header className="info-header">
           <span className="info-subtitle">Col·labora</span>
           <h1 className="info-title">Per als centres</h1>

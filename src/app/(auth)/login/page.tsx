@@ -19,16 +19,10 @@ function LoginForm() {
   useEffect(() => {
     const errorParam = searchParams.get("error");
     if (errorParam) {
-      if (errorParam === "CredentialsSignin") {
-        setErrorMsg("Correu o contrasenya incorrectes.");
-      } else if (errorParam === "not-approved") {
+      if (errorParam === "not-approved") {
         setErrorMsg("El teu compte encara està pendent d'aprovació manual per part de l'administrador.");
-      } else if (errorParam === "no-user") {
-        setErrorMsg("Aquest correu no està registrat en cap centre.");
-      } else if (errorParam === "wrong-password") {
-        setErrorMsg("Contrasenya incorrecta.");
       } else {
-        setErrorMsg("S'ha produït un error al iniciar sessió. Si us plau, torna-ho a provar.");
+        setErrorMsg("Correu o contrasenya incorrectes.");
       }
     }
 
@@ -58,13 +52,8 @@ function LoginForm() {
       });
 
       if (res?.error) {
-        // Next-auth custom authorize errors might trigger through direct param or inside res.error string
         if (res.error.includes("not-approved")) {
           setErrorMsg("El teu compte encara està pendent d'aprovació manual per part de l'administrador.");
-        } else if (res.error.includes("no-user")) {
-          setErrorMsg("Aquest correu no està registrat en cap centre.");
-        } else if (res.error.includes("wrong-password") || res.error.includes("CredentialsSignin")) {
-          setErrorMsg("Correu o contrasenya incorrectes.");
         } else {
           setErrorMsg("Correu o contrasenya incorrectes.");
         }
@@ -103,7 +92,7 @@ function LoginForm() {
 
       {/* Error message */}
       {errorMsg && (
-        <div style={{
+        <div role="alert" style={{
           backgroundColor: "#FCE8E6",
           border: "1px solid #F5C2C2",
           color: "#C53929",
@@ -119,7 +108,7 @@ function LoginForm() {
 
       {/* Success message */}
       {successMsg && (
-        <div style={{
+        <div role="status" aria-live="polite" style={{
           backgroundColor: "#E6F4EA",
           border: "1px solid #CEEAD6",
           color: "#137333",
@@ -135,7 +124,7 @@ function LoginForm() {
 
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
         <div className="form-group" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          <label style={{
+          <label htmlFor="login-email" style={{
             fontSize: "13px",
             fontWeight: "700",
             color: "var(--verd-fosc)",
@@ -145,10 +134,12 @@ function LoginForm() {
             Correu Electrònic
           </label>
           <input
+            id="login-email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="el-teu-email@centre.com"
+            autoComplete="email"
             disabled={loading}
             style={{
               padding: "14px",
@@ -163,7 +154,7 @@ function LoginForm() {
         </div>
 
         <div className="form-group" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          <label style={{
+          <label htmlFor="login-password" style={{
             fontSize: "13px",
             fontWeight: "700",
             color: "var(--verd-fosc)",
@@ -173,10 +164,12 @@ function LoginForm() {
             Contrasenya
           </label>
           <input
+            id="login-password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
+            autoComplete="current-password"
             disabled={loading}
             style={{
               padding: "14px",

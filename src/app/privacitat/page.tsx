@@ -1,4 +1,4 @@
-import Nav from '@/components/Nav';
+﻿import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 
 export const metadata = {
@@ -10,7 +10,7 @@ export default function Privacitat() {
   return (
     <>
       <Nav />
-      <main className="info-page">
+      <main id="main-content" className="info-page">
         <header className="info-header">
           <span className="info-subtitle">Protecció de dades</span>
           <h1 className="info-title">Política de privacitat</h1>
