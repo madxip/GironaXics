@@ -41,6 +41,11 @@ const nextConfig = {
             key: 'Referrer-Policy',
             value: 'strict-origin-when-cross-origin',
           },
+          {
+            key: 'Content-Security-Policy',
+            // Allow scripts from self, images from self and allowed CDNs, style from self and fonts, connect to APIs
+            value: "default-src 'self'; img-src 'self' data: https://images.unsplash.com https://files.catbox.moe https://tmpfiles.org; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://v5.airtableusercontent.com https://dl.airtable.com; object-src 'none'; frame-ancestors 'none';"
+          },
         ],
       },
     ];

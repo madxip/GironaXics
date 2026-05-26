@@ -2,7 +2,8 @@ export const revalidate = 3600; // revalida cada hora
 
 import { Metadata } from 'next';
 import { getActivitatsByBarri, getActivitats } from '@/lib/airtable';
-import { normalizeSlug, safeJsonLd } from '@/lib/utils';
+import { normalizeSlug } from '@/lib/utils';
+import JsonLd from '@/components/JsonLd';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import ActivitatCard from '@/components/ActivitatCard';
@@ -78,7 +79,7 @@ export default async function BarriPage({ params }: { params: { barri: string } 
   return (
     <>
       <Nav />
-      <script type="application/ld+json" {...{ dangerouslySetInnerHTML: { __html: safeJsonLd(jsonLd) } }} />
+      <JsonLd data={jsonLd} />
       <main style={{ padding: '120px 20px 60px', maxWidth: '1200px', margin: '0 auto', minHeight: '60vh' }}>
         {/* Breadcrumbs */}
         <div style={{ fontFamily: 'var(--font-sans)', fontSize: '14px', marginBottom: '24px', opacity: 0.6 }}>

@@ -1,9 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
+// Tipus MIME permesos (només imatges)
+const ALLOWED_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+]);
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+
 export async function POST(req: NextRequest) {
   try {
+    // 0. Verificar autenticació
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.centreId) {
+      return NextResponse.json(
+        { error: "No autoritzat. Cal iniciar sessió per pujar fitxers." },
+        { status: 401 }
+      );
+    }
+
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
 
@@ -11,9 +31,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No s'ha proporcionat cap fitxer." }, { status: 400 });
     }
 
+    // 1. Validar tipus MIME
+    if (!ALLOWED_TYPES.has(file.type)) {
+      return NextResponse.json(
+        { error: "Tipus de fitxer no permès. Només s'accepten imatges (JPEG, PNG, WebP, GIF)." },
+        { status: 400 }
+      );
+    }
+
+    // 2. Validar mida del fitxer
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { error: "El fitxer és massa gran. La mida màxima permesa és 5 MB." },
+        { status: 400 }
+      );
+    }
+
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    // 1. Intentar pujar a Catbox (permanent i ràpid)
+    // 3. Intentar pujar a Catbox (permanent i ràpid)
     try {
       const catboxForm = new FormData();
       catboxForm.append("reqtype", "fileupload");
@@ -37,7 +73,7 @@ export async function POST(req: NextRequest) {
       console.warn("[Upload API] Error amb Catbox, intentant fallback a Tmpfiles:", catboxErr);
     }
 
-    // 2. Fallback: Pujar a TmpFiles (Airtable importarà la imatge immediatament abans de l'expiració de 60 minuts)
+    // 4. Fallback: Pujar a TmpFiles (Airtable importarà la imatge immediatament abans de l'expiració de 60 minuts)
     try {
       const tmpForm = new FormData();
       const blob = new Blob([buffer], { type: file.type });
