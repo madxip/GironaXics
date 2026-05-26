@@ -58,26 +58,29 @@ async function fetchWithRetry(url: string, options: RequestInit, retries = 5, de
   return fetch(url, options);
 }
 
-async function fetchAllRecords(tableName: string, filterByFormula?: string, revalidate?: number): Promise<{ id: string; fields: Record<string, unknown> }[]> {
+async function fetchAllRecords(tableName: string, filterByFormula?: string): Promise<{ id: string; fields: Record<string, unknown> }[]> {
   let allRecords: { id: string; fields: Record<string, unknown> }[] = [];
   let offset: string | undefined;
+  const cb = Date.now().toString() + Math.random().toString().slice(2, 8);
 
   do {
     const params = new URLSearchParams();
     if (filterByFormula) params.append('filterByFormula', filterByFormula);
     if (offset) params.append('offset', offset);
+    
+    // Next.js overrides global fetch and caches responses by default, which breaks Airtable
+    // paginated queries when offset tokens expire on their server.
+    // Instead of using 'cache: no-store' (which forces the page to opt out of static generation
+    // with DYNAMIC_SERVER_USAGE), we append a unique request-level cache-busting query parameter.
+    // This allows Next.js to treat the page as fully static/ISR, while ensuring that each
+    // background revalidation or fresh compile fetches a brand-new page with a valid offset.
+    params.append('_cb', cb);
 
     const url = `https://api.airtable.com/v0/${BASE_ID}/${tableName}${params.toString() ? '?' + params.toString() : ''}`;
 
     const fetchOptions: RequestInit = {
       headers: { Authorization: `Bearer ${API_KEY}` },
     };
-
-    if (revalidate === 0) {
-      fetchOptions.cache = 'no-store';
-    } else {
-      fetchOptions.next = { revalidate: revalidate ?? 3600 };
-    }
 
     const res = await fetchWithRetry(url, fetchOptions);
 
@@ -126,11 +129,11 @@ export async function getActivitats(): Promise<Activitat[]> {
   }
 
   try {
-    const records = await fetchAllRecords('Activitats', '{publicada}=TRUE()', 60);
+    const records = await fetchAllRecords('Activitats', '{publicada}=TRUE()');
 
     let centresRecords: { id: string; fields: Record<string, unknown> }[] = [];
     try {
-      centresRecords = await fetchAllRecords('Centres', undefined, 60);
+      centresRecords = await fetchAllRecords('Centres');
     } catch {
       // Ignore
     }
@@ -309,7 +312,7 @@ export async function getCentres(): Promise<Centre[]> {
   }
 
   try {
-    const records = await fetchAllRecords('Centres', undefined, 60);
+    const records = await fetchAllRecords('Centres');
     const formattedCentres = records.map((r: { id: string; fields: Record<string, unknown> }) => {
       const f = { ...r.fields } as unknown as Centre;
       f.id = r.id;
@@ -357,7 +360,7 @@ export async function getUserByEmail(email: string): Promise<{ id: string; nom: 
   if (!API_KEY || !BASE_ID) return null;
   try {
     const filter = `LOWER({Email})="${email.toLowerCase().trim()}"`;
-    const records = await fetchAllRecords('Usuaris_Centres', filter, 0);
+    const records = await fetchAllRecords('Usuaris_Centres', filter);
     if (records.length === 0) return null;
     const r = records[0];
     return {
@@ -473,7 +476,7 @@ export async function getActivitatsByCentreId(centreId: string): Promise<Activit
     // Obtenim totes les activitats per filtrar-les posteriorment en memòria,
     // ja que Airtable avalua el camp de relació {centre} com a cadena de text (nom) en les seves fórmules,
     // fent que filterByFormula amb l'ID de centre falli o no retorni resultats de manera consistent.
-    const records = await fetchAllRecords('Activitats', undefined, 0);
+    const records = await fetchAllRecords('Activitats');
 
     let centresRecords: { id: string; fields: Record<string, unknown> }[] = [];
     try {

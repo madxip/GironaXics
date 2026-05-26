@@ -78,7 +78,7 @@ export default async function BarriPage({ params }: { params: { barri: string } 
   return (
     <>
       <Nav />
-      <script type="application/ld+json">{safeJsonLd(jsonLd)}</script>
+      <script type="application/ld+json" {...{ dangerouslySetInnerHTML: { __html: safeJsonLd(jsonLd) } }} />
       <main style={{ padding: '120px 20px 60px', maxWidth: '1200px', margin: '0 auto', minHeight: '60vh' }}>
         {/* Breadcrumbs */}
         <div style={{ fontFamily: 'var(--font-sans)', fontSize: '14px', marginBottom: '24px', opacity: 0.6 }}>

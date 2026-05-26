@@ -98,7 +98,7 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
     <>
       <Nav />
       <CloseButton />
-      <script type="application/ld+json">{safeJsonLd(jsonLd)}</script>
+      <script type="application/ld+json" {...{ dangerouslySetInnerHTML: { __html: safeJsonLd(jsonLd) } }} />
 
       <main style={{ paddingBottom: '60px' }}>
         <div className="modal-hero" style={{ position: 'relative' }}>
