@@ -319,3 +319,59 @@ export async function sendInternalEmail(data: {
     html: htmlContent,
   });
 }
+
+export async function sendApprovalEmail(data: {
+  email: string;
+  nom: string;
+  centreNom: string;
+}) {
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error("El servei d'enviament de correus no està configurat (falta RESEND_API_KEY).");
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!data.email || !emailRegex.test(data.email)) {
+    throw new Error("El correu electrònic indicat no és vàlid.");
+  }
+
+  if (!data.nom || data.nom.trim().length === 0) {
+    throw new Error("El nom del contacte és obligatori.");
+  }
+
+  if (!data.centreNom || data.centreNom.trim().length === 0) {
+    throw new Error("El nom del centre és obligatori.");
+  }
+
+  await resend.emails.send({
+    from: FROM,
+    to: data.email,
+    subject: `El teu centre ha estat acceptat a GironaXics!`,
+    html: `
+      <div style="font-family:sans-serif;max-width:600px;margin:0 auto;color:#1A1A18">
+        <div style="background:#1A6B3A;padding:20px 32px">
+          <span style="color:white;font-size:20px;font-weight:700">Girona<span style="color:#F5A623">Xics</span></span>
+        </div>
+        <div style="padding:32px">
+          <h2 style="margin:0 0 16px;color:#1A6B3A">Compte Activat! ✓</h2>
+          <p style="color:#525250;margin:0 0 24px;line-height:1.6;font-size:15px">
+            Hola <strong>${esc(data.nom)}</strong>,<br/><br/>
+            Ens plau informar-te que la teva sol·licitud d'alta per al centre <strong>${esc(data.centreNom)}</strong> ha estat acceptada i el teu compte ja està completament actiu!
+          </p>
+          <p style="color:#525250;margin:0 0 24px;line-height:1.6;font-size:15px">
+            A partir d'ara ja pots accedir al teu panell de control per començar a publicar i gestionar les teves activitats extraescolars, de manera que les famílies de Girona les puguin trobar.
+          </p>
+          <div style="text-align:center;margin:36px 0">
+            <a href="https://gironaxics.cat/login" style="display:inline-block;background:#1A6B3A;color:white;padding:14px 28px;border-radius:6px;text-decoration:none;font-weight:700;font-size:16px;box-shadow:0 4px 12px rgba(26,107,58,0.15)">Accedir al meu Panell</a>
+          </div>
+          <p style="color:#7C7C7A;margin:24px 0 0;font-size:14px;line-height:1.5;border-top:1px solid #EDE8DF;padding-top:20px">
+            Si tens qualsevol dubte o necessites ajuda durant el procés de creació d'activitats, pots respondre directament a aquest correu electrònic.
+          </p>
+        </div>
+        <div style="padding:16px 32px;border-top:1px solid #EDE8DF;font-size:12px;color:#7C7C7A;background:#F9F8F6">
+          <a href="https://gironaxics.cat" style="color:#1A6B3A;text-decoration:none;font-weight:600">gironaxics.cat</a> · El directori d'extraescolars de Girona
+        </div>
+      </div>
+    `,
+  });
+}
+

@@ -1,0 +1,71 @@
+import { NextRequest, NextResponse } from "next/server";
+import { sendApprovalEmail } from "@/app/actions/sendEmail";
+
+export const dynamic = "force-dynamic";
+
+export async function POST(req: NextRequest) {
+  try {
+    // 1. Validar el token secret de seguretat
+    const { searchParams } = new URL(req.url);
+    const secret = searchParams.get("secret");
+    
+    const expectedSecret = process.env.WEBHOOK_SECRET;
+
+    if (!expectedSecret) {
+      console.error("[Webhook Approval] Falta definir la variable d'entorn WEBHOOK_SECRET al servidor.");
+      return NextResponse.json(
+        { error: "El servidor de webhooks no està completament configurat." },
+        { status: 500 }
+      );
+    }
+
+    if (secret !== expectedSecret) {
+      console.warn("[Webhook Approval] Intent d'accés no autoritzat amb un secret incorrecte o buit.");
+      return NextResponse.json(
+        { error: "No autoritzat. El secret de seguretat és invàlid." },
+        { status: 401 }
+      );
+    }
+
+    // 2. Processar el cos (payload) de la petició
+    let body;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Cos de petició no vàlid. S'espera un format JSON." },
+        { status: 400 }
+      );
+    }
+
+    const { email, nom, centreNom } = body;
+
+    // 3. Validacions bàsiques de dades obligatòries
+    if (!email || !nom || !centreNom) {
+      return NextResponse.json(
+        { error: "Dades incompletes. S'espera 'email', 'nom' i 'centreNom' al cos de la petició." },
+        { status: 400 }
+      );
+    }
+
+    // 4. Enviar correu de confirmació d'aprovació
+    console.log(`[Webhook Approval] S'està enviant el correu de confirmació d'aprovació per a: ${nom} (${email}) del centre ${centreNom}`);
+    await sendApprovalEmail({
+      email,
+      nom,
+      centreNom,
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: `Correu de confirmació enviat correctament a ${email}.`,
+    });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Error desconegut";
+    console.error("[Webhook Approval] Error al processar el webhook d'aprovació:", error);
+    return NextResponse.json(
+      { error: "S'ha produït un error al servidor en processar el webhook.", details: errorMessage },
+      { status: 500 }
+    );
+  }
+}

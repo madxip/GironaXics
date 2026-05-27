@@ -165,7 +165,7 @@ export default function CentreForm({ initialData, barris }: CentreFormProps) {
             1. INFORMACIÓ BÀSICA
           </h2>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+          <div className="dashboard-grid-2">
             <div style={{ gridColumn: "span 2" }}>
               <label style={{ display: "block", fontSize: "13px", fontWeight: 700, color: "var(--verd-fosc)", textTransform: "uppercase", marginBottom: "8px" }}>
                 Nom del Centre *
@@ -354,7 +354,7 @@ export default function CentreForm({ initialData, barris }: CentreFormProps) {
             3. DADES DE CONTACTE
           </h2>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+          <div className="dashboard-grid-2">
             <div>
               <label style={{ display: "block", fontSize: "13px", fontWeight: 700, color: "var(--verd-fosc)", textTransform: "uppercase", marginBottom: "8px" }}>
                 Adreça física
