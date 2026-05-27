@@ -40,8 +40,13 @@ export async function POST(req: NextRequest) {
 
     const { email, nom, centreNom } = body;
 
+    // Convertir a string si són arrays (per exemple, si venen de camps lookup de relacions d'Airtable/Make)
+    const emailStr = (Array.isArray(email) ? email[0] : email)?.toString();
+    const nomStr = (Array.isArray(nom) ? nom[0] : nom)?.toString();
+    const centreNomStr = (Array.isArray(centreNom) ? centreNom[0] : centreNom)?.toString();
+
     // 3. Validacions bàsiques de dades obligatòries
-    if (!email || !nom || !centreNom) {
+    if (!emailStr || !nomStr || !centreNomStr) {
       return NextResponse.json(
         { error: "Dades incompletes. S'espera 'email', 'nom' i 'centreNom' al cos de la petició." },
         { status: 400 }
@@ -49,11 +54,11 @@ export async function POST(req: NextRequest) {
     }
 
     // 4. Enviar correu de confirmació d'aprovació
-    console.log(`[Webhook Approval] S'està enviant el correu de confirmació d'aprovació per a: ${nom} (${email}) del centre ${centreNom}`);
+    console.log(`[Webhook Approval] S'està enviant el correu de confirmació d'aprovació per a: ${nomStr} (${emailStr}) del centre ${centreNomStr}`);
     await sendApprovalEmail({
-      email,
-      nom,
-      centreNom,
+      email: emailStr,
+      nom: nomStr,
+      centreNom: centreNomStr,
     });
 
     return NextResponse.json({
