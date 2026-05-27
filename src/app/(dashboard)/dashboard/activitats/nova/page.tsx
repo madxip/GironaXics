@@ -7,29 +7,38 @@ export const dynamic = "force-dynamic";
 
 const DEFAULT_CATEGORIES = [
   "Arts plàstiques",
-  "Dansa i Teatre",
+  "Creativitat i Expressió",
+  "Cuina",
+  "Dansa",
+  "Escacs",
   "Esports",
   "Idiomes",
+  "Ioga",
   "Música",
-  "Reforç escolar",
-  "Tecnologia i Ciència"
+  "Naturalesa",
+  "Programació i robòtica",
+  "Salut i benestar",
+  "Teatre"
 ];
 
 const DEFAULT_BARRIS = [
   "Barri Vell",
-  "Carme",
   "Centre",
-  "Devesa-Güell",
+  "Devesa",
   "Eixample",
   "Fontajau",
-  "Girona Est",
+  "Germans Sàbat",
+  "Mas Xirgu",
   "Montilivi",
-  "Montjuïc",
+  "Palau",
   "Pedret",
   "Pont Major",
-  "Santa Eugènia",
+  "Salt",
+  "Sant Daniel",
   "Sant Narcís",
-  "Taialà"
+  "Santa Eugènia",
+  "Vila-roja i Font de la Pólvora",
+  "Vista Alegre - Carme"
 ];
 
 export default async function NovaActivitatPage() {

@@ -16,12 +16,18 @@ interface ActivityFormProps {
 
 const PREDEFINED_SUBCATEGORIES: Map<string, string[]> = new Map([
   ["Esports", ["Futbol", "Bàsquet", "Ciclisme", "Natació", "Atletisme", "Patinatge", "Arts marcials", "Gimnàstica", "Tennis / Pàdel"]],
-  ["Dansa i Teatre", ["Teatre", "Dansa contemporània", "Ballet", "Hip Hop / Urbà", "Expressió corporal"]],
-  ["Arts plàstiques", ["Pintura", "Dibuix", "Escultura", "Ceràmica", "Manualitats"]],
   ["Música", ["Instrument", "Cant / Coral", "Llenguatge musical", "Sensibilització"]],
   ["Idiomes", ["Anglès", "Francès", "Alemany"]],
-  ["Tecnologia i Ciència", ["Robòtica", "Programació", "Ciències / Experiments", "Disseny 3D"]],
-  ["Reforç escolar", ["Primària", "Secundària", "Tècniques d'estudi"]]
+  ["Dansa", ["Dansa contemporània", "Ballet", "Hip Hop / Urbà", "Expressió corporal"]],
+  ["Teatre", ["Teatre infantil", "Improvisació", "Interpretació"]],
+  ["Arts plàstiques", ["Pintura", "Dibuix", "Escultura", "Ceràmica", "Manualitats"]],
+  ["Cuina", ["Cuina infantil", "Pastisseria", "Alimentació saludable"]],
+  ["Ioga", ["Ioga infantil", "Mindfulness", "Relaxació"]],
+  ["Escacs", ["Iniciació", "Perfeccionament", "Competició"]],
+  ["Naturalesa", ["Experiments", "Hort", "Educació ambiental"]],
+  ["Creativitat i Expressió", ["Manualitats", "Expressió corporal", "Jocs creatius"]],
+  ["Programació i robòtica", ["Robòtica", "Programació", "Scratch", "Disseny 3D"]],
+  ["Salut i benestar", ["Educació emocional", "Psicomotricitat", "Benestar corporal"]]
 ]);
 
 const safeGetSubcategories = (cat: string | undefined): string[] | undefined => {

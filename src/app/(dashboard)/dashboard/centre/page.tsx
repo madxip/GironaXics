@@ -9,19 +9,22 @@ export const dynamic = "force-dynamic";
 
 const DEFAULT_BARRIS = [
   "Barri Vell",
-  "Carme",
   "Centre",
-  "Devesa-Güell",
+  "Devesa",
   "Eixample",
   "Fontajau",
-  "Girona Est",
+  "Germans Sàbat",
+  "Mas Xirgu",
   "Montilivi",
-  "Montjuïc",
+  "Palau",
   "Pedret",
   "Pont Major",
-  "Santa Eugènia",
+  "Salt",
+  "Sant Daniel",
   "Sant Narcís",
-  "Taialà"
+  "Santa Eugènia",
+  "Vila-roja i Font de la Pólvora",
+  "Vista Alegre - Carme"
 ];
 
 export default async function CentreDashboardPage() {
