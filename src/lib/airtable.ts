@@ -97,6 +97,20 @@ async function fetchAllRecords(tableName: string, filterByFormula?: string): Pro
   return allRecords;
 }
 
+async function getSubcategoryRecordIdByName(name: string): Promise<string | null> {
+  if (!name) return null;
+  try {
+    const filter = `LOWER({Nom})="${name.toLowerCase().trim()}"`;
+    const records = await fetchAllRecords('Subcategories', filter);
+    if (records.length > 0) {
+      return records[0].id;
+    }
+  } catch (err) {
+    console.error(`[Airtable API] Error fetching subcategory ID for ${name}:`, err);
+  }
+  return null;
+}
+
 export async function getActivitats(): Promise<Activitat[]> {
   if (!API_KEY || !BASE_ID) {
     console.warn("Manca AIRTABLE_API_KEY o AIRTABLE_BASE_ID. Utilitzant dades de prova.");
@@ -566,13 +580,14 @@ export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'cen
     const baseSlug = normalizeSlug(data.nom);
     const slug = baseSlug.endsWith('-girona') ? baseSlug : `${baseSlug}-girona`;
     
+    const subcatId = data.subcategoria ? await getSubcategoryRecordIdByName(data.subcategoria) : null;
+    
     const fields: Record<string, unknown> = {
       nom: data.nom,
       slug: slug,
       centre: [data.centreId],
       barri: data.barri,
       categoria: data.categoria,
-      subcategoria: data.subcategoria || "",
       edat: data.edat,
       preu: data.preu != null && data.preu !== '' ? String(data.preu) : undefined,
       horari: data.horari,
@@ -586,6 +601,10 @@ export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'cen
       publicada: true,
       destacada: false
     };
+
+    if (subcatId) {
+      fields.subcategoria_enllac = [subcatId];
+    }
 
     if (data.imatgeUrl) {
       fields.Imatge = [{ url: data.imatgeUrl }];
@@ -667,7 +686,10 @@ export async function updateActivitat(id: string, data: Partial<Omit<Activitat, 
     }
     if (data.barri) fields.barri = data.barri;
     if (data.categoria) fields.categoria = data.categoria;
-    if (data.subcategoria !== undefined) fields.subcategoria = data.subcategoria;
+    if (data.subcategoria !== undefined) {
+      const subcatId = data.subcategoria ? await getSubcategoryRecordIdByName(data.subcategoria) : null;
+      fields.subcategoria_enllac = subcatId ? [subcatId] : [];
+    }
     if (data.edat) fields.edat = data.edat;
     if (data.preu !== undefined) fields.preu = data.preu != null && data.preu !== '' ? String(data.preu) : null;
     if (data.horari) fields.horari = data.horari;

@@ -16,18 +16,7 @@ interface ActivityFormProps {
 
 const PREDEFINED_SUBCATEGORIES: Map<string, string[]> = new Map([
   ["Esports", ["Futbol", "Bàsquet", "Ciclisme", "Natació", "Atletisme", "Patinatge", "Arts marcials", "Gimnàstica", "Tennis / Pàdel"]],
-  ["Música", ["Instrument", "Cant / Coral", "Llenguatge musical", "Sensibilització"]],
-  ["Idiomes", ["Anglès", "Francès", "Alemany"]],
-  ["Dansa", ["Dansa contemporània", "Ballet", "Hip Hop / Urbà", "Expressió corporal"]],
-  ["Teatre", ["Teatre infantil", "Improvisació", "Interpretació"]],
-  ["Arts plàstiques", ["Pintura", "Dibuix", "Escultura", "Ceràmica", "Manualitats"]],
-  ["Cuina", ["Cuina infantil", "Pastisseria", "Alimentació saludable"]],
-  ["Ioga", ["Ioga infantil", "Mindfulness", "Relaxació"]],
-  ["Escacs", ["Iniciació", "Perfeccionament", "Competició"]],
-  ["Naturalesa", ["Experiments", "Hort", "Educació ambiental"]],
-  ["Creativitat i Expressió", ["Manualitats", "Expressió corporal", "Jocs creatius"]],
-  ["Programació i robòtica", ["Robòtica", "Programació", "Scratch", "Disseny 3D"]],
-  ["Salut i benestar", ["Educació emocional", "Psicomotricitat", "Benestar corporal"]]
+  ["Idiomes", ["Anglès", "Francès", "Alemany"]]
 ]);
 
 const safeGetSubcategories = (cat: string | undefined): string[] | undefined => {
@@ -423,7 +412,7 @@ export default function ActivityForm({
                 </select>
               </div>
 
-              {categoria && (
+              {categoria && (categoria === "Esports" || categoria === "Idiomes") && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                   <label style={{ fontSize: "13px", fontWeight: "700", color: "var(--verd-fosc)", textTransform: "uppercase" }}>
                     {TXT_SUBCATEGORIA}
