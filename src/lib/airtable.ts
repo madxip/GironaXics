@@ -650,7 +650,7 @@ export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'cen
     return null;
   } catch (error) {
     console.error("[Airtable API] Error en createActivitat:", error);
-    return null;
+    throw error;
   }
 }
 
@@ -715,7 +715,7 @@ export async function updateActivitat(id: string, data: Partial<Omit<Activitat, 
     return true;
   } catch (error) {
     console.error("[Airtable API] Error en updateActivitat:", error);
-    return false;
+    throw error;
   }
 }
 
