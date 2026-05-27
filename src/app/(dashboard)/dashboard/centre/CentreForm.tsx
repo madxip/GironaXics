@@ -251,6 +251,7 @@ export default function CentreForm({ initialData, barris }: CentreFormProps) {
                   src={imatgeUrl}
                   alt="Logotip previsualització"
                   style={{ width: "100%", height: "100%", objectFit: "contain", padding: "8px", boxSizing: "border-box" }}
+                  onError={() => setImatgeUrl("")}
                 />
               ) : (
                 <div style={{ textAlign: "center", color: "var(--muted)", padding: "12px" }}>

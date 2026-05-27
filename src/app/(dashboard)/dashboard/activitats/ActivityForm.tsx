@@ -906,6 +906,7 @@ export default function ActivityForm({
                         src={imatgeUrl}
                         alt="Imatge destacada previsualització"
                         style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        onError={() => setImatgeUrl("")}
                       />
                     ) : (
                       <div style={{ textAlign: "center", color: "var(--muted)", padding: "12px" }}>
@@ -1020,11 +1021,12 @@ export default function ActivityForm({
                             backgroundColor: "#fbfcfb"
                           }}
                         >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
+                           {/* eslint-disable-next-line @next/next/no-img-element */}
+                           <img
                             src={url}
                             alt={`Galeria ${idx + 1}`}
                             style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                            onError={() => handleRemoveGalleryImage(idx)}
                           />
                           <button
                             type="button"
