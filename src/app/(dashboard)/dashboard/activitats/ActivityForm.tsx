@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Save, Loader2, Upload, Trash2, Image as ImageIcon, Plus } from "lucide-react";
 import { Activitat } from "@/lib/types";
+import { mapAirtableError } from "@/lib/utils";
+import Toast from "@/components/Toast";
 
 interface ActivityFormProps {
   initialData?: Activitat;
@@ -67,6 +69,16 @@ export default function ActivityForm({
   const [barri, setBarri] = useState(initialData?.barri || "");
   const [categoria, setCategoria] = useState(initialData?.categoria || "");
 
+  const [validationErrors, setValidationErrors] = useState<Record<string, boolean>>({});
+  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  const handleFieldChange = (field: string, value: string, setter: (val: string) => void) => {
+    setter(value);
+    if (value.trim()) {
+      setValidationErrors(prev => ({ ...prev, [field]: false }));
+    }
+  };
+
   // Subcategories states
   const initialSub = initialData?.subcategoria || "";
   const hasPredefined = safeGetSubcategories(initialData?.categoria);
@@ -83,6 +95,9 @@ export default function ActivityForm({
     setCategoria(newCat);
     setSubSelectValue("");
     setCustomSubValue("");
+    if (newCat.trim()) {
+      setValidationErrors(prev => ({ ...prev, categoria: false }));
+    }
   };
   const predefinedSubs = safeGetSubcategories(categoria);
   const [edat, setEdat] = useState(initialData?.edat || "");
@@ -147,14 +162,13 @@ export default function ActivityForm({
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
 
   const handleFeaturedUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setIsUploadingFeatured(true);
-    setErrorMsg("");
+    setToast(null);
 
     const formData = new FormData();
     formData.append("file", file);
@@ -177,7 +191,10 @@ export default function ActivityForm({
       }
     } catch (err) {
       console.error(err);
-      setErrorMsg("No s'ha pogut pujar la imatge destacada. Intenta-ho de nou.");
+      setToast({
+        type: "error",
+        message: "No s'ha pogut pujar la imatge destacada. Intenta-ho de nou."
+      });
     } finally {
       setIsUploadingFeatured(false);
       if (featuredInputRef.current) featuredInputRef.current.value = "";
@@ -189,7 +206,7 @@ export default function ActivityForm({
     if (!files || files.length === 0) return;
 
     setIsUploadingGallery(true);
-    setErrorMsg("");
+    setToast(null);
 
     const uploadPromises = Array.from(files).map(async (file) => {
       const formData = new FormData();
@@ -213,7 +230,10 @@ export default function ActivityForm({
       setGaleria((prev) => [...prev, ...urls]);
     } catch (err) {
       console.error(err);
-      setErrorMsg("No s'han pogut pujar algunes imatges de la galeria. Intenta-ho de nou.");
+      setToast({
+        type: "error",
+        message: "No s'han pogut pujar algunes imatges de la galeria. Intenta-ho de nou."
+      });
     } finally {
       setIsUploadingGallery(false);
       if (galleryInputRef.current) galleryInputRef.current.value = "";
@@ -230,12 +250,32 @@ export default function ActivityForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMsg("");
+    setToast(null);
     setLoading(true);
 
-    if (!nom || !barri || !categoria || !edat || !horari || !dies) {
-      setErrorMsg("Si us plau, omple tots els camps obligatoris marcats amb asterisc (*).");
+    const errors: Record<string, boolean> = {};
+    if (!nom.trim()) errors.nom = true;
+    if (!barri.trim()) errors.barri = true;
+    if (!categoria.trim()) errors.categoria = true;
+    if (!edat.trim()) errors.edat = true;
+    if (!horari.trim()) errors.horari = true;
+    if (!dies.trim()) errors.dies = true;
+
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      setToast({
+        type: "error",
+        message: "Si us plau, omple tots els camps obligatoris marcats amb asterisc (*)."
+      });
       setLoading(false);
+      
+      // Scroll to the first error smoothly
+      const firstErrorField = Object.keys(errors)[0];
+      const element = document.getElementById(firstErrorField);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => element.focus(), 100);
+      }
       return;
     }
 
@@ -278,15 +318,18 @@ export default function ActivityForm({
       const res = await submitAction(null, formData);
 
       if (res && !res.success) {
-        setErrorMsg(res.error || "No s'ha pogut desar l'activitat.");
+        const parsed = mapAirtableError(res.error);
+        setToast({ type: "error", message: parsed });
         setLoading(false);
       } else {
-        router.push("/dashboard");
+        const query = initialData?.id ? "success=updated" : "success=created";
+        router.push(`/dashboard?${query}`);
         router.refresh();
       }
     } catch (err) {
       console.error("[Form Submit Error]", err);
-      setErrorMsg("S'ha produït un error de xarxa o inesperat.");
+      const parsed = mapAirtableError(err);
+      setToast({ type: "error", message: parsed });
       setLoading(false);
     }
   };
@@ -330,19 +373,33 @@ export default function ActivityForm({
         }}>
           {TXT_FORM_DESC}
         </p>
-
-        {errorMsg && (
-          <div style={{
-            backgroundColor: "#FCE8E6",
-            border: "1px solid #F5C2C2",
-            color: "#C53929",
-            padding: "16px",
-            borderRadius: "8px",
-            fontSize: "14px",
-            marginBottom: "32px",
-            lineHeight: "1.5"
-          }}>
-            {errorMsg}
+        {toast && (
+          <div className="activity-toast-container">
+            <Toast
+              type={toast.type}
+              message={toast.message}
+              onClose={() => setToast(null)}
+            />
+            <style dangerouslySetInnerHTML={{ __html: `
+              .activity-toast-container {
+                position: fixed;
+                top: 24px;
+                right: 24px;
+                z-index: 99999;
+                width: calc(100% - 48px);
+                max-width: 420px;
+                pointer-events: none;
+              }
+              @media (max-width: 768px) {
+                .activity-toast-container {
+                  top: 16px;
+                  right: 16px;
+                  left: 16px;
+                  width: auto;
+                  max-width: none;
+                }
+              }
+            `}} />
           </div>
         )}
 
@@ -370,20 +427,30 @@ export default function ActivityForm({
                 </label>
                 <input
                   type="text"
+                  id="nom"
                   value={nom}
-                  onChange={(e) => setNom(e.target.value)}
+                  onChange={(e) => handleFieldChange("nom", e.target.value, setNom)}
                   placeholder="Ex: Taller de Robòtica Educativa, Anglès extraescolar..."
                   disabled={loading}
                   style={{
                     padding: "12px 14px",
-                    border: "1px solid rgba(26, 107, 58, 0.2)",
+                    border: validationErrors.nom 
+                      ? "2.5px solid #b91c1c" 
+                      : "1px solid rgba(26, 107, 58, 0.2)",
                     borderRadius: "8px",
                     fontSize: "15px",
                     outline: "none",
                     width: "100%",
-                    color: "var(--fosc)"
+                    color: "var(--fosc)",
+                    backgroundColor: validationErrors.nom ? "#fef2f2" : "white",
+                    transition: "all 0.2s"
                   }}
                 />
+                {validationErrors.nom && (
+                  <span style={{ color: "#b91c1c", fontSize: "12px", fontWeight: "600", marginTop: "-2px" }}>
+                    * El nom de l'activitat és obligatori
+                  </span>
+                )}
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
@@ -391,18 +458,22 @@ export default function ActivityForm({
                   {TXT_CATEGORIA}
                 </label>
                 <select
+                  id="categoria"
                   value={categoria}
                   onChange={(e) => handleCategoriaChange(e.target.value)}
                   disabled={loading}
                   style={{
                     padding: "12px 14px",
-                    border: "1px solid rgba(26, 107, 58, 0.2)",
+                    border: validationErrors.categoria 
+                      ? "2.5px solid #b91c1c" 
+                      : "1px solid rgba(26, 107, 58, 0.2)",
                     borderRadius: "8px",
                     fontSize: "15px",
                     outline: "none",
                     cursor: "pointer",
                     color: "var(--fosc)",
-                    backgroundColor: "white"
+                    backgroundColor: validationErrors.categoria ? "#fef2f2" : "white",
+                    transition: "all 0.2s"
                   }}
                 >
                   <option value="">-- Tria una categoria --</option>
@@ -410,6 +481,11 @@ export default function ActivityForm({
                     <option key={c} value={c}>{c}</option>
                   ))}
                 </select>
+                {validationErrors.categoria && (
+                  <span style={{ color: "#b91c1c", fontSize: "12px", fontWeight: "600", marginTop: "-2px" }}>
+                    * Selecciona una categoria obligatòria
+                  </span>
+                )}
               </div>
 
               {categoria && (categoria === "Esports" || categoria === "Idiomes") && (
@@ -490,18 +566,22 @@ export default function ActivityForm({
                   {TXT_BARRI_GIRONA}
                 </label>
                 <select
+                  id="barri"
                   value={barri}
-                  onChange={(e) => setBarri(e.target.value)}
+                  onChange={(e) => handleFieldChange("barri", e.target.value, setBarri)}
                   disabled={loading}
                   style={{
                     padding: "12px 14px",
-                    border: "1px solid rgba(26, 107, 58, 0.2)",
+                    border: validationErrors.barri 
+                      ? "2.5px solid #b91c1c" 
+                      : "1px solid rgba(26, 107, 58, 0.2)",
                     borderRadius: "8px",
                     fontSize: "15px",
                     outline: "none",
                     cursor: "pointer",
                     color: "var(--fosc)",
-                    backgroundColor: "white"
+                    backgroundColor: validationErrors.barri ? "#fef2f2" : "white",
+                    transition: "all 0.2s"
                   }}
                 >
                   <option value="">-- Tria un barri --</option>
@@ -509,6 +589,11 @@ export default function ActivityForm({
                     <option key={b} value={b}>{b}</option>
                   ))}
                 </select>
+                {validationErrors.barri && (
+                  <span style={{ color: "#b91c1c", fontSize: "12px", fontWeight: "600", marginTop: "-2px" }}>
+                    * Selecciona un barri obligatori
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -535,19 +620,29 @@ export default function ActivityForm({
                 </label>
                 <input
                   type="text"
+                  id="dies"
                   value={dies}
-                  onChange={(e) => setDies(e.target.value)}
+                  onChange={(e) => handleFieldChange("dies", e.target.value, setDies)}
                   placeholder="Ex: Dilluns i Dimecres, Dissabtes matí..."
                   disabled={loading}
                   style={{
                     padding: "12px 14px",
-                    border: "1px solid rgba(26, 107, 58, 0.2)",
+                    border: validationErrors.dies 
+                      ? "2.5px solid #b91c1c" 
+                      : "1px solid rgba(26, 107, 58, 0.2)",
                     borderRadius: "8px",
                     fontSize: "15px",
                     outline: "none",
-                    color: "var(--fosc)"
+                    color: "var(--fosc)",
+                    backgroundColor: validationErrors.dies ? "#fef2f2" : "white",
+                    transition: "all 0.2s"
                   }}
                 />
+                {validationErrors.dies && (
+                  <span style={{ color: "#b91c1c", fontSize: "12px", fontWeight: "600", marginTop: "-2px" }}>
+                    * Especificar els dies és obligatori
+                  </span>
+                )}
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
@@ -556,19 +651,29 @@ export default function ActivityForm({
                 </label>
                 <input
                   type="text"
+                  id="horari"
                   value={horari}
-                  onChange={(e) => setHorari(e.target.value)}
+                  onChange={(e) => handleFieldChange("horari", e.target.value, setHorari)}
                   placeholder="Ex: 17:00 a 18:30"
                   disabled={loading}
                   style={{
                     padding: "12px 14px",
-                    border: "1px solid rgba(26, 107, 58, 0.2)",
+                    border: validationErrors.horari 
+                      ? "2.5px solid #b91c1c" 
+                      : "1px solid rgba(26, 107, 58, 0.2)",
                     borderRadius: "8px",
                     fontSize: "15px",
                     outline: "none",
-                    color: "var(--fosc)"
+                    color: "var(--fosc)",
+                    backgroundColor: validationErrors.horari ? "#fef2f2" : "white",
+                    transition: "all 0.2s"
                   }}
                 />
+                {validationErrors.horari && (
+                  <span style={{ color: "#b91c1c", fontSize: "12px", fontWeight: "600", marginTop: "-2px" }}>
+                    * L'horari és obligatori
+                  </span>
+                )}
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
@@ -577,19 +682,29 @@ export default function ActivityForm({
                 </label>
                 <input
                   type="text"
+                  id="edat"
                   value={edat}
-                  onChange={(e) => setEdat(e.target.value)}
+                  onChange={(e) => handleFieldChange("edat", e.target.value, setEdat)}
                   placeholder="Ex: 6 a 12 anys, P3 a P5..."
                   disabled={loading}
                   style={{
                     padding: "12px 14px",
-                    border: "1px solid rgba(26, 107, 58, 0.2)",
+                    border: validationErrors.edat 
+                      ? "2.5px solid #b91c1c" 
+                      : "1px solid rgba(26, 107, 58, 0.2)",
                     borderRadius: "8px",
                     fontSize: "15px",
                     outline: "none",
-                    color: "var(--fosc)"
+                    color: "var(--fosc)",
+                    backgroundColor: validationErrors.edat ? "#fef2f2" : "white",
+                    transition: "all 0.2s"
                   }}
                 />
+                {validationErrors.edat && (
+                  <span style={{ color: "#b91c1c", fontSize: "12px", fontWeight: "600", marginTop: "-2px" }}>
+                    * La franja d'edats és obligatòria
+                  </span>
+                )}
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "8px", gridColumn: "1 / -1" }}>

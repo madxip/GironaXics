@@ -4,6 +4,8 @@ import React, { useState, useRef } from "react";
 import { Centre } from "@/lib/types";
 import { updateCentreAction } from "@/app/actions/centre";
 import { Building, MapPin, Phone, Mail, Globe, Info, Loader2, Upload, Trash2 } from "lucide-react";
+import { mapAirtableError } from "@/lib/utils";
+import Toast from "@/components/Toast";
 
 interface CentreFormProps {
   initialData: Centre;
@@ -23,6 +25,15 @@ export default function CentreForm({ initialData, barris }: CentreFormProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  const [validationErrors, setValidationErrors] = useState<Record<string, boolean>>({});
+
+  const handleFieldChange = (field: string, value: string, setter: (val: string) => void) => {
+    setter(value);
+    if (value.trim()) {
+      setValidationErrors(prev => ({ ...prev, [field]: false }));
+    }
+  };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -67,13 +78,29 @@ export default function CentreForm({ initialData, barris }: CentreFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nom || !barri) {
-      setMessage({ type: "error", text: "El Nom del Centre i el Barri són camps obligatoris." });
+    setMessage(null);
+
+    const errors: Record<string, boolean> = {};
+    if (!nom.trim()) errors.nom = true;
+    if (!barri.trim()) errors.barri = true;
+
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      setMessage({
+        type: "error",
+        text: "Si us plau, omple tots els camps obligatoris marcats amb asterisc (*)."
+      });
+      
+      const firstErrorField = Object.keys(errors)[0];
+      const element = document.getElementById(firstErrorField);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => element.focus(), 100);
+      }
       return;
     }
 
     setIsSubmitting(true);
-    setMessage(null);
 
     let formattedWeb = web.trim();
     if (formattedWeb && !/^https?:\/\//i.test(formattedWeb)) {
@@ -95,13 +122,14 @@ export default function CentreForm({ initialData, barris }: CentreFormProps) {
       const res = await updateCentreAction(null, formData);
       if (res.success) {
         setMessage({ type: "success", text: "Dades del centre actualitzades correctament!" });
-        window.scrollTo({ top: 0, behavior: "smooth" });
       } else {
-        setMessage({ type: "error", text: res.error || "No s'han pogut desar les dades." });
+        const parsed = mapAirtableError(res.error);
+        setMessage({ type: "error", text: parsed });
       }
     } catch (err) {
       console.error(err);
-      setMessage({ type: "error", text: "S'ha produït un error inesperat." });
+      const parsed = mapAirtableError(err);
+      setMessage({ type: "error", text: parsed });
     } finally {
       setIsSubmitting(false);
     }
@@ -125,18 +153,32 @@ export default function CentreForm({ initialData, barris }: CentreFormProps) {
       </div>
 
       {message && (
-        <div style={{
-          padding: "16px 20px",
-          borderRadius: "8px",
-          marginBottom: "24px",
-          fontSize: "15px",
-          fontWeight: 500,
-          border: "1px solid",
-          backgroundColor: message.type === "success" ? "#f0fdf4" : "#fef2f2",
-          borderColor: message.type === "success" ? "#bbf7d0" : "#fecaca",
-          color: message.type === "success" ? "#166534" : "#991b1b"
-        }}>
-          {message.text}
+        <div className="centre-toast-container">
+          <Toast
+            type={message.type}
+            message={message.text}
+            onClose={() => setMessage(null)}
+          />
+          <style dangerouslySetInnerHTML={{ __html: `
+            .centre-toast-container {
+              position: fixed;
+              top: 24px;
+              right: 24px;
+              z-index: 99999;
+              width: calc(100% - 48px);
+              max-width: 420px;
+              pointer-events: none;
+            }
+            @media (max-width: 768px) {
+              .centre-toast-container {
+                top: 16px;
+                right: 16px;
+                left: 16px;
+                width: auto;
+                max-width: none;
+              }
+            }
+          `}} />
         </div>
       )}
 
@@ -171,20 +213,29 @@ export default function CentreForm({ initialData, barris }: CentreFormProps) {
               </label>
               <input
                 type="text"
+                id="nom"
                 value={nom}
-                onChange={(e) => setNom(e.target.value)}
-                required
+                onChange={(e) => handleFieldChange("nom", e.target.value, setNom)}
                 style={{
                   width: "100%",
                   padding: "12px 16px",
                   borderRadius: "8px",
-                  border: "1px solid var(--crema-fosca, #eae2d1)",
+                  border: validationErrors.nom 
+                    ? "2.5px solid #b91c1c" 
+                    : "1px solid var(--crema-fosca, #eae2d1)",
                   fontSize: "15px",
                   fontFamily: "inherit",
                   boxSizing: "border-box",
-                  outline: "none"
+                  backgroundColor: validationErrors.nom ? "#fef2f2" : "white",
+                  outline: "none",
+                  transition: "all 0.2s"
                 }}
               />
+              {validationErrors.nom && (
+                <span style={{ color: "#b91c1c", fontSize: "12px", fontWeight: "600", marginTop: "4px", display: "block" }}>
+                  * El nom del centre és obligatori
+                </span>
+              )}
             </div>
 
             <div style={{ gridColumn: "span 2" }}>
@@ -192,19 +243,22 @@ export default function CentreForm({ initialData, barris }: CentreFormProps) {
                 Barri de Girona *
               </label>
               <select
+                id="barri"
                 value={barri}
-                onChange={(e) => setBarri(e.target.value)}
-                required
+                onChange={(e) => handleFieldChange("barri", e.target.value, setBarri)}
                 style={{
                   width: "100%",
                   padding: "12px 16px",
                   borderRadius: "8px",
-                  border: "1px solid var(--crema-fosca, #eae2d1)",
+                  border: validationErrors.barri 
+                    ? "2.5px solid #b91c1c" 
+                    : "1px solid var(--crema-fosca, #eae2d1)",
                   fontSize: "15px",
                   fontFamily: "inherit",
-                  backgroundColor: "white",
+                  backgroundColor: validationErrors.barri ? "#fef2f2" : "white",
                   boxSizing: "border-box",
-                  outline: "none"
+                  outline: "none",
+                  transition: "all 0.2s"
                 }}
               >
                 <option value="">-- Tria un barri --</option>
@@ -212,6 +266,11 @@ export default function CentreForm({ initialData, barris }: CentreFormProps) {
                   <option key={b} value={b}>{b}</option>
                 ))}
               </select>
+              {validationErrors.barri && (
+                <span style={{ color: "#b91c1c", fontSize: "12px", fontWeight: "600", marginTop: "4px", display: "block" }}>
+                  * Selecciona un barri obligatori
+                </span>
+              )}
             </div>
           </div>
         </div>
