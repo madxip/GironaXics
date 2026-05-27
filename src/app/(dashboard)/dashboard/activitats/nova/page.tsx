@@ -46,13 +46,13 @@ export default async function NovaActivitatPage() {
   
   // Dynamically build list of categories and barris, merging with standard defaults
   const categories = Array.from(new Set([
-    ...activitats.map(a => a.categoria).filter(Boolean),
-    ...DEFAULT_CATEGORIES
+    ...activitats.map(a => a.categoria?.trim()).filter(Boolean),
+    ...DEFAULT_CATEGORIES.map(c => c.trim())
   ])).sort();
 
   const barris = Array.from(new Set([
-    ...activitats.map(a => a.barri).filter(Boolean),
-    ...DEFAULT_BARRIS
+    ...activitats.map(a => a.barri?.trim()).filter(Boolean),
+    ...DEFAULT_BARRIS.map(b => b.trim())
   ])).sort();
 
   return (

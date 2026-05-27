@@ -49,8 +49,8 @@ export default async function CentreDashboardPage() {
   // Get active neighborhoods to merge with defaults for the dropdown selection
   const activitats = await getActivitats();
   const barris = Array.from(new Set([
-    ...activitats.map(a => a.barri).filter(Boolean),
-    ...DEFAULT_BARRIS
+    ...activitats.map(a => a.barri?.trim()).filter(Boolean),
+    ...DEFAULT_BARRIS.map(b => b.trim())
   ])).sort();
 
   return (

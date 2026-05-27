@@ -96,13 +96,13 @@ export default async function EditarActivitatPage({ params }: EditarActivitatPag
 
   // Build options
   const categories = Array.from(new Set([
-    ...allActivitats.map(a => a.categoria).filter(Boolean),
-    ...DEFAULT_CATEGORIES
+    ...allActivitats.map(a => a.categoria?.trim()).filter(Boolean),
+    ...DEFAULT_CATEGORIES.map(c => c.trim())
   ])).sort();
 
   const barris = Array.from(new Set([
-    ...allActivitats.map(a => a.barri).filter(Boolean),
-    ...DEFAULT_BARRIS
+    ...allActivitats.map(a => a.barri?.trim()).filter(Boolean),
+    ...DEFAULT_BARRIS.map(b => b.trim())
   ])).sort();
 
   // Bind the ID to the server action so the form can just call it
