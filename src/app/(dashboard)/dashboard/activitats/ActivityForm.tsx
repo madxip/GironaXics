@@ -318,13 +318,7 @@ export default function ActivityForm({
       </div>
 
       {/* Card Wrapper */}
-      <div style={{
-        backgroundColor: "white",
-        borderRadius: "16px",
-        border: "1px solid var(--verd-pallid)",
-        boxShadow: "0 10px 30px rgba(26, 107, 58, 0.02)",
-        padding: "40px"
-      }}>
+      <div className="dashboard-card-form">
         <h2 style={{
           fontFamily: "var(--font-serif)",
           fontStyle: "italic",
@@ -375,7 +369,7 @@ export default function ActivityForm({
             </h3>
             
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px", gridColumn: "span 2" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px", gridColumn: "1 / -1" }}>
                 <label style={{ fontSize: "13px", fontWeight: "700", color: "var(--verd-fosc)", textTransform: "uppercase" }}>
                   {TXT_NOM_ACTIVITAT}
                 </label>
@@ -603,7 +597,7 @@ export default function ActivityForm({
                 />
               </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px", gridColumn: "span 2" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px", gridColumn: "1 / -1" }}>
                 <label style={{ fontSize: "13px", fontWeight: "700", color: "var(--verd-fosc)", textTransform: "uppercase" }}>
                   {TXT_PREU_FACTURACIO}
                 </label>

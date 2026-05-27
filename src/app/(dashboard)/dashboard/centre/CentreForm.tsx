@@ -140,16 +140,15 @@ export default function CentreForm({ initialData, barris }: CentreFormProps) {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} style={{
-        backgroundColor: "white",
-        borderRadius: "16px",
-        border: "1px solid var(--verd-pallid, #e2ebd5)",
-        boxShadow: "0 10px 30px rgba(26, 107, 58, 0.02)",
-        padding: "40px",
-        display: "flex",
-        flexDirection: "column",
-        gap: "32px"
-      }}>
+      <form 
+        onSubmit={handleSubmit} 
+        className="dashboard-card-form"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "32px"
+        }}
+      >
         {/* Section 1: Basic Info */}
         <div>
           <h2 style={{
