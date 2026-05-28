@@ -102,12 +102,18 @@ export default function Filtres({ activitats }: { activitats: Activitat[] }) {
   }, [activitats]);
 
   const filtered = useMemo(() => {
-    return activitats.filter(a => {
+    const result = activitats.filter(a => {
       const matchCat = selectedCategoria === 'Totes' || a.categoria === selectedCategoria;
       const matchSubcat = selectedCategoria === 'Totes' || selectedSubcategoria === 'Totes' || a.subcategoria === selectedSubcategoria;
       const matchEdat = matchEdatGroup(a.edat, selectedEdat);
       const matchBarri = selectedBarri === 'Totes' || a.barri === selectedBarri;
       return matchCat && matchSubcat && matchEdat && matchBarri;
+    });
+    // Centres confirmats primer, la resta per ordre natural
+    return result.sort((a, b) => {
+      const aInt = a.centreInteressat ? 1 : 0;
+      const bInt = b.centreInteressat ? 1 : 0;
+      return bInt - aInt;
     });
   }, [activitats, selectedCategoria, selectedSubcategoria, selectedEdat, selectedBarri]);
 

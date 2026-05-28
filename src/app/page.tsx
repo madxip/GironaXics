@@ -9,12 +9,13 @@ import Categories from '@/components/Categories';
 import ComFunciona from '@/components/ComFunciona';
 import BannerCentres from '@/components/BannerCentres';
 import Footer from '@/components/Footer';
-import { getActivitats, getCentres } from '@/lib/airtable';
+import { getActivitats, getActivitatsDestacades, getCentres } from '@/lib/airtable';
 import { Suspense } from 'react';
 
 export default async function Home() {
-  const [activitats, centres] = await Promise.all([
+  const [activitats, destacades, centres] = await Promise.all([
     getActivitats(),
+    getActivitatsDestacades(),
     getCentres()
   ]);
   return (
@@ -36,7 +37,7 @@ export default async function Home() {
         <div className="sep-num">02 · EL NOSTRE RECULL</div>
         <div className="sep-line"></div>
       </div>
-      <Destacades />
+      <Destacades destacades={destacades} all={activitats} />
       
       <div id="categories" className="editorial-sep">
         <div className="sep-num">03 · CATEGORIES</div>

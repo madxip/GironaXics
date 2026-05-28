@@ -154,6 +154,7 @@ export async function getActivitats(): Promise<Activitat[]> {
 
     const centreMap = new Map<string, string>();
     const centreImatgeMap = new Map<string, string>();
+    const centreInteressatMap = new Map<string, boolean>();
 
     centresRecords.forEach((c) => {
       if (c.fields && c.fields.nom) {
@@ -168,6 +169,12 @@ export async function getActivitats(): Promise<Activitat[]> {
             centreImatgeMap.set(c.fields.nom as string, url);
           }
         }
+        // Mapear si el centre ha confirmat participació
+        const interessat = !!(c.fields.interessat || c.fields.Interessat || c.fields['col·laborador'] || c.fields['Col·laborador'] || c.fields.partner || c.fields.Partner);
+        centreInteressatMap.set(c.id, interessat);
+        if (c.fields.nom) {
+          centreInteressatMap.set(c.fields.nom as string, interessat);
+        }
       }
     });
 
@@ -179,6 +186,7 @@ export async function getActivitats(): Promise<Activitat[]> {
       if (Array.isArray(r.fields.centre) && r.fields.centre.length > 0) {
         f.centre = centreMap.get(r.fields.centre[0] as string) || (r.fields.centre[0] as string);
         f.centreImatgeUrl = centreImatgeMap.get(r.fields.centre[0] as string);
+        f.centreInteressat = centreInteressatMap.get(r.fields.centre[0] as string) || false;
       }
       if (!f.centreImatgeUrl && f.centre) {
         f.centreImatgeUrl = centreImatgeMap.get(f.centre);
@@ -341,6 +349,10 @@ export async function getCentres(): Promise<Centre[]> {
       // Robust slug fallback: use slug field (lowercase or uppercase) or generate from name or fallback to record ID
       const customSlug = (r.fields.slug as string) || (r.fields.Slug as string);
       f.slug = customSlug ? normalizeSlug(customSlug) : (r.fields.nom ? normalizeSlug(r.fields.nom as string) : r.id);
+
+      // Mapear si el centre ha confirmat participació (casella Airtable)
+      f.interessat = !!(r.fields.interessat || r.fields.Interessat || r.fields['col·laborador'] || r.fields['Col·laborador'] || r.fields.partner || r.fields.Partner);
+
       return f;
     });
 

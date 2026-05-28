@@ -9,6 +9,7 @@ export interface Activitat {
   edat: string;
   preu?: number | string;
   destacada: boolean;
+  centreInteressat?: boolean; // Centre ha confirmat participació
   destacada_gran?: boolean;
   horari: string;
   dies: string;
@@ -37,5 +38,6 @@ export interface Centre {
   barri: string;
   descripcio: string;
   imatgeUrl?: string;
+  interessat?: boolean; // Centre ha confirmat participació (casella Airtable)
 }
 
