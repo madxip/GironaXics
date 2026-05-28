@@ -102,7 +102,7 @@ export default function Destacades({ destacades, all }: Props) {
   // és estable durant la sessió (no rebarreja en cada re-render).
   const { cards, showPromo } = useMemo(() => {
     const venudes = destacades.slice(); // destacades marcades a Airtable
-    const maxVenudes = TOTAL_SLOTS; // mai mostrem la promo si hi ha 5 venudes
+    const maxVenudes = TOTAL_SLOTS;
 
     if (venudes.length >= maxVenudes) {
       // 5 o més venudes → mostrem les 5 primeres, sense promo
@@ -117,9 +117,21 @@ export default function Destacades({ destacades, all }: Props) {
     // Nombre de slots lliures (reservem l'últim per la promo)
     const slotsLliures = TOTAL_SLOTS - 1 - venudes.length;
     const farciment = aleatories.slice(0, slotsLliures);
+    const candidats = [...venudes, ...farciment];
+
+    // La card gran (posició 0) ha de tenir foto pròpia (imatgeUrl).
+    // Si la primera no en té, busquem la primera del pool que sí tingui.
+    const granIdx = candidats.findIndex(a => !!a.imatgeUrl);
+    if (granIdx > 0) {
+      // Posem la que té foto al capdavant, deixem la resta en ordre
+      const ambFoto = candidats[granIdx];
+      candidats.splice(granIdx, 1);
+      candidats.unshift(ambFoto);
+    }
+    // Si granIdx === -1 no hi ha cap amb foto → deixem l'ordre tal qual (fallback)
 
     return {
-      cards: [...venudes, ...farciment],
+      cards: candidats,
       showPromo: true,
     };
   }, [destacades, all]);
