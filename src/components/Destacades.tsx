@@ -190,7 +190,7 @@ export default function Destacades({ destacades, all }: Props) {
             <div className="card-normal-content">
               <div className="card-normal-title">{a.nom}</div>
               <div className="card-normal-info">
-                {a.edat} · {a.preu != null && a.preu !== '' ? `${a.preu}€` : 'A consultar'}
+                {a.centre} · {a.edat} · {a.preu != null && a.preu !== '' ? `${a.preu}€` : 'A consultar'}
               </div>
             </div>
           </Link>
@@ -216,7 +216,7 @@ export default function Destacades({ destacades, all }: Props) {
             <div className="card-normal-content">
               <div className="card-normal-title">{cards[4].nom}</div>
               <div className="card-normal-info">
-                {cards[4].edat} · {cards[4].preu != null && cards[4].preu !== '' ? `${cards[4].preu}€` : 'A consultar'}
+                {cards[4].centre} · {cards[4].edat} · {cards[4].preu != null && cards[4].preu !== '' ? `${cards[4].preu}€` : 'A consultar'}
               </div>
             </div>
           </Link>
