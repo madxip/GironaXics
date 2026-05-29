@@ -27,15 +27,48 @@ export async function generateMetadata({ params }: { params: { categoria: string
   const activitat = await getActivitatBySlug(params.slug);
   if (!activitat) return {};
 
+  // Construïm un meta description superric, dinàmic i optimitzat per a Google SEO
+  let metaDesc = `${activitat.nom} per a nens de ${activitat.edat} a ${activitat.centre}.`;
+  
+  if (activitat.descripcio) {
+    // Agafem la primera frase de la descripció per a donar context orgànic
+    const firstSentence = activitat.descripcio.split(/[.!?]+/)[0]?.trim();
+    if (firstSentence && firstSentence.length > 10) {
+      metaDesc += ` ${firstSentence}.`;
+    }
+  }
+
+  // Afegim dies i horari si hi són
+  if (activitat.dies) {
+    if (activitat.horari) {
+      metaDesc += ` ${activitat.dies} de ${activitat.horari}.`;
+    } else {
+      metaDesc += ` ${activitat.dies}.`;
+    }
+  }
+
+  // Afegim preu formatat
+  if (activitat.preu != null && String(activitat.preu).trim() !== '') {
+    const formattedPreu = formatPreu(activitat.preu);
+    metaDesc += ` Preu: ${formattedPreu}.`;
+  }
+
+  // Tallem amb cura per no deixar paraules a mitges (màxim ~155-160 caràcters recomanat per Google)
+  if (metaDesc.length > 158) {
+    const sliced = metaDesc.slice(0, 155);
+    const lastSpace = sliced.lastIndexOf(' ');
+    metaDesc = (lastSpace > 110 ? sliced.slice(0, lastSpace) : sliced) + '...';
+  }
+
   return {
     title: `Activitats i extraescolars de ${activitat.nom} a ${activitat.barri}, Girona | GironaXics`,
-    description: `Aprèn ${activitat.nom} a ${activitat.centre}. Per a nens de ${activitat.edat}. ${activitat.preu != null && activitat.preu !== '' ? activitat.preu + '€/mes' : 'Preu a consultar'}. Troba totes les extraescolars de Girona a GironaXics.`.slice(0, 150),
+    description: metaDesc,
     alternates: {
       canonical: `/activitats/${params.categoria}/${params.slug}`,
     },
     openGraph: {
       title: `Activitats i extraescolars de ${activitat.nom} a ${activitat.barri}, Girona | GironaXics`,
-      description: `Aprèn ${activitat.nom} a ${activitat.centre}. Per a nens de ${activitat.edat}. ${activitat.preu != null && activitat.preu !== '' ? activitat.preu + '€/mes' : 'Preu a consultar'}. Troba totes les extraescolars de Girona a GironaXics.`.slice(0, 150),
+      description: metaDesc,
       type: 'article',
       locale: 'ca_ES',
     }
