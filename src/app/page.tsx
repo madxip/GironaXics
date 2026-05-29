@@ -18,12 +18,16 @@ export default async function Home() {
     getActivitatsDestacades(),
     getCentres()
   ]);
+
+  const uniqueCategories = new Set(activitats.map(a => a.categoria?.trim()).filter(Boolean));
+  const numCategories = uniqueCategories.size;
+
   return (
     <>
       <Nav />
       <main id="main-content">
       <Hero />
-      <Stats numCentres={centres.length} numActivitats={activitats.length} />
+      <Stats numCentres={centres.length} numCategories={numCategories} numActivitats={activitats.length} />
 
       <div id="filtres" className="editorial-sep">
         <div className="sep-num">01 · FILTRES</div>

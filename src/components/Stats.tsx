@@ -2,7 +2,15 @@
 
 import { useEffect, useRef } from 'react';
 
-export default function Stats({ numCentres = 60, numActivitats = 200 }: { numCentres?: number, numActivitats?: number }) {
+export default function Stats({ 
+  numCentres = 60, 
+  numCategories = 10,
+  numActivitats = 200 
+}: { 
+  numCentres?: number;
+  numCategories?: number;
+  numActivitats?: number;
+}) {
   const statRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
@@ -48,12 +56,12 @@ export default function Stats({ numCentres = 60, numActivitats = 200 }: { numCen
                 <div className="stat-label">centres adherits</div>
             </div>
             <div className="stat-item">
-                <div className="stat-number stat-anim" data-val={numActivitats} ref={el => { statRefs.current[1] = el; }}>+0</div>
-                <div className="stat-label">activitats disponibles</div>
+                <div className="stat-number stat-anim" data-val={numCategories} ref={el => { statRefs.current[1] = el; }}>0</div>
+                <div className="stat-label">categories<br/>d&apos;activitats</div>
             </div>
             <div className="stat-item">
-                <div className="stat-number stat-anim" data-val="1" ref={el => { statRefs.current[2] = el; }}>0</div>
-                <div className="stat-label">directori.<br/>En català.</div>
+                <div className="stat-number stat-anim" data-val={numActivitats} ref={el => { statRefs.current[2] = el; }}>+0</div>
+                <div className="stat-label">activitats disponibles</div>
             </div>
         </div>
     </section>
