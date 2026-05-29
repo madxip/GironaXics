@@ -144,6 +144,24 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
               <div style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', lineHeight: 1.6, color: 'var(--fosc)', whiteSpace: 'pre-line' }}>
                 {activitat.descripcio || TXT_SENSE_DESCRIPCIO}
               </div>
+              {activitat.material && (
+                <div style={{ 
+                  marginTop: '32px', 
+                  padding: '24px', 
+                  backgroundColor: 'var(--crema-fosca)', 
+                  borderLeft: '4px solid var(--verd)', 
+                  fontFamily: 'var(--font-sans)', 
+                  fontSize: '16px', 
+                  lineHeight: 1.5, 
+                  color: 'var(--fosc)',
+                  borderRadius: '0 4px 4px 0'
+                }}>
+                  <strong style={{ display: 'block', color: 'var(--verd-fosc)', marginBottom: '8px', textTransform: 'uppercase', fontSize: '12px', letterSpacing: '0.05em' }}>
+                    Informació d&apos;interès
+                  </strong>
+                  {activitat.material}
+                </div>
+              )}
               <Galeria images={activitat.galeria} nom={activitat.nom} />
             </div>
 

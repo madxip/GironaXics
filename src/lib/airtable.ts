@@ -200,7 +200,7 @@ export async function getActivitats(): Promise<Activitat[]> {
       } else {
         f.galeria = [];
       }
-      f.material = "";
+      f.material = (r.fields['descripció'] as string) || "";
       if (f.barri === 'Centro') {
         f.barri = 'Centre';
       }
@@ -538,7 +538,7 @@ export async function getActivitatsByCentreId(centreId: string): Promise<Activit
       } else {
         f.galeria = [];
       }
-      f.material = "";
+      f.material = (r.fields['descripció'] as string) || "";
       if (f.barri === 'Centro') f.barri = 'Centre';
       f.qui_imparteix = (r.fields.qui_imparteix as string) || (r.fields['Qui imparteix'] as string) || (r.fields['qui imparteix'] as string);
 
@@ -605,6 +605,7 @@ export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'cen
       horari: data.horari,
       dies: data.dies,
       descripcio: data.descripcio || "",
+      "descripció": data.material || "",
       durada: data.durada || "",
       alumnes: data.alumnes || "",
       inici: data.inici || "",
@@ -668,7 +669,7 @@ export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'cen
         descripcio: r.fields.descripcio as string,
         durada: r.fields.durada as string,
         alumnes: r.fields.alumnes as string,
-        material: "",
+        material: (r.fields['descripció'] as string) || "",
         inici: r.fields.inici as string,
         idioma: r.fields.idioma as string,
         qui_imparteix: (r.fields['Qui imparteix'] || r.fields.qui_imparteix) as string,
@@ -707,6 +708,7 @@ export async function updateActivitat(id: string, data: Partial<Omit<Activitat, 
     if (data.horari) fields.horari = data.horari;
     if (data.dies) fields.dies = data.dies;
     if (data.descripcio !== undefined) fields.descripcio = data.descripcio;
+    if (data.material !== undefined) fields["descripció"] = data.material;
     if (data.durada !== undefined) fields.durada = data.durada;
     if (data.alumnes !== undefined) fields.alumnes = data.alumnes;
     if (data.inici !== undefined) fields.inici = data.inici;
