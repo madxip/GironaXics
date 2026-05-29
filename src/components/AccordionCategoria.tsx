@@ -61,13 +61,20 @@ export default function AccordionCategoria({ categoria, activitats, defaultOpen 
         </span>
       </button>
       
-      {isOpen && (
-        <div id={`accordion-content-${categoria.replace(/\s+/g, '-')}`} className="accordion-content" style={{ padding: '16px 0', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {activitats.map(a => (
-            <ActivitatCard key={a.slug} activitat={a} />
-          ))}
-        </div>
-      )}
+      <div 
+        id={`accordion-content-${categoria.replace(/\s+/g, '-')}`} 
+        className="accordion-content" 
+        style={{ 
+          padding: isOpen ? '16px 0' : '0', 
+          display: isOpen ? 'flex' : 'none', 
+          flexDirection: 'column', 
+          gap: '16px' 
+        }}
+      >
+        {activitats.map(a => (
+          <ActivitatCard key={a.slug} activitat={a} />
+        ))}
+      </div>
     </div>
   );
 }

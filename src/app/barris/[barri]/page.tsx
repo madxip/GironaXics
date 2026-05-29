@@ -28,7 +28,10 @@ export async function generateMetadata({ params }: { params: { barri: string } }
 
   return {
     title: `Activitats i extraescolars al barri de ${barriDisplay} a Girona | GironaXics`,
-    description: `Descobreix totes les activitats extraescolars per a nens i joves al barri de ${barriDisplay} a Girona. Troba els millors centres i activitats.`
+    description: `Descobreix totes les activitats extraescolars per a nens i joves al barri de ${barriDisplay} a Girona. Troba els millors centres i activitats.`,
+    alternates: {
+      canonical: `/barris/${params.barri}`,
+    }
   };
 }
 

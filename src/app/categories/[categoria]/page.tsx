@@ -20,7 +20,10 @@ export async function generateMetadata({ params }: { params: { categoria: string
   const catDisplay = params.categoria.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   return {
     title: `Activitats i extraescolars de ${catDisplay} a Girona | GironaXics`,
-    description: `Totes les extraescolars de ${catDisplay} per a nens a Girona. Troba la millor opció.`
+    description: `Totes les extraescolars de ${catDisplay} per a nens a Girona. Troba la millor opció.`,
+    alternates: {
+      canonical: `/categories/${params.categoria}`,
+    }
   };
 }
 
