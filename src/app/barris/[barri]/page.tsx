@@ -26,9 +26,21 @@ export async function generateMetadata({ params }: { params: { barri: string } }
     .replace(/\bEls\b/g, 'els')
     .replace(/\bLes\b/g, 'les');
 
+  let descSuffix = "";
+  if (barriDisplay.toLowerCase().includes("sant ")) {
+    const abbr = barriDisplay.replace(/Sant\b/i, "St.");
+    descSuffix = ` (${abbr})`;
+  } else if (barriDisplay.toLowerCase().includes("santa ")) {
+    const abbr = barriDisplay.replace(/Santa\b/i, "Sta.");
+    descSuffix = ` (${abbr})`;
+  }
+
   return {
     title: `Activitats i extraescolars al barri de ${barriDisplay} a Girona | GironaXics`,
-    description: `Descobreix totes les activitats extraescolars per a nens i joves al barri de ${barriDisplay} a Girona. Troba els millors centres i activitats.`
+    description: `Descobreix totes les activitats extraescolars per a nens i joves al barri de ${barriDisplay}${descSuffix} a Girona. Troba els millors centres i activitats.`,
+    alternates: {
+      canonical: `/barris/${params.barri}`,
+    }
   };
 }
 
