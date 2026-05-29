@@ -24,7 +24,10 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
   return {
     title: `Activitats extraescolars a ${centre.nom} | GironaXics`,
-    description: `Totes les activitats extraescolars ofertes per ${centre.nom} a Girona. Troba la millor opció.`
+    description: `Totes les activitats extraescolars ofertes per ${centre.nom} a Girona. Troba la millor opció.`,
+    alternates: {
+      canonical: `/centres/${params.slug}`,
+    }
   };
 }
 
