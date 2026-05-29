@@ -25,6 +25,14 @@ const nextConfig = {
     ],
   },
   async headers() {
+    const isDev = process.env.NODE_ENV === 'development';
+    
+    // In development mode, Next.js requires 'unsafe-eval' for fast refresh/eval-source-maps
+    // and WebSockets (ws: wss:) for Hot Module Replacement (HMR) connection.
+    const cspValue = isDev
+      ? "default-src 'self'; img-src 'self' data: https: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' ws: wss: https://v5.airtableusercontent.com https://dl.airtable.com https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com; object-src 'none';"
+      : "default-src 'self'; img-src 'self' data: https://images.unsplash.com https://files.catbox.moe https://tmpfiles.org https://v5.airtableusercontent.com https://dl.airtable.com https://www.google-analytics.com; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://v5.airtableusercontent.com https://dl.airtable.com https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com; object-src 'none'; frame-ancestors 'none';";
+
     return [
       {
         source: '/(.*)',
@@ -43,8 +51,7 @@ const nextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            // Next.js requires 'unsafe-inline' for its hydration scripts; nonce-based CSP would need middleware refactoring
-            value: "default-src 'self'; img-src 'self' data: https://images.unsplash.com https://files.catbox.moe https://tmpfiles.org https://v5.airtableusercontent.com https://dl.airtable.com https://www.google-analytics.com; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://v5.airtableusercontent.com https://dl.airtable.com https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com; object-src 'none'; frame-ancestors 'none';"
+            value: cspValue,
           },
         ],
       },

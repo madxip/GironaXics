@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from './SafeImage';
 import { Activitat } from '@/lib/types';
 import { normalizeSlug } from '@/lib/utils';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 // Barreja un array de forma aleatòria (Fisher-Yates)
 function shuffle<T>(arr: T[]): T[] {
@@ -97,6 +97,11 @@ interface Props {
 
 export default function Destacades({ destacades, all }: Props) {
   const TOTAL_SLOTS = 5;
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Calculem les targetes a mostrar. useMemo garanteix que l'aleatorietat
   // és estable durant la sessió (no rebarreja en cada re-render).
@@ -112,11 +117,14 @@ export default function Destacades({ destacades, all }: Props) {
     // Activitats que no estan en les destacades venudes
     const slugsVenduts = new Set(venudes.map(d => d.slug));
     const pool = all.filter(a => !slugsVenduts.has(a.slug));
-    const aleatories = shuffle(pool);
+    
+    // Evitem mismatch d'hidratació: només barregem aleatòriament a client un cop muntat.
+    // Durant el render de servidor i la primera hidratació a client fem servir l'ordre determinista original.
+    const poolForSelection = isMounted ? shuffle(pool) : pool;
 
     // Nombre de slots lliures (reservem l'últim per la promo)
     const slotsLliures = TOTAL_SLOTS - 1 - venudes.length;
-    const farciment = aleatories.slice(0, slotsLliures);
+    const farciment = poolForSelection.slice(0, slotsLliures);
     const candidats = [...venudes, ...farciment];
 
     // La card gran (posició 0) ha de tenir foto pròpia (imatgeUrl).
@@ -134,7 +142,7 @@ export default function Destacades({ destacades, all }: Props) {
       cards: candidats,
       showPromo: true,
     };
-  }, [destacades, all]);
+  }, [destacades, all, isMounted]);
 
   const getMockImg = (color: string) =>
     `data:image/svg+xml,%3Csvg viewBox='0 0 400 300' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%25' height='100%25' fill='%23${color}'/%3E%3C/svg%3E`;
