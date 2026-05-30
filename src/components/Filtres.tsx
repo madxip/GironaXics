@@ -292,29 +292,33 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                           overflow: hidden;
                           text-decoration: none;
                           color: white;
-                          border: 1px solid rgba(255, 255, 255, 0.1);
+                          border: 1px solid rgba(9, 26, 15, 0.35);
                           background-size: cover;
                           background-position: center;
                           background-repeat: no-repeat;
+                          background-clip: padding-box;
                           box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
                           transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease;
+                          transform: translate3d(0, 0, 0);
+                          -webkit-mask-image: -webkit-radial-gradient(white, black);
                         }
                         
                         .sponsor-card-premium:hover {
-                          transform: translateY(-8px);
+                          transform: translate3d(0, -8px, 0);
                           box-shadow: 0 25px 50px rgba(12, 34, 20, 0.4);
                         }
                         
                         /* The fading dark green overlay */
                         .sponsor-card-overlay {
                           position: absolute;
-                          top: 0;
-                          left: 0;
-                          right: 0;
-                          bottom: 0;
+                          top: -1px;
+                          left: -1px;
+                          right: -1px;
+                          bottom: -1px;
                           background: linear-gradient(to bottom, rgba(12, 34, 20, 0.1) 0%, rgba(12, 34, 20, 0.4) 40%, rgba(9, 26, 15, 0.95) 100%);
                           z-index: 1;
                           transition: opacity 0.3s ease;
+                          border-radius: inherit;
                         }
                         
                         .sponsor-card-premium:hover .sponsor-card-overlay {
