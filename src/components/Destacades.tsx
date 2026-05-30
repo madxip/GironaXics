@@ -16,7 +16,10 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-const PROMO_PREU = '10';
+/**
+ * Preu base promocional en €/mes per destacar una activitat (Fase 1 / Centres)
+ */
+const PROMO_PREU_MENSUAL: number = 10;
 
 function CardPromo() {
   return (
@@ -71,7 +74,7 @@ function CardPromo() {
         letterSpacing: '0.03em',
         color: 'white',
       }}>
-        Des de {PROMO_PREU}€/mes
+        Des de {PROMO_PREU_MENSUAL}€/mes
       </div>
       <Link
         href="/per-a-centres"

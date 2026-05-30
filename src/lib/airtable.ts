@@ -111,6 +111,112 @@ async function getSubcategoryRecordIdByName(name: string): Promise<string | null
   return null;
 }
 
+function mapActivitatRecord(
+  r: { id: string; fields: Record<string, unknown> },
+  centreMap: Map<string, string>,
+  centreImatgeMap: Map<string, string>,
+  centreInteressatMap: Map<string, boolean>
+): Activitat {
+  const f = { ...r.fields } as unknown as Activitat;
+  f.id = r.id;
+  
+  const centreId = Array.isArray(r.fields.centre) && r.fields.centre.length > 0 ? (r.fields.centre[0] as string) : undefined;
+  f.centreId = centreId;
+
+  if (centreId) {
+    f.centre = centreMap.get(centreId) || centreId;
+    f.centreImatgeUrl = centreImatgeMap.get(centreId);
+    f.centreInteressat = centreInteressatMap.get(centreId) || false;
+  }
+  if (!f.centreImatgeUrl && f.centre) {
+    f.centreImatgeUrl = centreImatgeMap.get(f.centre);
+  }
+
+  if (Array.isArray(r.fields.Imatge) && r.fields.Imatge.length > 0) {
+    f.imatgeUrl = (r.fields.Imatge[0] as { url: string }).url;
+  }
+  
+  if (Array.isArray(r.fields.Galeria)) {
+    f.galeria = (r.fields.Galeria as { url: string }[]).map((img) => img.url);
+  } else {
+    f.galeria = [];
+  }
+  
+  f.material = (r.fields['descripció'] as string) || "";
+  
+  const rawCat = r.fields.categoria || r.fields.Categoria;
+  f.categoria = Array.isArray(rawCat) ? (rawCat[0] as string) : (rawCat as string) || '';
+  
+  if (f.barri === 'Centro') {
+    f.barri = 'Centre';
+  }
+  
+  f.qui_imparteix = (r.fields.qui_imparteix as string) || (r.fields['Qui imparteix'] as string) || (r.fields['qui imparteix'] as string);
+  f.tipus = (r.fields.tipus as string) || (r.fields.Tipus as string) || "Extraescolar";
+
+  // Auto-generate a beautiful SEO-friendly slug: "nom-activitat-nom-centre-nom-barri-girona"
+  const customSlug = (r.fields.slug as string) || (r.fields.Slug as string);
+  if (customSlug) {
+    let tempSlug = normalizeSlug(customSlug);
+    
+    // Strip final "-girona" temporarily for clean comparison
+    if (tempSlug.endsWith('-girona')) {
+      tempSlug = tempSlug.slice(0, -7);
+    }
+
+    let centrePart = f.centre ? normalizeSlug(f.centre) : '';
+    let barriPart = f.barri ? normalizeSlug(f.barri) : '';
+
+    if (centrePart.endsWith('-girona')) {
+      centrePart = centrePart.slice(0, -7);
+    }
+    if (barriPart.endsWith('-girona')) {
+      barriPart = barriPart.slice(0, -7);
+    }
+
+    const parts = [tempSlug];
+    if (centrePart && !tempSlug.includes(centrePart)) {
+      parts.push(centrePart);
+    }
+    if (barriPart && !tempSlug.includes(barriPart)) {
+      parts.push(barriPart);
+    }
+
+    f.slug = parts.filter(Boolean).join('-');
+  } else {
+    const namePart = r.fields.nom ? normalizeSlug(r.fields.nom as string) : '';
+    let centrePart = f.centre ? normalizeSlug(f.centre) : '';
+    let barriPart = f.barri ? normalizeSlug(f.barri) : '';
+
+    if (centrePart.endsWith('-girona')) {
+      centrePart = centrePart.slice(0, -7);
+    }
+    if (barriPart.endsWith('-girona')) {
+      barriPart = barriPart.slice(0, -7);
+    }
+
+    const parts = [namePart];
+    if (centrePart) parts.push(centrePart);
+    if (barriPart) parts.push(barriPart);
+
+    f.slug = parts.filter(Boolean).join('-');
+    if (!f.slug) f.slug = r.id; // absolute fallback
+  }
+
+  if (f.slug && !f.slug.endsWith('-girona')) {
+    f.slug = `${f.slug}-girona`;
+  }
+
+  f.destacada = !!r.fields.destacada;
+  f.publicada = !!r.fields.publicada;
+  f.destacada_gran = !!r.fields.destacada_gran || !!r.fields['destacada_gran'] || !!r.fields['Destacada gran'] || !!r.fields['Destacada Gran'];
+  
+  const rawSub = r.fields.subcategoria || r.fields.Subcategoria || r.fields['Sub-categoria'] || r.fields['sub-categoria'];
+  f.subcategoria = Array.isArray(rawSub) ? (rawSub[0] as string) : (rawSub as string);
+
+  return f;
+}
+
 export async function getActivitats(): Promise<Activitat[]> {
   if (!API_KEY || !BASE_ID) {
     console.warn("Manca AIRTABLE_API_KEY o AIRTABLE_BASE_ID. Utilitzant dades de prova.");
@@ -179,95 +285,7 @@ export async function getActivitats(): Promise<Activitat[]> {
     });
 
     const formattedActivitats = records.map((r: { id: string; fields: Record<string, unknown> }) => {
-      const f = { ...r.fields } as unknown as Activitat;
-      f.id = r.id;
-      f.centreId = Array.isArray(r.fields.centre) && r.fields.centre.length > 0 ? (r.fields.centre[0] as string) : undefined;
-
-      if (Array.isArray(r.fields.centre) && r.fields.centre.length > 0) {
-        f.centre = centreMap.get(r.fields.centre[0] as string) || (r.fields.centre[0] as string);
-        f.centreImatgeUrl = centreImatgeMap.get(r.fields.centre[0] as string);
-        f.centreInteressat = centreInteressatMap.get(r.fields.centre[0] as string) || false;
-      }
-      if (!f.centreImatgeUrl && f.centre) {
-        f.centreImatgeUrl = centreImatgeMap.get(f.centre);
-      }
-
-      if (Array.isArray(r.fields.Imatge) && r.fields.Imatge.length > 0) {
-        f.imatgeUrl = (r.fields.Imatge[0] as { url: string }).url;
-      }
-      if (Array.isArray(r.fields.Galeria)) {
-        f.galeria = (r.fields.Galeria as { url: string }[]).map((img) => img.url);
-      } else {
-        f.galeria = [];
-      }
-      f.material = (r.fields['descripció'] as string) || "";
-      if (f.barri === 'Centro') {
-        f.barri = 'Centre';
-      }
-      f.qui_imparteix = (r.fields.qui_imparteix as string) || (r.fields['Qui imparteix'] as string) || (r.fields['qui imparteix'] as string);
-
-      // Auto-generate a beautiful SEO-friendly slug: "nom-activitat-nom-centre-nom-barri-girona"
-      const customSlug = (r.fields.slug as string) || (r.fields.Slug as string);
-      if (customSlug) {
-        let tempSlug = normalizeSlug(customSlug);
-        
-        // Strip final "-girona" temporarily for clean comparison
-        if (tempSlug.endsWith('-girona')) {
-          tempSlug = tempSlug.slice(0, -7);
-        }
-
-        let centrePart = f.centre ? normalizeSlug(f.centre) : '';
-        let barriPart = f.barri ? normalizeSlug(f.barri) : '';
-
-        // Strip intermediate trailing "-girona" to avoid duplicates
-        if (centrePart.endsWith('-girona')) {
-          centrePart = centrePart.slice(0, -7);
-        }
-        if (barriPart.endsWith('-girona')) {
-          barriPart = barriPart.slice(0, -7);
-        }
-
-        const parts = [tempSlug];
-        // Only append if not already present in the custom slug to prevent duplicates
-        if (centrePart && !tempSlug.includes(centrePart)) {
-          parts.push(centrePart);
-        }
-        if (barriPart && !tempSlug.includes(barriPart)) {
-          parts.push(barriPart);
-        }
-
-        f.slug = parts.filter(Boolean).join('-');
-      } else {
-        const namePart = r.fields.nom ? normalizeSlug(r.fields.nom as string) : '';
-        let centrePart = f.centre ? normalizeSlug(f.centre) : '';
-        let barriPart = f.barri ? normalizeSlug(f.barri) : '';
-
-        // Strip intermediate trailing "-girona" to avoid duplicates
-        if (centrePart.endsWith('-girona')) {
-          centrePart = centrePart.slice(0, -7);
-        }
-        if (barriPart.endsWith('-girona')) {
-          barriPart = barriPart.slice(0, -7);
-        }
-
-        const parts = [namePart];
-        if (centrePart) parts.push(centrePart);
-        if (barriPart) parts.push(barriPart);
-
-        f.slug = parts.filter(Boolean).join('-');
-        if (!f.slug) f.slug = r.id; // absolute fallback
-      }
-
-      // Ensure slug ends with '-girona'
-      if (f.slug && !f.slug.endsWith('-girona')) {
-        f.slug = `${f.slug}-girona`;
-      }
-
-      f.destacada_gran = !!r.fields.destacada_gran || !!r.fields['Destacada gran'] || !!r.fields['Destacada Gran'];
-      const rawSub = r.fields.subcategoria || r.fields.Subcategoria || r.fields['Sub-categoria'] || r.fields['sub-categoria'];
-      f.subcategoria = Array.isArray(rawSub) ? (rawSub[0] as string) : (rawSub as string);
-
-      return f;
+      return mapActivitatRecord(r, centreMap, centreImatgeMap, centreInteressatMap);
     });
 
     // 2. Desar les dades formatades a la memòria cau local
@@ -499,85 +517,41 @@ export async function getActivitatsByCentreId(centreId: string): Promise<Activit
     return getFallbackActivitats().filter(a => a.centreId === centreId);
   }
   try {
-    // Obtenim totes les activitats per filtrar-les posteriorment en memòria,
-    // ja que Airtable avalua el camp de relació {centre} com a cadena de text (nom) en les seves fórmules,
-    // fent que filterByFormula amb l'ID de centre falli o no retorni resultats de manera consistent.
-    const records = await fetchAllRecords('Activitats');
+    // 1. Obtenir els centres per trobar el nom d'aquest centre (aprofitant la cache súper ràpida de getCentres)
+    const centres = await getCentres();
+    const targetCentre = centres.find(c => c.id === centreId);
+    
+    // Si no trobem el centre, retornem buit directament sense fer cap crida a l'API
+    if (!targetCentre) {
+      return [];
+    }
 
-    let centresRecords: { id: string; fields: Record<string, unknown> }[] = [];
-    try {
-      centresRecords = await fetchAllRecords('Centres');
-    } catch {}
+    // 2. Filtrar a nivell de base de dades d'Airtable pel nom del centre per evitar descarregar-ho tot
+    const filter = `{centre}="${targetCentre.nom.replace(/"/g, '\\"')}"`;
+    const records = await fetchAllRecords('Activitats', filter);
+
+    // 3. Mapejar els centres per poder resoldre els logos i noms de forma eficient
     const centreMap = new Map<string, string>();
     const centreImatgeMap = new Map<string, string>();
-    centresRecords.forEach((c) => {
-      if (c.fields && c.fields.nom) centreMap.set(c.id, c.fields.nom as string);
-      if (c.fields) {
-        const attachmentField = c.fields.Imatge || c.fields.imatge || c.fields.Logo || c.fields.logo || c.fields.Logotip || c.fields.logotip;
-        if (Array.isArray(attachmentField) && attachmentField.length > 0) {
-          const url = (attachmentField[0] as { url: string }).url;
-          centreImatgeMap.set(c.id, url);
-          if (c.fields.nom) centreImatgeMap.set(c.fields.nom as string, url);
+    const centreInteressatMap = new Map<string, boolean>();
+
+    centres.forEach((c) => {
+      if (c.id) {
+        if (c.nom) {
+          centreMap.set(c.id, c.nom);
+          centreMap.set(c.nom, c.nom);
         }
+        if (c.imatgeUrl) {
+          centreImatgeMap.set(c.id, c.imatgeUrl);
+          if (c.nom) centreImatgeMap.set(c.nom, c.imatgeUrl);
+        }
+        centreInteressatMap.set(c.id, c.interessat || false);
+        if (c.nom) centreInteressatMap.set(c.nom, c.interessat || false);
       }
     });
 
-    const mapped = records.map((r) => {
-      const f = { ...r.fields } as unknown as Activitat;
-      f.id = r.id;
-      f.centreId = Array.isArray(r.fields.centre) && r.fields.centre.length > 0 ? (r.fields.centre[0] as string) : undefined;
-      if (Array.isArray(r.fields.centre) && r.fields.centre.length > 0) {
-        f.centre = centreMap.get(r.fields.centre[0] as string) || (r.fields.centre[0] as string);
-        f.centreImatgeUrl = centreImatgeMap.get(r.fields.centre[0] as string);
-      }
-      if (Array.isArray(r.fields.Imatge) && r.fields.Imatge.length > 0) {
-        f.imatgeUrl = (r.fields.Imatge[0] as { url: string }).url;
-      }
-      if (Array.isArray(r.fields.Galeria)) {
-        f.galeria = (r.fields.Galeria as { url: string }[]).map((img) => img.url);
-      } else {
-        f.galeria = [];
-      }
-      f.material = (r.fields['descripció'] as string) || "";
-      if (f.barri === 'Centro') f.barri = 'Centre';
-      f.qui_imparteix = (r.fields.qui_imparteix as string) || (r.fields['Qui imparteix'] as string) || (r.fields['qui imparteix'] as string);
-
-      const customSlug = (r.fields.slug as string) || (r.fields.Slug as string);
-      if (customSlug) {
-        let tempSlug = normalizeSlug(customSlug);
-        if (tempSlug.endsWith('-girona')) tempSlug = tempSlug.slice(0, -7);
-        let centrePart = f.centre ? normalizeSlug(f.centre) : '';
-        let barriPart = f.barri ? normalizeSlug(f.barri) : '';
-        if (centrePart.endsWith('-girona')) centrePart = centrePart.slice(0, -7);
-        if (barriPart.endsWith('-girona')) barriPart = barriPart.slice(0, -7);
-        const parts = [tempSlug];
-        if (centrePart && !tempSlug.includes(centrePart)) parts.push(centrePart);
-        if (barriPart && !tempSlug.includes(barriPart)) parts.push(barriPart);
-        f.slug = parts.filter(Boolean).join('-');
-      } else {
-        const namePart = r.fields.nom ? normalizeSlug(r.fields.nom as string) : '';
-        let centrePart = f.centre ? normalizeSlug(f.centre) : '';
-        let barriPart = f.barri ? normalizeSlug(f.barri) : '';
-        if (centrePart.endsWith('-girona')) centrePart = centrePart.slice(0, -7);
-        if (barriPart.endsWith('-girona')) barriPart = barriPart.slice(0, -7);
-        const parts = [namePart];
-        if (centrePart) parts.push(centrePart);
-        if (barriPart) parts.push(barriPart);
-        f.slug = parts.filter(Boolean).join('-');
-      }
-      if (f.slug && !f.slug.endsWith('-girona')) f.slug = `${f.slug}-girona`;
-
-      f.publicada = !!r.fields.publicada;
-      f.destacada = !!r.fields.destacada;
-      f.destacada_gran = !!r.fields.destacada_gran || !!r.fields['destacada_gran'] || !!r.fields['Destacada gran'] || !!r.fields['Destacada Gran'];
-      const rawSub = r.fields.subcategoria || r.fields.Subcategoria || r.fields['Sub-categoria'] || r.fields['sub-categoria'];
-      f.subcategoria = Array.isArray(rawSub) ? (rawSub[0] as string) : (rawSub as string);
-
-      return f;
-    });
-
-    // Filtrem en memòria per assegurar consistència i evitar falles de fórmules d'Airtable
-    return mapped.filter((a) => a.centreId === centreId);
+    // 4. Mapejar cada activitat utilitzant la nostra funció unificada DRY mapActivitatRecord
+    return records.map((r) => mapActivitatRecord(r, centreMap, centreImatgeMap, centreInteressatMap));
   } catch (error) {
     console.error("[Airtable API] Error en getActivitatsByCentreId:", error);
     return [];

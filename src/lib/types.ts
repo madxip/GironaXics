@@ -25,6 +25,7 @@ export interface Activitat {
   galeria?: string[];
   centreImatgeUrl?: string;
   subcategoria?: string;
+  tipus?: string;
 }
 
 export interface Centre {
