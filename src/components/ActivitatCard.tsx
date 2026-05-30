@@ -15,48 +15,19 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
   return (
     <Link
       href={href}
-      className="activitat-card hoverable"
-      style={{
-        textDecoration: 'none',
-        color: 'inherit',
-        display: 'flex',
-        gap: '20px',
-        padding: '16px',
-        backgroundColor: isInteressat ? '#fffdf5' : 'white',
-        border: isInteressat ? '1px solid #d4a82a' : '1px solid var(--crema-fosca)',
-        borderRadius: '12px',
-        alignItems: 'center',
-        transition: 'box-shadow 0.3s, border-color 0.3s',
-        position: 'relative',
-      }}
+      className={`activitat-card hoverable ${isInteressat ? 'premium-card' : 'normal-card'}`}
     >
-        {/* Badge premium per a centres confirmats */}
-        {isInteressat && (
-          <span style={{
-            position: 'absolute',
-            top: '10px',
-            right: '12px',
-            fontSize: '11px',
-            fontFamily: 'var(--font-sans)',
-            fontWeight: 700,
-            letterSpacing: '0.04em',
-            color: '#92620a',
-            backgroundColor: '#fef3c7',
-            border: '1px solid #f5d07a',
-            borderRadius: '20px',
-            padding: '2px 10px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px',
-            lineHeight: 1.6,
-            pointerEvents: 'none',
-          }}>
-            ★ Centre confirmat
-          </span>
-        )}
+      {/* Badge premium per a centres confirmats */}
+      {isInteressat && (
+        <span className="activitat-badge">
+          ★ Centre confirmat
+        </span>
+      )}
 
+      {/* Contingut interior */}
+      <div className="activitat-card-content">
         {imageUrl ? (
-          <div style={{ position: 'relative', width: '80px', height: '80px', flexShrink: 0, borderRadius: '8px', overflow: 'hidden', border: isLogo ? '1px solid var(--crema-fosca)' : 'none', backgroundColor: isLogo ? '#fcfcfc' : 'var(--crema-fosca)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className={`activitat-image-container ${isLogo ? 'logo-img' : 'normal-img'}`}>
             <Image 
               src={imageUrl} 
               alt={activitat.nom} 
@@ -66,27 +37,28 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
             />
           </div>
         ) : (
-          <div style={{ width: '80px', height: '80px', flexShrink: 0, borderRadius: '8px', backgroundColor: 'var(--crema-fosca)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: '10px', textTransform: 'uppercase' }}>
+          <div className="activitat-image-placeholder">
             {TXT_SENSE_IMG}
           </div>
         )}
         
-        <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: isInteressat ? '110px' : '0' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
-            <div className="result-title" style={{ margin: 0, lineHeight: 1.2, fontSize: '22px' }}>{activitat.nom}</div>
+        <div className="activitat-info">
+          <div className="activitat-title-row">
+            <div className="result-title">{activitat.nom}</div>
           </div>
-          <div className="result-meta" style={{ margin: 0 }}>
+          <div className="result-meta">
               <span>{activitat.centre}</span>
               <span>·</span>
               <span>{activitat.subcategoria || activitat.categoria}</span>
               <span>·</span>
               <span>{activitat.edat}</span>
               <span>·</span>
-              <span style={{ color: 'var(--taronja-text)', fontWeight: 700 }}>
+              <span className="activitat-price">
                 {formatPreu(activitat.preu)}
               </span>
           </div>
         </div>
+      </div>
     </Link>
   );
 }
