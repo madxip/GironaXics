@@ -35,6 +35,7 @@ export interface Sponsor {
   imatgeUrl: string;
   enllac: string;
   actiu: boolean;
+  descripcio?: string;
 }
 
 export interface Centre {

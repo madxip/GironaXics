@@ -895,13 +895,27 @@ export async function getSponsors(): Promise<Sponsor[]> {
         ? (rawCategoria[0] as string) 
         : (rawCategoria as string);
 
+      // Busquem el camp de la descripció del patrocinador de forma intel·ligent
+      let descripcio = '';
+      const descKey = Object.keys(r.fields).find(k => 
+        k.toLowerCase().includes('descripcio') || 
+        k.toLowerCase().includes('descripció') || 
+        k.toLowerCase().includes('text') || 
+        k.toLowerCase().includes('slogan') || 
+        k.toLowerCase().includes('tagline')
+      );
+      if (descKey) {
+        descripcio = r.fields[descKey] as string;
+      }
+
       return {
         id: r.id,
         nom: (r.fields.nom || r.fields.Nom || '') as string,
         categoriaSlug: normalizeSlug(categoriaStr),
         imatgeUrl,
         enllac: (r.fields.enllac || r.fields.Enllac || '') as string,
-        actiu: !!r.fields.actiu
+        actiu: !!r.fields.actiu,
+        descripcio: descripcio || ''
       };
     });
   } catch (error) {

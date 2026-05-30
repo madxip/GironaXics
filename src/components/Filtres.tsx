@@ -78,6 +78,34 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
     router.replace(`?${params.toString()}`, { scroll: false });
   };
 
+  const handleSponsorClick = (sponsorNom: string) => {
+    interface CustomWindow extends Window {
+      gtag?: (
+        command: 'event',
+        eventName: string,
+        eventParams: {
+          event_category: string;
+          event_label: string;
+          category_name: string;
+        }
+      ) => void;
+    }
+    
+    if (typeof window !== 'undefined') {
+      const customWindow = window as unknown as CustomWindow;
+      if (customWindow.gtag) {
+        customWindow.gtag('event', 'sponsor_click', {
+          event_category: 'Sponsor',
+          event_label: sponsorNom,
+          category_name: selectedCategoria
+        });
+        console.log(`[Google Analytics] Event enviat: sponsor_click (${sponsorNom})`);
+      } else {
+        console.log(`[Analytics Fallback] Clic registrat localment per a ${sponsorNom} (Sense Google Analytics)`);
+      }
+    }
+  };
+
   const categories = useMemo(() => {
     const set = new Set<string>();
     activitats.forEach(a => { if (a.categoria) set.add(a.categoria); });
@@ -261,13 +289,18 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                           gap: 20px;
                           padding: 20px;
                           background-color: #0c2214;
-                          background-image: radial-gradient(circle at 90% 10%, rgba(251, 191, 36, 0.08) 0%, transparent 60%);
+                          background-image: linear-gradient(135deg, #091a10 0%, #0c2214 50%, #112d1b 100%);
                           border-radius: 16px;
                           text-decoration: none;
                           color: white;
-                          border: 1px solid rgba(251, 191, 36, 0.2);
-                          box-shadow: 0 10px 25px -5px rgba(12, 34, 20, 0.15);
-                          transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+                          border: 1px solid rgba(251, 191, 36, 0.25);
+                          box-shadow: 0 10px 25px -5px rgba(12, 34, 20, 0.2);
+                          transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s ease, box-shadow 0.3s ease;
+                        }
+                        .sponsor-card:hover {
+                          transform: translateY(-4px);
+                          border-color: rgba(251, 191, 36, 0.5);
+                          box-shadow: 0 15px 30px -5px rgba(12, 34, 20, 0.35), 0 0 15px rgba(251, 191, 36, 0.1);
                         }
                         .sponsor-logo-container {
                           display: flex;
@@ -280,6 +313,11 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                           padding: 10px;
                           box-shadow: 0 8px 30px rgba(0,0,0,0.15);
                           flex-shrink: 0;
+                          transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+                        }
+                        .sponsor-card:hover .sponsor-logo-container {
+                          transform: scale(1.03);
+                           box-shadow: 0 12px 35px rgba(0,0,0,0.2);
                         }
                         .sponsor-text-container {
                           flex-grow: 1;
@@ -304,6 +342,26 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                         }
                         .sponsor-cta-wrapper {
                           display: none;
+                        }
+                        .sponsor-cta {
+                          display: inline-flex;
+                          align-items: center;
+                          gap: 8px;
+                          background-color: transparent;
+                          border: 1px solid #fbbf24;
+                          color: #fbbf24;
+                          padding: 8px 18px;
+                          border-radius: 30px;
+                          font-size: 11px;
+                          font-weight: 700;
+                          text-transform: uppercase;
+                          letter-spacing: 0.1em;
+                          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                        }
+                        .sponsor-card:hover .sponsor-cta {
+                          background-color: #fbbf24;
+                          color: #0c2214;
+                          box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
                         }
                         
                         @media (min-width: 1024px) {
@@ -333,6 +391,10 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                             padding: 24px;
                             border-radius: 20px;
                             box-shadow: 0 20px 40px -15px rgba(12, 34, 20, 0.35);
+                          }
+                          .sponsor-card:hover {
+                            transform: translateY(-6px);
+                            box-shadow: 0 25px 45px -15px rgba(12, 34, 20, 0.5), 0 0 25px rgba(251, 191, 36, 0.15);
                           }
                           .sponsor-logo-container {
                             width: 100%;
@@ -385,6 +447,7 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="sponsor-card hoverable"
+                            onClick={() => handleSponsorClick(activeSponsor.nom)}
                           >
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignSelf: 'stretch' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
@@ -420,27 +483,13 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                                 {activeSponsor.nom}
                               </h3>
                               <p className="sponsor-desc">
-                                El millor material i servei per a les teves activitats a Girona.
+                                {activeSponsor.descripcio || 'El millor material i servei per a les teves activitats a Girona.'}
                               </p>
                             </div>
                             
                             <div className="sponsor-cta-wrapper">
-                              <span style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                backgroundColor: 'transparent',
-                                border: '1px solid #fbbf24',
-                                color: '#fbbf24',
-                                padding: '8px 16px',
-                                borderRadius: '30px',
-                                fontSize: '11px',
-                                fontWeight: 700,
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.08em',
-                                transition: 'all 0.3s ease'
-                              }}>
-                                Visitar web <span style={{ fontSize: '12px' }}>→</span>
+                              <span className="sponsor-cta">
+                                Visitar web <span>→</span>
                               </span>
                             </div>
                           </a>
