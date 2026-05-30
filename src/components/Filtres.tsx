@@ -570,10 +570,6 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                                   )}
                                   <span className="sponsor-logo-text">{activeSponsor.nom.toUpperCase()}</span>
                                 </div>
-                                
-                                <div className="sponsor-cta-pill">
-                                  Saber-ne més <span className="arrow">→</span>
-                                </div>
                               </div>
                             </div>
                           </a>
