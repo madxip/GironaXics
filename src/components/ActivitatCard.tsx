@@ -85,11 +85,11 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
               <span style={{ color: 'var(--taronja-text)', fontWeight: 700 }}>
                 {formatPreu(activitat.preu)}
               </span>
-              {activitat.tipus && activitat.tipus !== 'Extraescolar' && (
+              {activitat.tipus && !activitat.tipus.toLowerCase().includes('extraescolar') && (
                 <>
                   <span>·</span>
                   <span style={{
-                    backgroundColor: activitat.tipus === 'Casal' ? 'var(--taronja)' : '#10b981',
+                    backgroundColor: activitat.tipus.toLowerCase().includes('casal') ? 'var(--taronja)' : '#10b981',
                     color: 'white',
                     padding: '2px 8px',
                     borderRadius: '4px',
@@ -101,7 +101,7 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
                     display: 'inline-flex',
                     alignItems: 'center'
                   }}>
-                    {activitat.tipus === 'Casal' ? 'Casal' : 'Taller o Oci'}
+                    {activitat.tipus.toLowerCase().includes('casal') ? 'Casal' : 'Taller o Oci'}
                   </span>
                 </>
               )}

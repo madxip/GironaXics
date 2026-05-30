@@ -105,10 +105,18 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
 
   const filtered = useMemo(() => {
     const result = activitats.filter(a => {
+      const normalizedTipus = a.tipus?.toLowerCase().trim() || '';
       const matchTipus = selectedTipus === 'Totes' || 
-                         (selectedTipus === 'Extraescolars' && (a.tipus === 'Extraescolar' || !a.tipus)) ||
-                         (selectedTipus === 'Casals' && a.tipus === 'Casal') ||
-                         (selectedTipus === 'Tallers i Oci' && a.tipus === 'Taller / Oci');
+                         (selectedTipus === 'Extraescolars' && (normalizedTipus === '' || normalizedTipus.includes('extraescolar'))) ||
+                         (selectedTipus === 'Casals' && normalizedTipus.includes('casal')) ||
+                         (selectedTipus === 'Tallers i Oci' && (
+                           normalizedTipus.includes('taller') || 
+                           normalizedTipus.includes('oci') || 
+                           normalizedTipus.includes('monograf') || 
+                           normalizedTipus.includes('escape') || 
+                           normalizedTipus.includes('aniversari') || 
+                           normalizedTipus.includes('virtual')
+                         ));
       const matchCat = selectedCategoria === 'Totes' || a.categoria === selectedCategoria;
       const matchSubcat = selectedCategoria === 'Totes' || selectedSubcategoria === 'Totes' || a.subcategoria === selectedSubcategoria;
       const matchEdat = matchEdatGroup(a.edat, selectedEdat);
