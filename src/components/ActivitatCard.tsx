@@ -3,8 +3,6 @@ import Image from './SafeImage';
 import { Activitat } from '@/lib/types';
 import { normalizeSlug, formatPreu } from '@/lib/utils';
 
-const TXT_SENSE_IMG = 'Sense img';
-
 export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
   const catSlug = normalizeSlug(activitat.categoria);
   const href = `/activitats/${catSlug}/${activitat.slug}`;
@@ -37,8 +35,10 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
             />
           </div>
         ) : (
-          <div className="activitat-image-placeholder">
-            {TXT_SENSE_IMG}
+          <div className="activitat-image-placeholder" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--crema-fosca)', borderRadius: '8px', width: '80px', height: '80px', flexShrink: 0 }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--verd)" strokeWidth="1.5" style={{ opacity: 0.4, width: '28px', height: '28px' }} aria-hidden="true">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </div>
         )}
         

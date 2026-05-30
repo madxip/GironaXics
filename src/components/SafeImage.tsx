@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import Image, { ImageProps } from 'next/image';
 
@@ -10,8 +12,46 @@ const ALLOWED_DOMAINS = [
 ];
 
 export default function SafeImage({ src, alt, ...props }: ImageProps) {
+  const [error, setError] = React.useState(false);
+
   if (!src || (typeof src === 'string' && (src.trim() === '' || src === 'undefined' || src === 'null'))) {
     return null;
+  }
+
+  if (error) {
+    const fallbackStyle: React.CSSProperties = props.fill ? {
+      position: 'absolute',
+      height: '100%',
+      width: '100%',
+      left: 0,
+      top: 0,
+      right: 0,
+      bottom: 0,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'var(--crema-fosca)',
+      borderRadius: 'inherit'
+    } : {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'var(--crema-fosca)',
+      width: '100%',
+      aspectRatio: '1',
+      borderRadius: '8px',
+      padding: '24px'
+    };
+
+    return (
+      <div style={fallbackStyle} className="image-error-fallback">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--verd)" strokeWidth="1.5" style={{ opacity: 0.3, width: props.fill ? '35%' : '28px', height: props.fill ? '35%' : '28px' }} aria-hidden="true">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+          <circle cx="8.5" cy="8.5" r="1.5" />
+          <polyline points="21 15 16 10 5 21" />
+        </svg>
+      </div>
+    );
   }
 
   if (typeof src === 'string') {
@@ -40,12 +80,12 @@ export default function SafeImage({ src, alt, ...props }: ImageProps) {
         const imgProps = rest as React.ImgHTMLAttributes<HTMLImageElement>;
 
         // eslint-disable-next-line @next/next/no-img-element
-        return <img src={src} alt={alt} style={imgStyle} {...imgProps} />;
+        return <img src={src} alt={alt} style={imgStyle} onError={() => setError(true)} {...imgProps} />;
       }
     } catch {
       // Relative path or local asset
     }
   }
 
-  return <Image src={src} alt={alt} {...props} />;
+  return <Image src={src} alt={alt} onError={() => setError(true)} {...props} />;
 }
