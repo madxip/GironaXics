@@ -855,7 +855,18 @@ export async function getSponsors(): Promise<Sponsor[]> {
         imatgeUrl = (r.fields.Imatge[0] as { url: string }).url;
       }
       
-      const rawCategoria = r.fields.categoria || r.fields.Categoria || r.fields.categoria_slug || r.fields.Categoria_slug || '';
+      // Busquem el camp de la categoria de forma intel·ligent (suporta text, single-select, i lookups automàtics com "categoria (from...")
+      let rawCategoria = r.fields.categoria || r.fields.Categoria;
+      if (!rawCategoria) {
+        const lookupKey = Object.keys(r.fields).find(k => k.toLowerCase().startsWith('categoria'));
+        if (lookupKey) {
+          rawCategoria = r.fields[lookupKey];
+        }
+      }
+      if (!rawCategoria) {
+        rawCategoria = r.fields.categoria_slug || r.fields.Categoria_slug || '';
+      }
+
       const categoriaStr = Array.isArray(rawCategoria) 
         ? (rawCategoria[0] as string) 
         : (rawCategoria as string);
