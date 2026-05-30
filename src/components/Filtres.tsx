@@ -241,14 +241,126 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                 {filtered.length === 0 ? (
                     <div className="results-empty">No s&apos;han trobat activitats amb aquests filtres.</div>
                 ) : (
-                    <div style={{ 
-                      display: 'grid', 
-                      gridTemplateColumns: activeSponsor ? 'repeat(12, 1fr)' : '1fr', 
-                      gap: '32px', 
-                      alignItems: 'start' 
-                    }}>
+                    <div className={`results-split-grid ${activeSponsor ? 'has-sponsor' : ''}`}>
+                      <style>{`
+                        .results-split-grid {
+                          display: flex;
+                          flex-direction: column;
+                          gap: 24px;
+                        }
+                        .activities-column {
+                          order: 2;
+                        }
+                        .sponsor-column {
+                          order: 1;
+                        }
+                        .sponsor-card {
+                          display: flex;
+                          flex-direction: row;
+                          align-items: center;
+                          gap: 20px;
+                          padding: 20px;
+                          background-color: #0c2214;
+                          background-image: radial-gradient(circle at 90% 10%, rgba(251, 191, 36, 0.08) 0%, transparent 60%);
+                          border-radius: 16px;
+                          text-decoration: none;
+                          color: white;
+                          border: 1px solid rgba(251, 191, 36, 0.2);
+                          box-shadow: 0 10px 25px -5px rgba(12, 34, 20, 0.15);
+                          transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+                        }
+                        .sponsor-logo-container {
+                          display: flex;
+                          align-items: center;
+                          justify-content: center;
+                          background-color: white;
+                          width: 80px;
+                          height: 80px;
+                          border-radius: 12px;
+                          padding: 10px;
+                          box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+                          flex-shrink: 0;
+                        }
+                        .sponsor-text-container {
+                          flex-grow: 1;
+                          display: flex;
+                          flex-direction: column;
+                          gap: 6px;
+                        }
+                        .sponsor-title {
+                          margin: 0;
+                          font-size: 20px;
+                          font-family: var(--font-serif);
+                          font-style: italic;
+                          font-weight: 700;
+                          color: white;
+                          line-height: 1.2;
+                        }
+                        .sponsor-desc {
+                          margin: 0;
+                          font-size: 13px;
+                          color: rgba(255,255,255,0.75);
+                          line-height: 1.4;
+                        }
+                        .sponsor-cta-wrapper {
+                          display: none;
+                        }
+                        
+                        @media (min-width: 1024px) {
+                          .results-split-grid {
+                            display: grid;
+                            grid-template-columns: 1fr;
+                            gap: 32px;
+                            align-items: start;
+                          }
+                          .results-split-grid.has-sponsor {
+                            grid-template-columns: repeat(12, 1fr);
+                          }
+                          .results-split-grid.has-sponsor .activities-column {
+                            grid-column: span 8;
+                            order: unset;
+                          }
+                          .results-split-grid.has-sponsor .sponsor-column {
+                            grid-column: span 4;
+                            position: sticky;
+                            top: 100px;
+                            order: unset;
+                            z-index: 10;
+                          }
+                          .sponsor-card {
+                            flex-direction: column;
+                            gap: 20px;
+                            padding: 24px;
+                            border-radius: 20px;
+                            box-shadow: 0 20px 40px -15px rgba(12, 34, 20, 0.35);
+                          }
+                          .sponsor-logo-container {
+                            width: 100%;
+                            height: 140px;
+                            border-radius: 16px;
+                            padding: 16px;
+                          }
+                          .sponsor-text-container {
+                            align-items: center;
+                          }
+                          .sponsor-title {
+                            font-size: 26px;
+                          }
+                          .sponsor-desc {
+                            text-align: center;
+                            font-size: 14px;
+                            line-height: 1.5;
+                          }
+                          .sponsor-cta-wrapper {
+                            display: flex;
+                            justify-content: center;
+                            margin-top: 4px;
+                          }
+                        }
+                      `}</style>
+
                       {/* Llista d'activitats (2/3 de l'espai si hi ha sponsor) */}
-                      <div style={{ gridColumn: activeSponsor ? 'span 8' : 'span 12' }}>
+                      <div className="activities-column">
                         <div className="results-list">
                             {(() => {
                               const entries = Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b));
@@ -267,80 +379,52 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                       
                       {/* Sponsor enganxós / Sticky (1/3 de l'espai) */}
                       {activeSponsor && (
-                        <div style={{ 
-                          gridColumn: 'span 4', 
-                          position: 'sticky', 
-                          top: '100px', 
-                          alignSelf: 'start',
-                          zIndex: 10
-                        }}>
+                        <div className="sponsor-column">
                           <a 
                             href={activeSponsor.enllac} 
                             target="_blank" 
                             rel="noopener noreferrer"
-                            className="hoverable"
-                            style={{
-                              display: 'flex',
-                              flexDirection: 'column',
-                              gap: '20px',
-                              padding: '24px',
-                              backgroundColor: '#0c2214',
-                              backgroundImage: 'linear-gradient(180deg, #0c2214 0%, #06110a 100%)',
-                              borderRadius: '20px',
-                              textDecoration: 'none',
-                              color: 'white',
-                              border: '1px solid rgba(251, 191, 36, 0.25)',
-                              boxShadow: '0 20px 40px -15px rgba(12, 34, 20, 0.35)',
-                              transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease'
-                            }}
+                            className="sponsor-card hoverable"
                           >
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                              <span style={{ 
-                                alignSelf: 'start',
-                                backgroundColor: '#fbbf24', 
-                                color: '#0c2214', 
-                                fontSize: '9px', 
-                                fontWeight: 800, 
-                                textTransform: 'uppercase', 
-                                letterSpacing: '0.15em', 
-                                padding: '3px 8px', 
-                                borderRadius: '4px',
-                                lineHeight: 1
-                              }}>
-                                Patrocinador Oficial
-                              </span>
-                              <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.05em' }}>
-                                Categoria {selectedCategoria}
-                              </span>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignSelf: 'stretch' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                <span style={{ 
+                                  backgroundColor: '#fbbf24', 
+                                  color: '#0c2214', 
+                                  fontSize: '8px', 
+                                  fontWeight: 800, 
+                                  textTransform: 'uppercase', 
+                                  letterSpacing: '0.12em', 
+                                  padding: '2px 6px', 
+                                  borderRadius: '30px',
+                                  lineHeight: 1.2
+                                }}>
+                                  Patrocinador
+                                </span>
+                                <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>✦</span>
+                                <span style={{ fontSize: '10px', color: '#fbbf24', fontWeight: 600, letterSpacing: '0.04em' }}>
+                                  {selectedCategoria}
+                                </span>
+                              </div>
                             </div>
                             
                             {activeSponsor.imatgeUrl && (
-                              <div style={{ 
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                backgroundColor: 'white',
-                                width: '100%',
-                                height: '140px',
-                                borderRadius: '16px',
-                                padding: '16px',
-                                boxShadow: '0 8px 30px rgba(0,0,0,0.15)'
-                              }}>
+                              <div className="sponsor-logo-container">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src={activeSponsor.imatgeUrl} alt={activeSponsor.nom} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                               </div>
                             )}
                             
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                              <h3 style={{ margin: 0, fontSize: '26px', fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontWeight: 700, color: 'white', letterSpacing: '0.02em', textAlign: 'center' }}>
+                            <div className="sponsor-text-container">
+                              <h3 className="sponsor-title">
                                 {activeSponsor.nom}
                               </h3>
-                              <p style={{ margin: 0, fontSize: '14px', color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, textAlign: 'center' }}>
-                                Equipa&apos;t amb el millor material i servei per a les teves activitats de temporada a Girona.
+                              <p className="sponsor-desc">
+                                El millor material i servei per a les teves activitats a Girona.
                               </p>
                             </div>
                             
-                            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '4px' }}>
+                            <div className="sponsor-cta-wrapper">
                               <span style={{
                                 display: 'inline-flex',
                                 alignItems: 'center',
@@ -348,17 +432,15 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                                 backgroundColor: 'transparent',
                                 border: '1px solid #fbbf24',
                                 color: '#fbbf24',
-                                padding: '10px 20px',
+                                padding: '8px 16px',
                                 borderRadius: '30px',
-                                fontSize: '12px',
+                                fontSize: '11px',
                                 fontWeight: 700,
                                 textTransform: 'uppercase',
                                 letterSpacing: '0.08em',
                                 transition: 'all 0.3s ease'
-                              }}
-                              className="sponsor-cta-btn"
-                              >
-                                Visitar web <span style={{ fontSize: '13px' }}>→</span>
+                              }}>
+                                Visitar web <span style={{ fontSize: '12px' }}>→</span>
                               </span>
                             </div>
                           </a>
