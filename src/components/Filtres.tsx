@@ -262,7 +262,7 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                   ? '1px solid var(--taronja)' 
                   : '1px solid rgba(220, 100, 50, 0.2)',
                 borderLeft: '4px solid var(--taronja)',
-                padding: '16px 24px',
+                padding: '28px 32px',
                 marginBottom: '24px',
                 borderRadius: '4px',
                 cursor: 'pointer',
@@ -275,14 +275,14 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                   : '0 4px 12px rgba(220, 100, 50, 0.05)'
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '20px' }}>🌸</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <span style={{ fontSize: '28px' }}>🌸</span>
                 <div style={{ textAlign: 'left' }}>
                   <h4 style={{ 
                     margin: 0, 
                     fontFamily: 'var(--font-serif)', 
                     fontStyle: 'italic', 
-                    fontSize: '16px', 
+                    fontSize: '18px', 
                     color: selectedTipus === 'Casals' ? '#fbfaf7' : 'var(--verd-fosc)',
                     fontWeight: 700 
                   }}>
@@ -291,9 +291,9 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                       : 'Inscripcions Obertes de Casals de Temporada'}
                   </h4>
                   <p style={{ 
-                    margin: '4px 0 0 0', 
+                    margin: '6px 0 0 0', 
                     fontFamily: 'var(--font-sans)', 
-                    fontSize: '12px', 
+                    fontSize: '13px', 
                     color: selectedTipus === 'Casals' ? 'rgba(255,255,255,0.8)' : 'rgba(12, 34, 20, 0.7)' 
                   }}>
                     {selectedTipus === 'Casals' 
@@ -304,13 +304,13 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
               </div>
               <span style={{ 
                 fontFamily: 'var(--font-sans)', 
-                fontSize: '11px', 
+                fontSize: '12px', 
                 fontWeight: 700, 
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em',
                 color: 'var(--taronja)',
                 border: '1px solid var(--taronja)',
-                padding: '4px 10px',
+                padding: '6px 14px',
                 borderRadius: '30px',
                 backgroundColor: selectedTipus === 'Casals' ? 'rgba(245, 166, 35, 0.1)' : 'transparent'
               }}>
@@ -368,7 +368,7 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                 onClick={() => updateFilter('tipus', 'Tallers i Oci')}
                 className={`filter-tab-button ${selectedTipus === 'Tallers i Oci' ? 'active' : ''}`}
               >
-                Tallers i oci puntual
+                Tallers
               </button>
             </div>
 
@@ -376,7 +376,7 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
               {selectedTipus === 'Casals' 
                 ? `Casals de Temporada (${filtered.length})` 
                 : selectedTipus === 'Tallers i Oci'
-                  ? `Tallers i Oci Puntual (${filtered.length})`
+                  ? `Tallers (${filtered.length})`
                   : `Extraescolars Setmanals (${filtered.length})`}
             </h2>
             <div id="results-container">
