@@ -246,105 +246,96 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                       className="hoverable"
                       style={{
                         display: 'flex',
-                        gap: '24px',
-                        padding: '24px',
-                        backgroundColor: 'var(--verd-fosc)',
-                        backgroundImage: 'linear-gradient(135deg, var(--verd-fosc) 0%, #0d4622 100%)',
-                        borderRadius: '16px',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '32px 40px',
+                        backgroundColor: '#0c2214',
+                        backgroundImage: 'radial-gradient(circle at 90% 10%, rgba(251, 191, 36, 0.08) 0%, transparent 60%)',
+                        borderRadius: '20px',
                         textDecoration: 'none',
                         color: 'white',
-                        alignItems: 'center',
-                        marginBottom: '32px',
-                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                        boxShadow: '0 10px 25px -5px rgba(14, 58, 30, 0.2), 0 8px 10px -6px rgba(14, 58, 30, 0.2)',
+                        marginBottom: '40px',
+                        transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease',
+                        boxShadow: '0 20px 40px -15px rgba(12, 34, 20, 0.3)',
+                        border: '1px solid rgba(251, 191, 36, 0.25)',
                         position: 'relative',
-                        overflow: 'hidden',
-                        border: '1px solid rgba(251, 191, 36, 0.15)'
+                        flexWrap: 'wrap',
+                        gap: '24px'
                       }}
                     >
-                      {/* Badge de recomendació */}
-                      <div style={{
-                        position: 'absolute',
-                        top: '0',
-                        right: '0',
-                        backgroundColor: '#d97706',
-                        color: 'white',
-                        fontSize: '10px',
-                        fontWeight: 700,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.08em',
-                        padding: '6px 16px',
-                        borderRadius: '0 0 0 12px',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                      }}>
-                        Destacat
+                      {/* Secció esquerra: Text, badge i botó CTA */}
+                      <div style={{ flex: '1 1 400px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ 
+                            backgroundColor: '#fbbf24', 
+                            color: '#0c2214', 
+                            fontSize: '9px', 
+                            fontWeight: 800, 
+                            textTransform: 'uppercase', 
+                            letterSpacing: '0.15em', 
+                            padding: '3px 8px', 
+                            borderRadius: '4px',
+                            lineHeight: 1
+                          }}>
+                            Patrocinador Oficial
+                          </span>
+                          <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.05em' }}>✦</span>
+                          <span style={{ fontSize: '11px', color: '#fbbf24', fontWeight: 600, letterSpacing: '0.05em' }}>
+                            Categoria {selectedCategoria}
+                          </span>
+                        </div>
+                        
+                        <div>
+                          <h3 style={{ margin: 0, fontSize: '32px', fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontWeight: 700, color: 'white', letterSpacing: '0.02em' }}>
+                            {activeSponsor.nom}
+                          </h3>
+                          <p style={{ margin: '8px 0 0 0', fontSize: '15px', color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, maxWidth: '480px' }}>
+                            Equipa&apos;t amb el millor material i servei per a extraescolars i tallers d&apos;aquesta categoria a Girona.
+                          </p>
+                        </div>
+                        
+                        <div style={{ marginTop: '8px' }}>
+                          <span style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            backgroundColor: 'transparent',
+                            border: '1px solid #fbbf24',
+                            color: '#fbbf24',
+                            padding: '10px 20px',
+                            borderRadius: '30px',
+                            fontSize: '13px',
+                            fontWeight: 700,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.08em',
+                            transition: 'all 0.3s ease'
+                          }}
+                          className="sponsor-cta-btn"
+                          >
+                            Visitar lloc web <span style={{ fontSize: '14px' }}>→</span>
+                          </span>
+                        </div>
                       </div>
-                      
+
+                      {/* Secció dreta: Logotip destacat */}
                       {activeSponsor.imatgeUrl && (
                         <div style={{ 
-                          position: 'relative', 
-                          width: '96px', 
-                          height: '96px', 
-                          flexShrink: 0, 
-                          borderRadius: '12px', 
-                          overflow: 'hidden', 
-                          backgroundColor: 'white', 
-                          display: 'flex', 
-                          alignItems: 'center', 
+                          display: 'flex',
+                          alignItems: 'center',
                           justifyContent: 'center',
-                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                          padding: '10px'
+                          backgroundColor: 'white',
+                          width: '130px',
+                          height: '130px',
+                          borderRadius: '16px',
+                          padding: '16px',
+                          boxShadow: '0 8px 30px rgba(0,0,0,0.15)',
+                          border: '1px solid rgba(255,255,255,0.1)',
+                          flexShrink: 0
                         }}>
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={activeSponsor.imatgeUrl} alt={activeSponsor.nom} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                         </div>
                       )}
-                      
-                      <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <div style={{ 
-                          fontSize: '11px', 
-                          fontWeight: 700, 
-                          color: '#fbbf24',
-                          letterSpacing: '0.08em', 
-                          textTransform: 'uppercase'
-                        }}>
-                          ✦ Recomanació patrocinada
-                        </div>
-                        <div style={{ 
-                          margin: 0, 
-                          fontSize: '24px', 
-                          fontWeight: 700, 
-                          color: 'white', 
-                          fontFamily: 'var(--font-serif)', 
-                          fontStyle: 'italic',
-                          lineHeight: 1.2
-                        }}>
-                          {activeSponsor.nom}
-                        </div>
-                        <div style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.8)', lineHeight: '1.4', fontWeight: 400 }}>
-                          El millor material i servei per a extraescolars i tallers d&apos;aquesta categoria a Girona.
-                        </div>
-                      </div>
-                      
-                      <div style={{
-                        backgroundColor: '#fbbf24',
-                        color: 'var(--verd-fosc)',
-                        width: '44px',
-                        height: '44px',
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontWeight: 'bold',
-                        fontSize: '18px',
-                        flexShrink: 0,
-                        transition: 'transform 0.3s ease',
-                        boxShadow: '0 4px 10px rgba(251, 191, 36, 0.3)'
-                      }}
-                      className="sponsor-arrow-btn"
-                      >
-                        →
-                      </div>
                     </a>
                 )}
 
