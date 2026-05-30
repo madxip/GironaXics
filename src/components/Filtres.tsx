@@ -59,7 +59,7 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const selectedTipus = searchParams.get('tipus') || 'Totes';
+  const selectedTipus = searchParams.get('tipus') || 'Extraescolars';
   const selectedCategoria = searchParams.get('categoria') || 'Totes';
   const selectedSubcategoria = searchParams.get('subcategoria') || 'Totes';
   const selectedEdat = searchParams.get('edat') || 'Totes';
@@ -183,21 +183,6 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 <div>
-                    <label htmlFor="filtre-tipus" style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', color: 'var(--verd)', marginBottom: '8px' }}>TIPUS D&apos;OFERTA</label>
-                    <select
-                        id="filtre-tipus"
-                        value={selectedTipus}
-                        onChange={e => updateFilter('tipus', e.target.value)}
-                        style={{ width: '100%', padding: '12px 16px', borderRadius: '0', border: '1px solid var(--verd)', backgroundColor: 'transparent', color: 'var(--fosc)', fontFamily: 'var(--font-sans)', fontSize: '16px', outline: 'none', cursor: 'pointer' }}
-                    >
-                        <option value="Totes">Totes</option>
-                        <option value="Extraescolars">Extraescolars setmanals</option>
-                        <option value="Casals">Casals estacionals</option>
-                        <option value="Tallers i Oci">Tallers i oci puntual</option>
-                    </select>
-                </div>
-
-                <div>
                     <label htmlFor="filtre-categoria" style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', color: 'var(--verd)', marginBottom: '8px' }}>PER CATEGORIA</label>
                     <select
                         id="filtre-categoria"
@@ -259,7 +244,141 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
         </div>
         
         <div className="map-results" style={{ gridColumn: 'span 8', paddingLeft: '0' }}>
-            <h2 aria-live="polite">Resultats ({filtered.length})</h2>
+            {/* 1. Franja estacional dels Casals */}
+            <div 
+              onClick={() => {
+                if (selectedTipus === 'Casals') {
+                  updateFilter('tipus', 'Extraescolars');
+                } else {
+                  updateFilter('tipus', 'Casals');
+                }
+              }}
+              className={`casals-seasonal-banner ${selectedTipus === 'Casals' ? 'active' : ''}`}
+              style={{
+                background: selectedTipus === 'Casals' 
+                  ? 'linear-gradient(135deg, #0c2214 0%, #091a10 100%)' 
+                  : 'linear-gradient(135deg, #fbfaf7 0%, #f7eae1 100%)',
+                border: selectedTipus === 'Casals' 
+                  ? '1px solid var(--taronja)' 
+                  : '1px solid rgba(220, 100, 50, 0.2)',
+                borderLeft: '4px solid var(--taronja)',
+                padding: '16px 24px',
+                marginBottom: '24px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                boxShadow: selectedTipus === 'Casals' 
+                  ? '0 8px 24px rgba(12, 34, 20, 0.2)' 
+                  : '0 4px 12px rgba(220, 100, 50, 0.05)'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '20px' }}>🌸</span>
+                <div style={{ textAlign: 'left' }}>
+                  <h4 style={{ 
+                    margin: 0, 
+                    fontFamily: 'var(--font-serif)', 
+                    fontStyle: 'italic', 
+                    fontSize: '16px', 
+                    color: selectedTipus === 'Casals' ? '#fbfaf7' : 'var(--verd-fosc)',
+                    fontWeight: 700 
+                  }}>
+                    {selectedTipus === 'Casals' 
+                      ? 'Campanya Especial de Casals Activa' 
+                      : 'Inscripcions Obertes de Casals de Temporada'}
+                  </h4>
+                  <p style={{ 
+                    margin: '4px 0 0 0', 
+                    fontFamily: 'var(--font-sans)', 
+                    fontSize: '12px', 
+                    color: selectedTipus === 'Casals' ? 'rgba(255,255,255,0.8)' : 'rgba(12, 34, 20, 0.7)' 
+                  }}>
+                    {selectedTipus === 'Casals' 
+                      ? 'Mostrant exclusivament casals d’estiu, nadal i setmana santa.' 
+                      : 'Troba els millors casals d’estiu, nadal i setmana santa a Girona!'}
+                  </p>
+                </div>
+              </div>
+              <span style={{ 
+                fontFamily: 'var(--font-sans)', 
+                fontSize: '11px', 
+                fontWeight: 700, 
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                color: 'var(--taronja)',
+                border: '1px solid var(--taronja)',
+                padding: '4px 10px',
+                borderRadius: '30px',
+                backgroundColor: selectedTipus === 'Casals' ? 'rgba(245, 166, 35, 0.1)' : 'transparent'
+              }}>
+                {selectedTipus === 'Casals' ? 'Tancar ×' : 'Explorar →'}
+              </span>
+            </div>
+
+            {/* 2. Pestanyes Segmentades (Extraescolars vs Tallers) */}
+            <div className="filter-tabs-container" style={{
+              display: 'flex',
+              gap: '24px',
+              marginBottom: '28px',
+              borderBottom: '1px solid rgba(12, 34, 20, 0.1)',
+              paddingBottom: '2px'
+            }}>
+              <style>{`
+                .filter-tab-button {
+                  font-family: var(--font-sans);
+                  font-size: 13px;
+                  font-weight: 800;
+                  color: rgba(12, 34, 20, 0.4);
+                  background: none;
+                  border: none;
+                  padding: 10px 4px;
+                  cursor: pointer;
+                  position: relative;
+                  transition: all 0.3s ease;
+                  text-transform: uppercase;
+                  letter-spacing: 0.08em;
+                  outline: none;
+                }
+                .filter-tab-button:hover {
+                  color: var(--verd-fosc);
+                }
+                .filter-tab-button.active {
+                  color: var(--verd-fosc);
+                }
+                .filter-tab-button.active::after {
+                  content: '';
+                  position: absolute;
+                  bottom: -2px;
+                  left: 0;
+                  right: 0;
+                  height: 3px;
+                  background-color: var(--verd-fosc);
+                }
+              `}</style>
+              <button 
+                onClick={() => updateFilter('tipus', 'Extraescolars')}
+                className={`filter-tab-button ${selectedTipus !== 'Tallers i Oci' && selectedTipus !== 'Casals' ? 'active' : ''}`}
+              >
+                Extraescolars setmanals
+              </button>
+              <button 
+                onClick={() => updateFilter('tipus', 'Tallers i Oci')}
+                className={`filter-tab-button ${selectedTipus === 'Tallers i Oci' ? 'active' : ''}`}
+              >
+                Tallers i oci puntual
+              </button>
+            </div>
+
+            <h2 aria-live="polite" style={{ fontSize: '24px', marginTop: '0', marginBottom: '24px', fontFamily: 'var(--font-serif)', fontStyle: 'italic', color: 'var(--verd-fosc)' }}>
+              {selectedTipus === 'Casals' 
+                ? `Casals de Temporada (${filtered.length})` 
+                : selectedTipus === 'Tallers i Oci'
+                  ? `Tallers i Oci Puntual (${filtered.length})`
+                  : `Extraescolars Setmanals (${filtered.length})`}
+            </h2>
             <div id="results-container">
                 {filtered.length === 0 ? (
                     <div className="results-empty">No s&apos;han trobat activitats amb aquests filtres.</div>
