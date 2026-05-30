@@ -393,30 +393,30 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                         .sponsor-logo-pill {
                           display: flex;
                           align-items: center;
-                          gap: 8px;
+                          gap: 10px;
                           background-color: #f7f6f0;
-                          padding: 8px 16px;
-                          border-radius: 30px;
+                          padding: 6px 18px 6px 8px;
+                          border-radius: 50px;
                           flex-shrink: 0;
                           border: 1px solid rgba(0,0,0,0.05);
                         }
                         
                         .sponsor-logo-icon {
-                          width: 20px;
-                          height: 20px;
+                          width: 32px;
+                          height: 32px;
                           background-color: white;
-                          border-radius: 4px;
+                          border-radius: 50%;
                           overflow: hidden;
                           display: flex;
                           align-items: center;
                           justify-content: center;
-                          border: 1px solid rgba(0,0,0,0.05);
+                          border: 1px solid rgba(0,0,0,0.08);
                           flex-shrink: 0;
                         }
                         
                         .sponsor-logo-icon img {
-                          width: 85%;
-                          height: 85%;
+                          width: 90%;
+                          height: 90%;
                           object-fit: contain;
                         }
                         
@@ -551,10 +551,9 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                             
                             {/* Contingut del patrocinador */}
                             <div className="sponsor-premium-content">
-                              <span className="sponsor-pre-title">PATROCINAT PER</span>
-                              <h3 className="sponsor-premium-title">
-                                {activeSponsor.titol || `Mou-te amb ${activeSponsor.nom}`}
-                              </h3>
+                               <h3 className="sponsor-premium-title">
+                                 {activeSponsor.titol || `Mou-te amb ${activeSponsor.nom}`}
+                               </h3>
                               <p className="sponsor-premium-desc">
                                 {activeSponsor.descripcio || `El partner d'${selectedCategoria} a GironaXics. Troba tot el que necessites per a les teves activitats.`}
                               </p>
