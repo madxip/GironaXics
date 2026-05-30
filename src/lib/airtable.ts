@@ -201,6 +201,8 @@ export async function getActivitats(): Promise<Activitat[]> {
         f.galeria = [];
       }
       f.material = (r.fields['descripció'] as string) || "";
+      const rawCat = r.fields.categoria || r.fields.Categoria;
+      f.categoria = Array.isArray(rawCat) ? (rawCat[0] as string) : (rawCat as string) || '';
       if (f.barri === 'Centro') {
         f.barri = 'Centre';
       }
@@ -662,7 +664,7 @@ export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'cen
         centre: '',
         centreId: data.centreId,
         barri: r.fields.barri as string,
-        categoria: r.fields.categoria as string,
+        categoria: Array.isArray(r.fields.categoria) ? (r.fields.categoria[0] as string) : (r.fields.categoria as string) || '',
         subcategoria: (r.fields.subcategoria || r.fields.Subcategoria) as string,
         edat: r.fields.edat as string,
         preu: r.fields.preu as string,
