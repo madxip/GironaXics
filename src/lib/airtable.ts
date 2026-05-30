@@ -858,7 +858,10 @@ export async function getSponsors(): Promise<Sponsor[]> {
       // Busquem el camp de la categoria de forma intel·ligent (suporta text, single-select, i lookups automàtics com "categoria (from...")
       let rawCategoria = r.fields.categoria || r.fields.Categoria;
       if (!rawCategoria) {
-        const lookupKey = Object.keys(r.fields).find(k => k.toLowerCase().startsWith('categoria'));
+        const lookupKey = Object.keys(r.fields).find(k => 
+          k.toLowerCase().startsWith('categoria') && 
+          !k.toLowerCase().includes('slug')
+        );
         if (lookupKey) {
           rawCategoria = r.fields[lookupKey];
         }
