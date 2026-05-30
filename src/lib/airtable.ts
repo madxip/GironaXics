@@ -855,10 +855,15 @@ export async function getSponsors(): Promise<Sponsor[]> {
         imatgeUrl = (r.fields.Imatge[0] as { url: string }).url;
       }
       
+      const rawCategoria = r.fields.categoria || r.fields.Categoria || r.fields.categoria_slug || r.fields.Categoria_slug || '';
+      const categoriaStr = Array.isArray(rawCategoria) 
+        ? (rawCategoria[0] as string) 
+        : (rawCategoria as string);
+
       return {
         id: r.id,
         nom: (r.fields.nom || r.fields.Nom || '') as string,
-        categoriaSlug: (r.fields.categoria_slug || r.fields.Categoria_slug || '') as string,
+        categoriaSlug: normalizeSlug(categoriaStr),
         imatgeUrl,
         enllac: (r.fields.enllac || r.fields.Enllac || '') as string,
         actiu: !!r.fields.actiu
