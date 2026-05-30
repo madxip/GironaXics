@@ -282,87 +282,183 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                         .sponsor-column {
                           order: 1;
                         }
-                        .sponsor-card {
+                        .sponsor-card-premium {
+                          display: flex;
+                          flex-direction: column;
+                          justify-content: flex-end;
+                          min-height: 380px;
+                          border-radius: 20px;
+                          position: relative;
+                          overflow: hidden;
+                          text-decoration: none;
+                          color: white;
+                          border: 1px solid rgba(255, 255, 255, 0.1);
+                          background-size: cover;
+                          background-position: center;
+                          background-repeat: no-repeat;
+                          box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+                          transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease;
+                        }
+                        
+                        .sponsor-card-premium:hover {
+                          transform: translateY(-8px);
+                          box-shadow: 0 25px 50px rgba(12, 34, 20, 0.4);
+                        }
+                        
+                        /* The fading dark green overlay */
+                        .sponsor-card-overlay {
+                          position: absolute;
+                          top: 0;
+                          left: 0;
+                          right: 0;
+                          bottom: 0;
+                          background: linear-gradient(to bottom, rgba(12, 34, 20, 0.1) 0%, rgba(12, 34, 20, 0.4) 40%, rgba(9, 26, 15, 0.95) 100%);
+                          z-index: 1;
+                          transition: opacity 0.3s ease;
+                        }
+                        
+                        .sponsor-card-premium:hover .sponsor-card-overlay {
+                          background: linear-gradient(to bottom, rgba(12, 34, 20, 0.05) 0%, rgba(12, 34, 20, 0.3) 30%, rgba(7, 21, 12, 0.98) 100%);
+                        }
+                        
+                        /* Top Left Orange Badge */
+                        .sponsor-top-badge {
+                          position: absolute;
+                          top: 16px;
+                          left: 16px;
+                          background-color: var(--taronja);
+                          color: var(--verd-fosc);
+                          font-family: var(--font-sans);
+                          font-size: 10px;
+                          font-weight: 800;
+                          text-transform: uppercase;
+                          letter-spacing: 0.08em;
+                          padding: 6px 12px;
+                          border-radius: 30px;
+                          z-index: 2;
+                          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                        }
+                        
+                        /* Content container */
+                        .sponsor-premium-content {
+                          position: relative;
+                          z-index: 2;
+                          padding: 24px;
+                          display: flex;
+                          flex-direction: column;
+                          gap: 12px;
+                          text-align: left;
+                        }
+                        
+                        .sponsor-pre-title {
+                          font-family: var(--font-sans);
+                          font-size: 10px;
+                          font-weight: 800;
+                          color: var(--taronja);
+                          text-transform: uppercase;
+                          letter-spacing: 0.1em;
+                          margin-bottom: -4px;
+                        }
+                        
+                        .sponsor-premium-title {
+                          font-family: var(--font-serif);
+                          font-style: italic;
+                          font-size: 32px;
+                          font-weight: 700;
+                          color: white;
+                          margin: 0;
+                          line-height: 1.15;
+                          letter-spacing: -0.02em;
+                        }
+                        
+                        .sponsor-premium-desc {
+                          font-family: var(--font-sans);
+                          font-size: 13px;
+                          color: rgba(255, 255, 255, 0.85);
+                          line-height: 1.5;
+                          margin: 0;
+                          margin-bottom: 8px;
+                        }
+                        
+                        /* Bottom Buttons Row */
+                        .sponsor-buttons-row {
                           display: flex;
                           flex-direction: row;
                           align-items: center;
-                          gap: 20px;
-                          padding: 20px;
-                          background-color: #fffdf6;
-                          background-image: linear-gradient(135deg, #fffdf6 0%, #fdf5e2 100%);
-                          border-radius: 16px;
-                          text-decoration: none;
-                          color: var(--fosc);
-                          border: 1px solid rgba(212, 168, 42, 0.4);
-                          box-shadow: 0 10px 25px -5px rgba(212, 168, 42, 0.1);
-                          transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s ease, box-shadow 0.3s ease;
+                          gap: 12px;
+                          flex-wrap: wrap;
                         }
-                        .sponsor-card:hover {
-                          transform: translateY(-4px);
-                          border-color: rgba(212, 168, 42, 0.8);
-                          box-shadow: 0 15px 30px -5px rgba(212, 168, 42, 0.2), 0 0 15px rgba(212, 168, 42, 0.1);
+                        
+                        /* Logo pill */
+                        .sponsor-logo-pill {
+                          display: flex;
+                          align-items: center;
+                          gap: 8px;
+                          background-color: #f7f6f0;
+                          padding: 8px 16px;
+                          border-radius: 30px;
+                          flex-shrink: 0;
+                          border: 1px solid rgba(0,0,0,0.05);
                         }
-                        .sponsor-logo-container {
+                        
+                        .sponsor-logo-icon {
+                          width: 20px;
+                          height: 20px;
+                          background-color: white;
+                          border-radius: 4px;
+                          overflow: hidden;
                           display: flex;
                           align-items: center;
                           justify-content: center;
-                          background-color: white;
-                          width: 80px;
-                          height: 80px;
-                          border-radius: 12px;
-                          padding: 10px;
-                          box-shadow: 0 8px 24px rgba(212, 168, 42, 0.08);
-                          border: 1px solid rgba(212, 168, 42, 0.15);
+                          border: 1px solid rgba(0,0,0,0.05);
                           flex-shrink: 0;
-                          transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
                         }
-                        .sponsor-card:hover .sponsor-logo-container {
-                          transform: scale(1.03);
-                          box-shadow: 0 12px 30px rgba(212, 168, 42, 0.15);
+                        
+                        .sponsor-logo-icon img {
+                          width: 85%;
+                          height: 85%;
+                          object-fit: contain;
                         }
-                        .sponsor-text-container {
-                          flex-grow: 1;
-                          display: flex;
-                          flex-direction: column;
-                          gap: 6px;
-                        }
-                        .sponsor-title {
-                          margin: 0;
-                          font-size: 20px;
-                          font-family: var(--font-serif);
-                          font-style: italic;
-                          font-weight: 700;
+                        
+                        .sponsor-logo-text {
+                          font-family: var(--font-sans);
+                          font-size: 11px;
+                          font-weight: 800;
                           color: var(--verd-fosc);
+                          letter-spacing: 0.05em;
                           line-height: 1.2;
                         }
-                        .sponsor-desc {
-                          margin: 0;
-                          font-size: 13px;
-                          color: var(--muted);
-                          line-height: 1.4;
-                        }
-                        .sponsor-cta-wrapper {
-                          display: none;
-                        }
-                        .sponsor-cta {
+                        
+                        /* CTA Pill */
+                        .sponsor-cta-pill {
                           display: inline-flex;
                           align-items: center;
-                          gap: 8px;
-                          background-color: transparent;
-                          border: 1px solid #d4a82a;
-                          color: #92620a;
-                          padding: 8px 18px;
+                          gap: 6px;
+                          background-color: var(--taronja);
+                          color: var(--verd-fosc);
+                          padding: 9px 18px;
                           border-radius: 30px;
-                          font-size: 11px;
+                          font-family: var(--font-sans);
+                          font-size: 12px;
                           font-weight: 700;
-                          text-transform: uppercase;
-                          letter-spacing: 0.1em;
+                          letter-spacing: 0.02em;
                           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                          box-shadow: 0 4px 15px rgba(245, 166, 35, 0.2);
                         }
-                        .sponsor-card:hover .sponsor-cta {
-                          background-color: #d4a82a;
-                          color: white;
-                          box-shadow: 0 4px 15px rgba(212, 168, 42, 0.3);
+                        
+                        .sponsor-card-premium:hover .sponsor-cta-pill {
+                          background-color: white;
+                          color: var(--verd-fosc);
+                          box-shadow: 0 4px 15px rgba(255,255,255,0.3);
+                        }
+                        
+                        .sponsor-cta-pill .arrow {
+                          font-size: 13px;
+                          transition: transform 0.3s ease;
+                        }
+                        
+                        .sponsor-card-premium:hover .sponsor-cta-pill .arrow {
+                          transform: translateX(3px);
                         }
                         
                         @media (min-width: 1024px) {
@@ -386,38 +482,28 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                             order: unset;
                             z-index: 10;
                           }
-                          .sponsor-card {
-                            flex-direction: column;
-                            gap: 20px;
-                            padding: 24px;
-                            border-radius: 20px;
-                            box-shadow: 0 20px 40px -15px rgba(212, 168, 42, 0.15);
+                        }
+                        
+                        @media (max-width: 768px) {
+                          .sponsor-card-premium {
+                            min-height: 320px;
                           }
-                          .sponsor-card:hover {
-                            transform: translateY(-6px);
-                            box-shadow: 0 25px 45px -15px rgba(212, 168, 42, 0.25), 0 0 25px rgba(212, 168, 42, 0.15);
-                          }
-                          .sponsor-logo-container {
-                            width: 100%;
-                            height: 140px;
-                            border-radius: 16px;
-                            padding: 16px;
-                          }
-                          .sponsor-text-container {
-                            align-items: center;
-                          }
-                          .sponsor-title {
+                          .sponsor-premium-title {
                             font-size: 26px;
                           }
-                          .sponsor-desc {
-                            text-align: center;
-                            font-size: 14px;
-                            line-height: 1.5;
+                          .sponsor-premium-content {
+                            padding: 16px;
+                            gap: 8px;
                           }
-                          .sponsor-cta-wrapper {
-                            display: flex;
-                            justify-content: center;
-                            margin-top: 4px;
+                          .sponsor-buttons-row {
+                            gap: 8px;
+                          }
+                          .sponsor-logo-pill {
+                            padding: 6px 12px;
+                          }
+                          .sponsor-cta-pill {
+                            padding: 7px 14px;
+                            font-size: 11px;
                           }
                         }
                       `}</style>
@@ -447,51 +533,48 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                             href={activeSponsor.enllac} 
                             target="_blank" 
                             rel="noopener noreferrer"
-                            className="sponsor-card hoverable"
+                            className="sponsor-card-premium hoverable"
                             onClick={() => handleSponsorClick(activeSponsor.nom)}
+                            style={{
+                              backgroundImage: activeSponsor.imatgeFonsUrl 
+                                ? `url(${activeSponsor.imatgeFonsUrl})` 
+                                : `linear-gradient(135deg, #091a10 0%, #0c2214 50%, #112d1b 100%)`
+                            }}
                           >
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignSelf: 'stretch' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                                <span style={{ 
-                                  backgroundColor: 'var(--verd)', 
-                                  color: 'white', 
-                                  fontSize: '8px', 
-                                  fontWeight: 800, 
-                                  textTransform: 'uppercase', 
-                                  letterSpacing: '0.12em', 
-                                  padding: '2px 6px', 
-                                  borderRadius: '30px',
-                                  lineHeight: 1.2
-                                }}>
-                                  Patrocinador
-                                </span>
-                                <span style={{ fontSize: '11px', color: 'var(--crema-fosca)' }}>✦</span>
-                                <span style={{ fontSize: '10px', color: 'var(--taronja-text)', fontWeight: 700, letterSpacing: '0.04em' }}>
-                                  {selectedCategoria}
-                                </span>
-                              </div>
+                            {/* Fons fosc per llegibilitat */}
+                            <div className="sponsor-card-overlay"></div>
+                            
+                            {/* Badge superior: PATROCINAT · CATEGORIA */}
+                            <div className="sponsor-top-badge">
+                              PATROCINAT · {selectedCategoria.toUpperCase()}
                             </div>
                             
-                            {activeSponsor.imatgeUrl && (
-                              <div className="sponsor-logo-container">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={activeSponsor.imatgeUrl} alt={activeSponsor.nom} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                              </div>
-                            )}
-                            
-                            <div className="sponsor-text-container">
-                              <h3 className="sponsor-title">
-                                {activeSponsor.nom}
+                            {/* Contingut del patrocinador */}
+                            <div className="sponsor-premium-content">
+                              <span className="sponsor-pre-title">PATROCINAT PER</span>
+                              <h3 className="sponsor-premium-title">
+                                {activeSponsor.titol || `Mou-te amb ${activeSponsor.nom}`}
                               </h3>
-                              <p className="sponsor-desc">
-                                {activeSponsor.descripcio || 'El millor material i servei per a les teves activitats a Girona.'}
+                              <p className="sponsor-premium-desc">
+                                {activeSponsor.descripcio || `El partner d'${selectedCategoria} a GironaXics. Troba tot el que necessites per a les teves activitats.`}
                               </p>
-                            </div>
-                            
-                            <div className="sponsor-cta-wrapper">
-                              <span className="sponsor-cta">
-                                Visitar web <span>→</span>
-                              </span>
+                              
+                              {/* Fila de botons inferiors */}
+                              <div className="sponsor-buttons-row">
+                                <div className="sponsor-logo-pill">
+                                  {activeSponsor.imatgeUrl && (
+                                    <div className="sponsor-logo-icon">
+                                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                                      <img src={activeSponsor.imatgeUrl} alt="" />
+                                    </div>
+                                  )}
+                                  <span className="sponsor-logo-text">{activeSponsor.nom.toUpperCase()}</span>
+                                </div>
+                                
+                                <div className="sponsor-cta-pill">
+                                  Saber-ne més <span className="arrow">→</span>
+                                </div>
+                              </div>
                             </div>
                           </a>
                         </div>

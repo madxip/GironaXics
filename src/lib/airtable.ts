@@ -908,6 +908,29 @@ export async function getSponsors(): Promise<Sponsor[]> {
         descripcio = r.fields[descKey] as string;
       }
 
+      // Busquem la imatge de fons de forma intel·ligent (columna d'attachments)
+      let imatgeFonsUrl = '';
+      const fonsKey = Object.keys(r.fields).find(k => 
+        k.toLowerCase().includes('fons') || 
+        k.toLowerCase().includes('fond') || 
+        k.toLowerCase().includes('background')
+      );
+      if (fonsKey && Array.isArray(r.fields[fonsKey]) && (r.fields[fonsKey] as unknown[]).length > 0) {
+        imatgeFonsUrl = ((r.fields[fonsKey] as unknown[])[0] as { url: string }).url;
+      }
+
+      // Busquem un titular o títol personalitzat per al banner
+      let titol = '';
+      const titolKey = Object.keys(r.fields).find(k => 
+        k.toLowerCase().includes('titol') || 
+        k.toLowerCase().includes('títol') || 
+        k.toLowerCase().includes('headline') || 
+        k.toLowerCase().includes('titular')
+      );
+      if (titolKey) {
+        titol = r.fields[titolKey] as string;
+      }
+
       return {
         id: r.id,
         nom: (r.fields.nom || r.fields.Nom || '') as string,
@@ -915,7 +938,9 @@ export async function getSponsors(): Promise<Sponsor[]> {
         imatgeUrl,
         enllac: (r.fields.enllac || r.fields.Enllac || '') as string,
         actiu: !!r.fields.actiu,
-        descripcio: descripcio || ''
+        descripcio: descripcio || '',
+        imatgeFonsUrl,
+        titol
       };
     });
   } catch (error) {
