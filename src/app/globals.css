@@ -1946,3 +1946,174 @@
                 border-radius: 12px !important;
             }
         }
+
+        /* Millora de disseny responsiu per a les fitxes d'activitat (ActivitatCard) */
+        .activitat-card {
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            border-radius: 12px;
+            transition: box-shadow 0.3s, border-color 0.3s;
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        .activitat-card.normal-card {
+            background-color: white;
+            border: 1px solid var(--crema-fosca);
+        }
+
+        .activitat-card.premium-card {
+            background-color: #fffdf5;
+            border: 1px solid #d4a82a;
+        }
+
+        .activitat-badge {
+            font-size: 11px;
+            font-family: var(--font-sans);
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            color: #92620a;
+            background-color: #fef3c7;
+            border: 1px solid #f5d07a;
+            border-radius: 20px;
+            padding: 2px 10px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            line-height: 1.6;
+            pointer-events: none;
+            align-self: flex-start;
+            position: absolute;
+            top: 10px;
+            right: 12px;
+        }
+
+        .activitat-card-content {
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            align-items: center;
+            width: 100%;
+        }
+
+        .activitat-image-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            flex-shrink: 0;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .activitat-image-container.normal-img {
+            border: none;
+            background-color: var(--crema-fosca);
+        }
+
+        .activitat-image-container.logo-img {
+            border: 1px solid var(--crema-fosca);
+            background-color: #fcfcfc;
+        }
+
+        .activitat-image-placeholder {
+            width: 80px;
+            height: 80px;
+            flex-shrink: 0;
+            border-radius: 8px;
+            background-color: var(--crema-fosca);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted);
+            font-size: 10px;
+            text-transform: uppercase;
+        }
+
+        .activitat-info {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .activitat-card.premium-card .activitat-info {
+            padding-right: 110px;
+        }
+
+        .activitat-card .result-title {
+            font-size: 22px;
+            line-height: 1.2;
+            margin: 0;
+        }
+
+        .activitat-card .result-meta {
+            font-size: 13px;
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .activitat-price {
+            color: var(--taronja-text);
+            font-weight: 700;
+        }
+
+        .activitat-type-badge {
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            line-height: 1.4;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .activitat-type-badge.casal {
+            background-color: var(--taronja);
+        }
+
+        .activitat-type-badge.taller {
+            background-color: #10b981;
+        }
+
+        /* Ajustos per a dispositius mòbils */
+        @media (max-width: 768px) {
+            .activitat-card {
+                padding: 16px;
+                gap: 12px;
+            }
+            
+            .activitat-badge {
+                position: relative;
+                top: auto;
+                right: auto;
+                margin-bottom: 2px;
+            }
+            
+            .activitat-card.premium-card .activitat-info {
+                padding-right: 0 !important;
+            }
+            
+            .activitat-card-content {
+                gap: 16px;
+            }
+            
+            .activitat-info {
+                gap: 6px;
+            }
+            
+            .activitat-card .result-title {
+                font-size: 18px;
+            }
+        }
