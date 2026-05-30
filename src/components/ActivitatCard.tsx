@@ -75,7 +75,7 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
             <div className="result-title" style={{ margin: 0, lineHeight: 1.2, fontSize: '22px' }}>{activitat.nom}</div>
           </div>
-          <div className="result-meta" style={{ margin: 0 }}>
+          <div className="result-meta" style={{ margin: 0, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
               <span>{activitat.centre}</span>
               <span>·</span>
               <span>{activitat.subcategoria || activitat.categoria}</span>
@@ -85,6 +85,26 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
               <span style={{ color: 'var(--taronja-text)', fontWeight: 700 }}>
                 {formatPreu(activitat.preu)}
               </span>
+              {activitat.tipus && activitat.tipus !== 'Extraescolar' && (
+                <>
+                  <span>·</span>
+                  <span style={{
+                    backgroundColor: activitat.tipus === 'Casal' ? 'var(--taronja)' : '#10b981',
+                    color: 'white',
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
+                    lineHeight: 1.4,
+                    display: 'inline-flex',
+                    alignItems: 'center'
+                  }}>
+                    {activitat.tipus === 'Casal' ? 'Casal' : 'Taller o Oci'}
+                  </span>
+                </>
+              )}
           </div>
         </div>
     </Link>

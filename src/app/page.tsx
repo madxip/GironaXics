@@ -9,14 +9,15 @@ import Categories from '@/components/Categories';
 import ComFunciona from '@/components/ComFunciona';
 import BannerCentres from '@/components/BannerCentres';
 import Footer from '@/components/Footer';
-import { getActivitats, getActivitatsDestacades, getCentres } from '@/lib/airtable';
+import { getActivitats, getActivitatsDestacades, getCentres, getSponsors } from '@/lib/airtable';
 import { Suspense } from 'react';
 
 export default async function Home() {
-  const [activitats, destacades, centres] = await Promise.all([
+  const [activitats, destacades, centres, sponsors] = await Promise.all([
     getActivitats(),
     getActivitatsDestacades(),
-    getCentres()
+    getCentres(),
+    getSponsors()
   ]);
 
   const uniqueCategories = new Set(activitats.map(a => a.categoria?.trim()).filter(Boolean));
@@ -34,7 +35,7 @@ export default async function Home() {
         <div className="sep-line"></div>
       </div>
       <Suspense fallback={<div style={{ padding: '0 5vw 80px' }}>Carregant filtres...</div>}>
-        <Filtres activitats={activitats} />
+        <Filtres activitats={activitats} sponsors={sponsors} />
       </Suspense>
       
       <div className="editorial-sep">

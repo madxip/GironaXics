@@ -2,8 +2,9 @@
 
 import { useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Activitat } from '@/lib/types';
+import { Activitat, Sponsor } from '@/lib/types';
 import AccordionCategoria from './AccordionCategoria';
+import { normalizeSlug } from '@/lib/utils';
 
 const EDAT_GROUPS = [
   'Totes',
@@ -54,10 +55,11 @@ function matchEdatGroup(edatStr: string | undefined, group: string): boolean {
   return false;
 }
 
-export default function Filtres({ activitats }: { activitats: Activitat[] }) {
+export default function Filtres({ activitats, sponsors = [] }: { activitats: Activitat[], sponsors?: Sponsor[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const selectedTipus = searchParams.get('tipus') || 'Totes';
   const selectedCategoria = searchParams.get('categoria') || 'Totes';
   const selectedSubcategoria = searchParams.get('subcategoria') || 'Totes';
   const selectedEdat = searchParams.get('edat') || 'Totes';
@@ -103,11 +105,15 @@ export default function Filtres({ activitats }: { activitats: Activitat[] }) {
 
   const filtered = useMemo(() => {
     const result = activitats.filter(a => {
+      const matchTipus = selectedTipus === 'Totes' || 
+                         (selectedTipus === 'Extraescolars' && (a.tipus === 'Extraescolar' || !a.tipus)) ||
+                         (selectedTipus === 'Casals' && a.tipus === 'Casal') ||
+                         (selectedTipus === 'Tallers i Oci' && a.tipus === 'Taller / Oci');
       const matchCat = selectedCategoria === 'Totes' || a.categoria === selectedCategoria;
       const matchSubcat = selectedCategoria === 'Totes' || selectedSubcategoria === 'Totes' || a.subcategoria === selectedSubcategoria;
       const matchEdat = matchEdatGroup(a.edat, selectedEdat);
       const matchBarri = selectedBarri === 'Totes' || a.barri === selectedBarri;
-      return matchCat && matchSubcat && matchEdat && matchBarri;
+      return matchTipus && matchCat && matchSubcat && matchEdat && matchBarri;
     });
     // Centres confirmats primer, la resta per ordre natural
     return result.sort((a, b) => {
@@ -115,7 +121,7 @@ export default function Filtres({ activitats }: { activitats: Activitat[] }) {
       const bInt = b.centreInteressat ? 1 : 0;
       return bInt - aInt;
     });
-  }, [activitats, selectedCategoria, selectedSubcategoria, selectedEdat, selectedBarri]);
+  }, [activitats, selectedTipus, selectedCategoria, selectedSubcategoria, selectedEdat, selectedBarri]);
 
   const grouped = useMemo(() => {
     return filtered.reduce((acc, a) => {
@@ -126,6 +132,12 @@ export default function Filtres({ activitats }: { activitats: Activitat[] }) {
     }, {} as Record<string, Activitat[]>);
   }, [filtered]);
 
+  const activeSponsor = useMemo(() => {
+    if (!sponsors || sponsors.length === 0 || selectedCategoria === 'Totes') return null;
+    const catSlug = normalizeSlug(selectedCategoria);
+    return sponsors.find(s => s.categoriaSlug === catSlug && s.actiu) || null;
+  }, [sponsors, selectedCategoria]);
+
   return (
     <section className="map-section grid-12" style={{ paddingBottom: '80px' }}>
         <div className="map-container" style={{ gridColumn: 'span 4', paddingRight: '2vw' }}>
@@ -134,6 +146,21 @@ export default function Filtres({ activitats }: { activitats: Activitat[] }) {
             </h2>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div>
+                    <label htmlFor="filtre-tipus" style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', color: 'var(--verd)', marginBottom: '8px' }}>TIPUS D&apos;OFERTA</label>
+                    <select
+                        id="filtre-tipus"
+                        value={selectedTipus}
+                        onChange={e => updateFilter('tipus', e.target.value)}
+                        style={{ width: '100%', padding: '12px 16px', borderRadius: '0', border: '1px solid var(--verd)', backgroundColor: 'transparent', color: 'var(--fosc)', fontFamily: 'var(--font-sans)', fontSize: '16px', outline: 'none', cursor: 'pointer' }}
+                    >
+                        <option value="Totes">Totes</option>
+                        <option value="Extraescolars">Extraescolars setmanals</option>
+                        <option value="Casals">Casals estacionals</option>
+                        <option value="Tallers i Oci">Tallers i oci puntual</option>
+                    </select>
+                </div>
+
                 <div>
                     <label htmlFor="filtre-categoria" style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', color: 'var(--verd)', marginBottom: '8px' }}>PER CATEGORIA</label>
                     <select
@@ -203,6 +230,81 @@ export default function Filtres({ activitats }: { activitats: Activitat[] }) {
         <div className="map-results" style={{ gridColumn: 'span 8', paddingLeft: '0' }}>
             <h2>Resultats ({filtered.length})</h2>
             <div id="results-container">
+                {activeSponsor && (
+                    <a 
+                      href={activeSponsor.enllac} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="hoverable"
+                      style={{
+                        display: 'flex',
+                        gap: '20px',
+                        padding: '20px',
+                        backgroundColor: '#f8fafc',
+                        border: '2px solid var(--verd)',
+                        borderRadius: '12px',
+                        textDecoration: 'none',
+                        color: 'var(--fosc)',
+                        alignItems: 'center',
+                        marginBottom: '24px',
+                        transition: 'all 0.3s ease',
+                        boxShadow: '0 4px 12px rgba(26, 107, 58, 0.05)',
+                        position: 'relative',
+                        overflow: 'hidden'
+                      }}
+                    >
+                      {/* Badge de recomendació */}
+                      <div style={{
+                        position: 'absolute',
+                        top: '0',
+                        right: '0',
+                        backgroundColor: 'var(--verd-fosc)',
+                        color: 'white',
+                        fontSize: '10px',
+                        fontWeight: 'bold',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                        padding: '4px 12px',
+                        borderRadius: '0 0 0 8px'
+                      }}>
+                        Recomanat
+                      </div>
+                      
+                      {activeSponsor.imatgeUrl && (
+                        <div style={{ position: 'relative', width: '90px', height: '90px', flexShrink: 0, borderRadius: '8px', overflow: 'hidden', backgroundColor: 'white', border: '1px solid var(--crema-fosca)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={activeSponsor.imatgeUrl} alt={activeSponsor.nom} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '8px' }} />
+                        </div>
+                      )}
+                      
+                      <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <div style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--verd)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>✦ RECOMANACIÓ DESTACADA</div>
+                        <div style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: 'var(--verd-fosc)', fontFamily: 'var(--font-serif)', fontStyle: 'italic' }}>
+                          {activeSponsor.nom}
+                        </div>
+                        <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: '1.4' }}>
+                          El millor material i servei per a extraescolars i tallers d&apos;aquesta categoria a Girona.
+                        </div>
+                      </div>
+                      
+                      <div style={{
+                        backgroundColor: 'var(--verd)',
+                        color: 'white',
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 'bold',
+                        fontSize: '16px',
+                        flexShrink: 0
+                      }}>
+                        →
+                      </div>
+                    </a>
+                )}
+
                 {filtered.length === 0 ? (
                     <div className="results-empty">No s&apos;han trobat activitats amb aquests filtres.</div>
                 ) : (

@@ -25,6 +25,16 @@ export interface Activitat {
   galeria?: string[];
   centreImatgeUrl?: string;
   subcategoria?: string;
+  tipus?: string; // Extraescolar, Casal, Taller / Oci
+}
+
+export interface Sponsor {
+  id: string;
+  nom: string;
+  categoriaSlug: string;
+  imatgeUrl: string;
+  enllac: string;
+  actiu: boolean;
 }
 
 export interface Centre {

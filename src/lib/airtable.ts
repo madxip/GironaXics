@@ -1,4 +1,4 @@
-import { Activitat, Centre } from './types';
+import { Activitat, Centre, Sponsor } from './types';
 import activitatsSeed from '../../seed/activitats-inicials.json';
 import { normalizeSlug } from './utils';
 
@@ -205,6 +205,7 @@ export async function getActivitats(): Promise<Activitat[]> {
         f.barri = 'Centre';
       }
       f.qui_imparteix = (r.fields.qui_imparteix as string) || (r.fields['Qui imparteix'] as string) || (r.fields['qui imparteix'] as string);
+      f.tipus = (r.fields.tipus as string) || (r.fields.Tipus as string) || "Extraescolar";
 
       // Auto-generate a beautiful SEO-friendly slug: "nom-activitat-nom-centre-nom-barri-girona"
       const customSlug = (r.fields.slug as string) || (r.fields.Slug as string);
@@ -612,7 +613,8 @@ export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'cen
       idioma: data.idioma || "",
       "Qui imparteix": data.qui_imparteix || "",
       publicada: true,
-      destacada: false
+      destacada: false,
+      tipus: data.tipus || "Extraescolar"
     };
 
     if (subcatId) {
@@ -675,6 +677,7 @@ export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'cen
         qui_imparteix: (r.fields['Qui imparteix'] || r.fields.qui_imparteix) as string,
         publicada: !!r.fields.publicada,
         destacada: !!r.fields.destacada,
+        tipus: (r.fields.tipus || r.fields.Tipus) as string || "Extraescolar",
         imatgeUrl: Array.isArray(r.fields.Imatge) && r.fields.Imatge.length > 0 ? (r.fields.Imatge[0] as { url: string }).url : undefined,
         galeria: Array.isArray(r.fields.Galeria) ? (r.fields.Galeria as { url: string }[]).map((img) => img.url) : []
       };
@@ -715,6 +718,7 @@ export async function updateActivitat(id: string, data: Partial<Omit<Activitat, 
     if (data.idioma !== undefined) fields.idioma = data.idioma;
     if (data.qui_imparteix !== undefined) fields["Qui imparteix"] = data.qui_imparteix;
     if (data.publicada !== undefined) fields.publicada = data.publicada;
+    if (data.tipus !== undefined) fields.tipus = data.tipus;
 
     if (data.imatgeUrl !== undefined) {
       fields.Imatge = data.imatgeUrl ? [{ url: data.imatgeUrl }] : [];
@@ -835,5 +839,33 @@ export async function updateCentre(id: string, data: Partial<Omit<Centre, 'id' |
   } catch (error) {
     console.error("[Airtable API] Error en updateCentre:", error);
     return false;
+  }
+}
+
+export async function getSponsors(): Promise<Sponsor[]> {
+  if (!API_KEY || !BASE_ID) return [];
+  
+  try {
+    const records = await fetchAllRecords('Sponsors', '{actiu}=TRUE()');
+    return records.map((r: { id: string; fields: Record<string, unknown> }) => {
+      let imatgeUrl = '';
+      if (Array.isArray(r.fields.imatge) && r.fields.imatge.length > 0) {
+        imatgeUrl = (r.fields.imatge[0] as { url: string }).url;
+      } else if (Array.isArray(r.fields.Imatge) && r.fields.Imatge.length > 0) {
+        imatgeUrl = (r.fields.Imatge[0] as { url: string }).url;
+      }
+      
+      return {
+        id: r.id,
+        nom: (r.fields.nom || r.fields.Nom || '') as string,
+        categoriaSlug: (r.fields.categoria_slug || r.fields.Categoria_slug || '') as string,
+        imatgeUrl,
+        enllac: (r.fields.enllac || r.fields.Enllac || '') as string,
+        actiu: !!r.fields.actiu
+      };
+    });
+  } catch (error) {
+    console.error("[Airtable API] Error en getSponsors:", error);
+    return [];
   }
 }

@@ -142,6 +142,7 @@ export default function ActivityForm({
   const [priceVal, setPriceVal] = useState(initialPriceState.val);
   const [priceUnit, setPriceUnit] = useState(initialPriceState.unit);
   const [customPrice, setCustomPrice] = useState(initialPriceState.custom);
+  const [tipus, setTipus] = useState(initialData?.tipus || "Extraescolar");
   const [horari, setHorari] = useState(initialData?.horari || "");
   const [dies, setDies] = useState(initialData?.dies || "");
   const [descripcio, setDescripcio] = useState(initialData?.descripcio || "");
@@ -314,6 +315,7 @@ export default function ActivityForm({
       formData.append("qui_imparteix", qui_imparteix);
       formData.append("imatgeUrl", imatgeUrl);
       formData.append("galeria", JSON.stringify(galeria));
+      formData.append("tipus", tipus);
 
       const res = await submitAction(null, formData);
 
@@ -486,6 +488,33 @@ export default function ActivityForm({
                     * Selecciona una categoria obligatòria
                   </span>
                 )}
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <label style={{ fontSize: "13px", fontWeight: "700", color: "var(--verd-fosc)", textTransform: "uppercase" }}>
+                  Tipus d&apos;Activitat *
+                </label>
+                <select
+                  id="tipus"
+                  value={tipus}
+                  onChange={(e) => setTipus(e.target.value)}
+                  disabled={loading}
+                  style={{
+                    padding: "12px 14px",
+                    border: "1px solid rgba(26, 107, 58, 0.2)",
+                    borderRadius: "8px",
+                    fontSize: "15px",
+                    outline: "none",
+                    cursor: "pointer",
+                    color: "var(--fosc)",
+                    backgroundColor: "white",
+                    transition: "all 0.2s"
+                  }}
+                >
+                  <option value="Extraescolar">Extraescolar (Setmanal / Curs anual)</option>
+                  <option value="Casal">Casal (Estiu, Nadal, Setmana Santa)</option>
+                  <option value="Taller / Oci">Taller o Oci (Monogràfic, escape room, aniversari, puntual)</option>
+                </select>
               </div>
 
               {categoria && (categoria === "Esports" || categoria === "Idiomes") && (
