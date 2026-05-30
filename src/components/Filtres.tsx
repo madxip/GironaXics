@@ -176,6 +176,183 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
 
   return (
     <section className="map-section grid-12" style={{ paddingBottom: '80px' }}>
+        {/* 0. Top Full-Width Page Segment Navigation (Select first, then filter!) */}
+        <div style={{ gridColumn: 'span 12', paddingBottom: '16px' }}>
+          <style>{`
+            /* Casals Banner Styles */
+            .casals-seasonal-banner {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              border-radius: 4px;
+              cursor: pointer;
+              transition: all 0.3s ease;
+              width: 100%;
+            }
+            .casals-banner-content {
+              display: flex;
+              align-items: center;
+              gap: 16px;
+            }
+            .casals-banner-button {
+              font-family: var(--font-sans);
+              font-weight: 700;
+              text-transform: uppercase;
+              letter-spacing: 0.05em;
+              border-radius: 30px;
+              transition: all 0.3s ease;
+              flex-shrink: 0;
+            }
+            
+            /* Tabs Navigation Styles */
+            .filter-tabs-container {
+              display: flex;
+              gap: 24px;
+              margin-bottom: 28px;
+              border-bottom: 1px solid rgba(12, 34, 20, 0.1);
+              padding-bottom: 2px;
+            }
+            .filter-tab-button {
+              font-family: var(--font-sans);
+              font-size: 13px;
+              font-weight: 800;
+              color: rgba(12, 34, 20, 0.4);
+              background: none;
+              border: none;
+              padding: 10px 4px;
+              cursor: pointer;
+              position: relative;
+              transition: all 0.3s ease;
+              text-transform: uppercase;
+              letter-spacing: 0.08em;
+              outline: none;
+            }
+            .filter-tab-button:hover {
+              color: var(--verd-fosc);
+            }
+            .filter-tab-button.active {
+              color: var(--verd-fosc);
+            }
+            .filter-tab-button.active::after {
+              content: '';
+              position: absolute;
+              bottom: -2px;
+              left: 0;
+              right: 0;
+              height: 3px;
+              background-color: var(--verd-fosc);
+            }
+
+            /* Responsive Mobile Enhancements */
+            @media (max-width: 768px) {
+              .casals-seasonal-banner {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 16px;
+                padding: 20px 24px !important;
+              }
+              .casals-banner-content {
+                align-items: flex-start;
+              }
+              .casals-banner-content span {
+                font-size: 24px !important;
+                margin-top: 2px;
+              }
+              .casals-banner-button {
+                align-self: flex-end;
+              }
+              .filter-tabs-container {
+                gap: 16px;
+                margin-bottom: 20px;
+              }
+              .filter-tab-button {
+                font-size: 11px;
+                padding: 8px 2px;
+              }
+            }
+          `}</style>
+
+          {/* 1. Franja estacional dels Casals */}
+          <div 
+            onClick={() => {
+              if (selectedTipus === 'Casals') {
+                updateFilter('tipus', 'Extraescolars');
+              } else {
+                updateFilter('tipus', 'Casals');
+              }
+            }}
+            className={`casals-seasonal-banner ${selectedTipus === 'Casals' ? 'active' : ''}`}
+            style={{
+              background: selectedTipus === 'Casals' 
+                ? 'linear-gradient(135deg, #0c2214 0%, #091a10 100%)' 
+                : 'linear-gradient(135deg, #fbfaf7 0%, #f7eae1 100%)',
+              border: selectedTipus === 'Casals' 
+                ? '1px solid var(--taronja)' 
+                : '1px solid rgba(220, 100, 50, 0.2)',
+              borderLeft: '4px solid var(--taronja)',
+              padding: '28px 32px',
+              marginBottom: '24px',
+              boxShadow: selectedTipus === 'Casals' 
+                ? '0 8px 24px rgba(12, 34, 20, 0.2)' 
+                : '0 4px 12px rgba(220, 100, 50, 0.05)'
+            }}
+          >
+            <div className="casals-banner-content">
+              <span style={{ fontSize: '28px' }}>🌸</span>
+              <div style={{ textAlign: 'left' }}>
+                <h4 style={{ 
+                  margin: 0, 
+                  fontFamily: 'var(--font-serif)', 
+                  fontStyle: 'italic', 
+                  fontSize: '18px', 
+                  color: selectedTipus === 'Casals' ? '#fbfaf7' : 'var(--verd-fosc)',
+                  fontWeight: 700 
+                }}>
+                  {selectedTipus === 'Casals' 
+                    ? 'Campanya Especial de Casals Activa' 
+                    : 'Inscripcions Obertes de Casals de Temporada'}
+                </h4>
+                <p style={{ 
+                  margin: '6px 0 0 0', 
+                  fontFamily: 'var(--font-sans)', 
+                  fontSize: '13px', 
+                  color: selectedTipus === 'Casals' ? 'rgba(255,255,255,0.8)' : 'rgba(12, 34, 20, 0.7)' 
+                }}>
+                  {selectedTipus === 'Casals' 
+                    ? 'Mostrant exclusivament casals d’estiu, nadal i setmana santa.' 
+                    : 'Troba els millors casals d’estiu, nadal i setmana santa a Girona!'}
+                </p>
+              </div>
+            </div>
+            <span className="casals-banner-button" style={{ 
+              fontSize: '12px', 
+              color: 'var(--taronja)',
+              border: '1px solid var(--taronja)',
+              padding: '6px 14px',
+              backgroundColor: selectedTipus === 'Casals' ? 'rgba(245, 166, 35, 0.1)' : 'transparent'
+            }}>
+              {selectedTipus === 'Casals' ? 'Tancar ×' : 'Explorar →'}
+            </span>
+          </div>
+
+          {/* 2. Pestanyes Segmentades (Extraescolars vs Tallers) */}
+          <div className="filter-tabs-container">
+            <button 
+              onClick={() => updateFilter('tipus', 'Extraescolars')}
+              className={`filter-tab-button ${selectedTipus !== 'Tallers i Oci' && selectedTipus !== 'Casals' ? 'active' : ''}`}
+            >
+              Extraescolars setmanals
+            </button>
+            <button 
+              onClick={() => updateFilter('tipus', 'Tallers i Oci')}
+              className={`filter-tab-button ${selectedTipus === 'Tallers i Oci' ? 'active' : ''}`}
+            >
+              Tallers
+            </button>
+          </div>
+        </div>
+
+        {/* 3. Filters Sidebar */}
         <div className="map-container" style={{ gridColumn: 'span 4', paddingRight: '2vw' }}>
             <h2 style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: '32px', color: 'var(--verd-fosc)', marginBottom: '32px' }}>
               Filtra les activitats
@@ -243,139 +420,12 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
             </div>
         </div>
         
+        {/* 4. Results Column */}
         <div className="map-results" style={{ gridColumn: 'span 8', paddingLeft: '0' }}>
-            {/* 1. Franja estacional dels Casals */}
-            <div 
-              onClick={() => {
-                if (selectedTipus === 'Casals') {
-                  updateFilter('tipus', 'Extraescolars');
-                } else {
-                  updateFilter('tipus', 'Casals');
-                }
-              }}
-              className={`casals-seasonal-banner ${selectedTipus === 'Casals' ? 'active' : ''}`}
-              style={{
-                background: selectedTipus === 'Casals' 
-                  ? 'linear-gradient(135deg, #0c2214 0%, #091a10 100%)' 
-                  : 'linear-gradient(135deg, #fbfaf7 0%, #f7eae1 100%)',
-                border: selectedTipus === 'Casals' 
-                  ? '1px solid var(--taronja)' 
-                  : '1px solid rgba(220, 100, 50, 0.2)',
-                borderLeft: '4px solid var(--taronja)',
-                padding: '28px 32px',
-                marginBottom: '24px',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                boxShadow: selectedTipus === 'Casals' 
-                  ? '0 8px 24px rgba(12, 34, 20, 0.2)' 
-                  : '0 4px 12px rgba(220, 100, 50, 0.05)'
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <span style={{ fontSize: '28px' }}>🌸</span>
-                <div style={{ textAlign: 'left' }}>
-                  <h4 style={{ 
-                    margin: 0, 
-                    fontFamily: 'var(--font-serif)', 
-                    fontStyle: 'italic', 
-                    fontSize: '18px', 
-                    color: selectedTipus === 'Casals' ? '#fbfaf7' : 'var(--verd-fosc)',
-                    fontWeight: 700 
-                  }}>
-                    {selectedTipus === 'Casals' 
-                      ? 'Campanya Especial de Casals Activa' 
-                      : 'Inscripcions Obertes de Casals de Temporada'}
-                  </h4>
-                  <p style={{ 
-                    margin: '6px 0 0 0', 
-                    fontFamily: 'var(--font-sans)', 
-                    fontSize: '13px', 
-                    color: selectedTipus === 'Casals' ? 'rgba(255,255,255,0.8)' : 'rgba(12, 34, 20, 0.7)' 
-                  }}>
-                    {selectedTipus === 'Casals' 
-                      ? 'Mostrant exclusivament casals d’estiu, nadal i setmana santa.' 
-                      : 'Troba els millors casals d’estiu, nadal i setmana santa a Girona!'}
-                  </p>
-                </div>
-              </div>
-              <span style={{ 
-                fontFamily: 'var(--font-sans)', 
-                fontSize: '12px', 
-                fontWeight: 700, 
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                color: 'var(--taronja)',
-                border: '1px solid var(--taronja)',
-                padding: '6px 14px',
-                borderRadius: '30px',
-                backgroundColor: selectedTipus === 'Casals' ? 'rgba(245, 166, 35, 0.1)' : 'transparent'
-              }}>
-                {selectedTipus === 'Casals' ? 'Tancar ×' : 'Explorar →'}
-              </span>
-            </div>
-
-            {/* 2. Pestanyes Segmentades (Extraescolars vs Tallers) */}
-            <div className="filter-tabs-container" style={{
-              display: 'flex',
-              gap: '24px',
-              marginBottom: '28px',
-              borderBottom: '1px solid rgba(12, 34, 20, 0.1)',
-              paddingBottom: '2px'
-            }}>
-              <style>{`
-                .filter-tab-button {
-                  font-family: var(--font-sans);
-                  font-size: 13px;
-                  font-weight: 800;
-                  color: rgba(12, 34, 20, 0.4);
-                  background: none;
-                  border: none;
-                  padding: 10px 4px;
-                  cursor: pointer;
-                  position: relative;
-                  transition: all 0.3s ease;
-                  text-transform: uppercase;
-                  letter-spacing: 0.08em;
-                  outline: none;
-                }
-                .filter-tab-button:hover {
-                  color: var(--verd-fosc);
-                }
-                .filter-tab-button.active {
-                  color: var(--verd-fosc);
-                }
-                .filter-tab-button.active::after {
-                  content: '';
-                  position: absolute;
-                  bottom: -2px;
-                  left: 0;
-                  right: 0;
-                  height: 3px;
-                  background-color: var(--verd-fosc);
-                }
-              `}</style>
-              <button 
-                onClick={() => updateFilter('tipus', 'Extraescolars')}
-                className={`filter-tab-button ${selectedTipus !== 'Tallers i Oci' && selectedTipus !== 'Casals' ? 'active' : ''}`}
-              >
-                Extraescolars setmanals
-              </button>
-              <button 
-                onClick={() => updateFilter('tipus', 'Tallers i Oci')}
-                className={`filter-tab-button ${selectedTipus === 'Tallers i Oci' ? 'active' : ''}`}
-              >
-                Tallers
-              </button>
-            </div>
-
             <h2 aria-live="polite" style={{ fontSize: '24px', marginTop: '0', marginBottom: '24px', fontFamily: 'var(--font-serif)', fontStyle: 'italic', color: 'var(--verd-fosc)' }}>
               {selectedTipus === 'Casals' 
                 ? `Casals de Temporada (${filtered.length})` 
-                : selectedTipus === 'Tallers i Oci'
+                : selectedTipus === 'Tallers' || selectedTipus === 'Tallers i Oci'
                   ? `Tallers (${filtered.length})`
                   : `Extraescolars Setmanals (${filtered.length})`}
             </h2>
