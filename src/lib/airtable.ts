@@ -845,6 +845,7 @@ export async function updateCentre(id: string, data: Partial<Omit<Centre, 'id' |
 }
 
 export async function getSponsors(): Promise<Sponsor[]> {
+  // Trigger fresh build to load new Airtable sponsors
   if (!API_KEY || !BASE_ID) return [];
   
   try {
