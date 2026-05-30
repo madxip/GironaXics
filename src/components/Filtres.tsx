@@ -288,19 +288,19 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                           align-items: center;
                           gap: 20px;
                           padding: 20px;
-                          background-color: #0c2214;
-                          background-image: linear-gradient(135deg, #091a10 0%, #0c2214 50%, #112d1b 100%);
+                          background-color: #fffdf6;
+                          background-image: linear-gradient(135deg, #fffdf6 0%, #fdf5e2 100%);
                           border-radius: 16px;
                           text-decoration: none;
-                          color: white;
-                          border: 1px solid rgba(251, 191, 36, 0.25);
-                          box-shadow: 0 10px 25px -5px rgba(12, 34, 20, 0.2);
+                          color: var(--fosc);
+                          border: 1px solid rgba(212, 168, 42, 0.4);
+                          box-shadow: 0 10px 25px -5px rgba(212, 168, 42, 0.1);
                           transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s ease, box-shadow 0.3s ease;
                         }
                         .sponsor-card:hover {
                           transform: translateY(-4px);
-                          border-color: rgba(251, 191, 36, 0.5);
-                          box-shadow: 0 15px 30px -5px rgba(12, 34, 20, 0.35), 0 0 15px rgba(251, 191, 36, 0.1);
+                          border-color: rgba(212, 168, 42, 0.8);
+                          box-shadow: 0 15px 30px -5px rgba(212, 168, 42, 0.2), 0 0 15px rgba(212, 168, 42, 0.1);
                         }
                         .sponsor-logo-container {
                           display: flex;
@@ -311,13 +311,14 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                           height: 80px;
                           border-radius: 12px;
                           padding: 10px;
-                          box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+                          box-shadow: 0 8px 24px rgba(212, 168, 42, 0.08);
+                          border: 1px solid rgba(212, 168, 42, 0.15);
                           flex-shrink: 0;
                           transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
                         }
                         .sponsor-card:hover .sponsor-logo-container {
                           transform: scale(1.03);
-                           box-shadow: 0 12px 35px rgba(0,0,0,0.2);
+                          box-shadow: 0 12px 30px rgba(212, 168, 42, 0.15);
                         }
                         .sponsor-text-container {
                           flex-grow: 1;
@@ -331,13 +332,13 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                           font-family: var(--font-serif);
                           font-style: italic;
                           font-weight: 700;
-                          color: white;
+                          color: var(--verd-fosc);
                           line-height: 1.2;
                         }
                         .sponsor-desc {
                           margin: 0;
                           font-size: 13px;
-                          color: rgba(255,255,255,0.75);
+                          color: var(--muted);
                           line-height: 1.4;
                         }
                         .sponsor-cta-wrapper {
@@ -348,8 +349,8 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                           align-items: center;
                           gap: 8px;
                           background-color: transparent;
-                          border: 1px solid #fbbf24;
-                          color: #fbbf24;
+                          border: 1px solid #d4a82a;
+                          color: #92620a;
                           padding: 8px 18px;
                           border-radius: 30px;
                           font-size: 11px;
@@ -359,9 +360,9 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                         }
                         .sponsor-card:hover .sponsor-cta {
-                          background-color: #fbbf24;
-                          color: #0c2214;
-                          box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
+                          background-color: #d4a82a;
+                          color: white;
+                          box-shadow: 0 4px 15px rgba(212, 168, 42, 0.3);
                         }
                         
                         @media (min-width: 1024px) {
@@ -390,11 +391,11 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                             gap: 20px;
                             padding: 24px;
                             border-radius: 20px;
-                            box-shadow: 0 20px 40px -15px rgba(12, 34, 20, 0.35);
+                            box-shadow: 0 20px 40px -15px rgba(212, 168, 42, 0.15);
                           }
                           .sponsor-card:hover {
                             transform: translateY(-6px);
-                            box-shadow: 0 25px 45px -15px rgba(12, 34, 20, 0.5), 0 0 25px rgba(251, 191, 36, 0.15);
+                            box-shadow: 0 25px 45px -15px rgba(212, 168, 42, 0.25), 0 0 25px rgba(212, 168, 42, 0.15);
                           }
                           .sponsor-logo-container {
                             width: 100%;
@@ -452,8 +453,8 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignSelf: 'stretch' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                                 <span style={{ 
-                                  backgroundColor: '#fbbf24', 
-                                  color: '#0c2214', 
+                                  backgroundColor: 'var(--verd)', 
+                                  color: 'white', 
                                   fontSize: '8px', 
                                   fontWeight: 800, 
                                   textTransform: 'uppercase', 
@@ -464,8 +465,8 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                                 }}>
                                   Patrocinador
                                 </span>
-                                <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>✦</span>
-                                <span style={{ fontSize: '10px', color: '#fbbf24', fontWeight: 600, letterSpacing: '0.04em' }}>
+                                <span style={{ fontSize: '11px', color: 'var(--crema-fosca)' }}>✦</span>
+                                <span style={{ fontSize: '10px', color: 'var(--taronja-text)', fontWeight: 700, letterSpacing: '0.04em' }}>
                                   {selectedCategoria}
                                 </span>
                               </div>
