@@ -858,20 +858,38 @@ export async function getSponsors(): Promise<Sponsor[]> {
         imatgeUrl = (r.fields.Imatge[0] as { url: string }).url;
       }
       
-      // Busquem el camp de la categoria de forma intel·ligent (suporta text, single-select, i lookups automàtics com "categoria (from...")
-      let rawCategoria = r.fields.categoria || r.fields.Categoria;
+      // Busquem el camp de la categoria de forma intel·ligent (suporta text, single-select, i lookups com "Nom (from categoria...)")
+      let rawCategoria = '';
+      
+      // 1. Busquem primer un camp que contingui tant "nom" com "categoria" (típic de Lookups de nom de categoria, ex: "Nom (from categoria...)")
+      const lookupKey = Object.keys(r.fields).find(k => 
+        k.toLowerCase().includes('categoria') && 
+        k.toLowerCase().includes('nom') &&
+        k !== 'nom' && k !== 'Nom'
+      );
+      if (lookupKey) {
+        rawCategoria = r.fields[lookupKey] as string;
+      }
+      
+      // 2. Si no es troba, busquem qualsevol camp que contingui "categoria" (excloent "slug" i que no sigui un ID de registre "rec...")
       if (!rawCategoria) {
-        const lookupKey = Object.keys(r.fields).find(k => 
-          k.toLowerCase().startsWith('categoria') && 
+        const catKeys = Object.keys(r.fields).filter(k => 
+          k.toLowerCase().includes('categoria') && 
           !k.toLowerCase().includes('slug')
         );
-        if (lookupKey) {
-          rawCategoria = r.fields[lookupKey];
+        for (const k of catKeys) {
+          const val = r.fields[k];
+          const valStr = Array.isArray(val) ? (val[0] as string) : (val as string);
+          if (valStr && !valStr.startsWith('rec')) {
+            rawCategoria = val as string;
+            break;
+          }
         }
       }
-      if (!rawCategoria) {
-        rawCategoria = r.fields.categoria_slug || r.fields.Categoria_slug || '';
-      }
+      
+      // 3. Fallbacks de compatibilitat
+      if (!rawCategoria) rawCategoria = (r.fields.categoria || r.fields.Categoria || '') as string;
+      if (!rawCategoria) rawCategoria = (r.fields.categoria_slug || r.fields.Categoria_slug || '') as string;
 
       const categoriaStr = Array.isArray(rawCategoria) 
         ? (rawCategoria[0] as string) 
