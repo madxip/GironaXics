@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Activitat } from '@/lib/types';
 import AccordionCategoria from './AccordionCategoria';
@@ -63,13 +63,6 @@ export default function Filtres({ activitats }: { activitats: Activitat[] }) {
   const selectedEdat = searchParams.get('edat') || 'Totes';
   const selectedBarri = searchParams.get('barri') || 'Totes';
 
-  const [visibleCount, setVisibleCount] = useState(20);
-
-  // Reset pagination count when any filter changes
-  useEffect(() => {
-    setVisibleCount(20);
-  }, [selectedCategoria, selectedSubcategoria, selectedEdat, selectedBarri]);
-
   const updateFilter = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
     if (key === 'categoria') {
@@ -124,18 +117,14 @@ export default function Filtres({ activitats }: { activitats: Activitat[] }) {
     });
   }, [activitats, selectedCategoria, selectedSubcategoria, selectedEdat, selectedBarri]);
 
-  const paginatedFiltered = useMemo(() => {
-    return filtered.slice(0, visibleCount);
-  }, [filtered, visibleCount]);
-
   const grouped = useMemo(() => {
-    return paginatedFiltered.reduce((acc, a) => {
+    return filtered.reduce((acc, a) => {
       const cat = a.categoria || 'Altres';
       if (!acc[cat]) acc[cat] = [];
       acc[cat].push(a);
       return acc;
     }, {} as Record<string, Activitat[]>);
-  }, [paginatedFiltered]);
+  }, [filtered]);
 
   return (
     <section className="map-section grid-12" style={{ paddingBottom: '80px' }}>
@@ -225,37 +214,6 @@ export default function Filtres({ activitats }: { activitats: Activitat[] }) {
                             />
                           ));
                         })()}
-                        
-                        {filtered.length > visibleCount && (
-                          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '32px' }}>
-                            <button
-                              onClick={() => setVisibleCount(prev => prev + 20)}
-                              className="hoverable"
-                              style={{
-                                padding: '12px 32px',
-                                borderRadius: '0',
-                                border: '2px solid var(--verd-fosc)',
-                                backgroundColor: 'transparent',
-                                color: 'var(--verd-fosc)',
-                                fontFamily: 'var(--font-sans)',
-                                fontSize: '14px',
-                                fontWeight: 'bold',
-                                cursor: 'pointer',
-                                transition: 'all 0.3s',
-                              }}
-                              onMouseOver={(e) => {
-                                e.currentTarget.style.backgroundColor = 'var(--verd-fosc)';
-                                e.currentTarget.style.color = 'white';
-                              }}
-                              onMouseOut={(e) => {
-                                e.currentTarget.style.backgroundColor = 'transparent';
-                                e.currentTarget.style.color = 'var(--verd-fosc)';
-                              }}
-                            >
-                              MOSTRA&apos;N MÉS ({filtered.length - visibleCount} restants)
-                            </button>
-                          </div>
-                        )}
                     </div>
                 )}
             </div>
