@@ -246,19 +246,20 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                       className="hoverable"
                       style={{
                         display: 'flex',
-                        gap: '20px',
-                        padding: '20px',
-                        backgroundColor: '#f8fafc',
-                        border: '2px solid var(--verd)',
-                        borderRadius: '12px',
+                        gap: '24px',
+                        padding: '24px',
+                        backgroundColor: 'var(--verd-fosc)',
+                        backgroundImage: 'linear-gradient(135deg, var(--verd-fosc) 0%, #0d4622 100%)',
+                        borderRadius: '16px',
                         textDecoration: 'none',
-                        color: 'var(--fosc)',
+                        color: 'white',
                         alignItems: 'center',
-                        marginBottom: '24px',
-                        transition: 'all 0.3s ease',
-                        boxShadow: '0 4px 12px rgba(26, 107, 58, 0.05)',
+                        marginBottom: '32px',
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        boxShadow: '0 10px 25px -5px rgba(14, 58, 30, 0.2), 0 8px 10px -6px rgba(14, 58, 30, 0.2)',
                         position: 'relative',
-                        overflow: 'hidden'
+                        overflow: 'hidden',
+                        border: '1px solid rgba(251, 191, 36, 0.15)'
                       }}
                     >
                       {/* Badge de recomendació */}
@@ -266,48 +267,82 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                         position: 'absolute',
                         top: '0',
                         right: '0',
-                        backgroundColor: 'var(--verd-fosc)',
+                        backgroundColor: '#d97706',
                         color: 'white',
                         fontSize: '10px',
-                        fontWeight: 'bold',
+                        fontWeight: 700,
                         textTransform: 'uppercase',
-                        letterSpacing: '0.05em',
-                        padding: '4px 12px',
-                        borderRadius: '0 0 0 8px'
+                        letterSpacing: '0.08em',
+                        padding: '6px 16px',
+                        borderRadius: '0 0 0 12px',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                       }}>
-                        Recomanat
+                        Destacat
                       </div>
                       
                       {activeSponsor.imatgeUrl && (
-                        <div style={{ position: 'relative', width: '90px', height: '90px', flexShrink: 0, borderRadius: '8px', overflow: 'hidden', backgroundColor: 'white', border: '1px solid var(--crema-fosca)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ 
+                          position: 'relative', 
+                          width: '96px', 
+                          height: '96px', 
+                          flexShrink: 0, 
+                          borderRadius: '12px', 
+                          overflow: 'hidden', 
+                          backgroundColor: 'white', 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center',
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                          padding: '10px'
+                        }}>
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={activeSponsor.imatgeUrl} alt={activeSponsor.nom} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '8px' }} />
+                          <img src={activeSponsor.imatgeUrl} alt={activeSponsor.nom} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                         </div>
                       )}
                       
                       <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <div style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--verd)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>✦ RECOMANACIÓ DESTACADA</div>
-                        <div style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: 'var(--verd-fosc)', fontFamily: 'var(--font-serif)', fontStyle: 'italic' }}>
+                        <div style={{ 
+                          fontSize: '11px', 
+                          fontWeight: 700, 
+                          color: '#fbbf24',
+                          letterSpacing: '0.08em', 
+                          textTransform: 'uppercase'
+                        }}>
+                          ✦ Recomanació patrocinada
+                        </div>
+                        <div style={{ 
+                          margin: 0, 
+                          fontSize: '24px', 
+                          fontWeight: 700, 
+                          color: 'white', 
+                          fontFamily: 'var(--font-serif)', 
+                          fontStyle: 'italic',
+                          lineHeight: 1.2
+                        }}>
                           {activeSponsor.nom}
                         </div>
-                        <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: '1.4' }}>
+                        <div style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.8)', lineHeight: '1.4', fontWeight: 400 }}>
                           El millor material i servei per a extraescolars i tallers d&apos;aquesta categoria a Girona.
                         </div>
                       </div>
                       
                       <div style={{
-                        backgroundColor: 'var(--verd)',
-                        color: 'white',
-                        width: '36px',
-                        height: '36px',
+                        backgroundColor: '#fbbf24',
+                        color: 'var(--verd-fosc)',
+                        width: '44px',
+                        height: '44px',
                         borderRadius: '50%',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         fontWeight: 'bold',
-                        fontSize: '16px',
-                        flexShrink: 0
-                      }}>
+                        fontSize: '18px',
+                        flexShrink: 0,
+                        transition: 'transform 0.3s ease',
+                        boxShadow: '0 4px 10px rgba(251, 191, 36, 0.3)'
+                      }}
+                      className="sponsor-arrow-btn"
+                      >
                         →
                       </div>
                     </a>
