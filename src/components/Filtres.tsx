@@ -23,6 +23,95 @@ const renderBannerTitle = (title: string) => {
   return title;
 };
 
+const renderBannerIcon = (nom: string) => {
+  const s = (nom || '').toLowerCase();
+  
+  const iconStyle: React.CSSProperties = {
+    position: 'absolute',
+    right: '40px',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    width: '220px',
+    height: '220px',
+    opacity: 0.07,
+    color: 'var(--verd)',
+    pointerEvents: 'none',
+    transition: 'all 0.3s ease'
+  };
+
+  if (s.includes('estiu') || s.includes('summer') || s.includes('sol')) {
+    // Sun SVG for Summer
+    return (
+      <svg 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        strokeWidth="1.2" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+        className="casals-snowflake-svg"
+        style={iconStyle}
+      >
+        <circle cx="12" cy="12" r="4"></circle>
+        <line x1="12" y1="2" x2="12" y2="4"></line>
+        <line x1="12" y1="20" x2="12" y2="22"></line>
+        <line x1="4.93" y1="4.93" x2="6.34" y2="6.34"></line>
+        <line x1="17.66" y1="17.66" x2="19.07" y2="19.07"></line>
+        <line x1="2" y1="12" x2="4" y2="12"></line>
+        <line x1="20" y1="12" x2="22" y2="12"></line>
+        <line x1="6.34" y1="17.66" x2="4.93" y2="19.07"></line>
+        <line x1="19.07" y1="4.93" x2="17.66" y2="6.34"></line>
+      </svg>
+    );
+  }
+
+  if (s.includes('santa') || s.includes('primavera') || s.includes('pasqua') || s.includes('spring')) {
+    // Leaf/Flower SVG for Spring
+    return (
+      <svg 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        strokeWidth="1.2" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+        className="casals-snowflake-svg"
+        style={iconStyle}
+      >
+        <path d="M12 2c1.7 0 3 1.3 3 3v14c0 1.7-1.3 3-3 3s-3-1.3-3-3V5c0-1.7 1.3-3 3-3z"></path>
+        <path d="M12 6c3.3 0 6 2.7 6 6s-2.7 6-6 6-6-2.7-6-6 2.7-6 6-6z"></path>
+      </svg>
+    );
+  }
+
+  // Fallback: Snowflake for Nadal/Winter
+  return (
+    <svg 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="1.2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round"
+      className="casals-snowflake-svg"
+      style={iconStyle}
+    >
+      <line x1="12" y1="2" x2="12" y2="22"></line>
+      <line x1="22" y1="12" x2="2" y2="12"></line>
+      <path d="m20 16-4-4 4-4"></path>
+      <path d="m4 8 4 4-4 4"></path>
+      <path d="m16 20-4-4-4 4"></path>
+      <path d="m8 4 4 4 4-4"></path>
+      <line x1="19.07" y1="4.93" x2="4.93" y2="19.07"></line>
+      <line x1="19.07" y1="19.07" x2="4.93" y2="4.93"></line>
+      <path d="m14 4 4 4v4"></path>
+      <path d="m10 4-4 4v4"></path>
+      <path d="m18 14v4l-4 4"></path>
+      <path d="m6 14v4l4 4"></path>
+    </svg>
+  );
+};
+
 const EDAT_GROUPS = [
   'Totes',
   'De 3 a 5 anys',
@@ -342,41 +431,8 @@ export default function Filtres({
                 boxShadow: '0 12px 32px rgba(6, 38, 18, 0.25)'
               }}
             >
-              {/* Background Snowflake decoration */}
-              <svg 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="1.2" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-                className="casals-snowflake-svg"
-                style={{
-                  position: 'absolute',
-                  right: '40px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  width: '220px',
-                  height: '220px',
-                  opacity: 0.07,
-                  color: 'var(--verd)',
-                  pointerEvents: 'none',
-                  transition: 'all 0.3s ease'
-                }}
-              >
-                <line x1="12" y1="2" x2="12" y2="22"></line>
-                <line x1="22" y1="12" x2="2" y2="12"></line>
-                <path d="m20 16-4-4 4-4"></path>
-                <path d="m4 8 4 4-4 4"></path>
-                <path d="m16 20-4-4-4 4"></path>
-                <path d="m8 4 4 4 4-4"></path>
-                <line x1="19.07" y1="4.93" x2="4.93" y2="19.07"></line>
-                <line x1="19.07" y1="19.07" x2="4.93" y2="4.93"></line>
-                <path d="m14 4 4 4v4"></path>
-                <path d="m10 4-4 4v4"></path>
-                <path d="m18 14v4l-4 4"></path>
-                <path d="m6 14v4l4 4"></path>
-              </svg>
+              {/* Dynamic background seasonal decoration */}
+              {renderBannerIcon(casalsBanner.nom)}
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', zIndex: 2, position: 'relative', textAlign: 'left', width: '100%' }}>
                 {/* Kicker */}
