@@ -785,6 +785,7 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                                   categoria={categoria}
                                   activitats={activitatsCat}
                                   defaultOpen={numCats <= 3 || idx === 0}
+                                  hasSponsor={!!activeSponsor}
                                 />
                               ));
                             })()}
