@@ -2342,3 +2342,174 @@
                 font-size: 24px;
             }
         }
+
+        /* --- TARGETES DE TALLERS (FASE 2) --- */
+        .taller-card-wrapper {
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            border-radius: 16px;
+            background-color: #ffffff;
+            border: 1px solid #eae6df;
+            box-shadow: 0 4px 15px rgba(12, 34, 20, 0.04);
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+            position: relative;
+            overflow: hidden;
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        .taller-card-wrapper:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(12, 34, 20, 0.08);
+            border-color: #1a6b3a; /* Verd de GironaXics per als tallers */
+        }
+
+        .taller-card-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 24px 24px 16px 24px;
+        }
+
+        .taller-card-calendars-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .taller-card-calendar {
+            width: 50px;
+            height: 52px;
+            border-radius: 10px;
+            background-color: #e6f4ea; /* Fons verd suau */
+            border: 1px solid #ceead6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            line-height: 1.15;
+            padding: 2px;
+            box-sizing: border-box;
+        }
+
+        .taller-card-calendar-day {
+            font-family: var(--font-sans);
+            font-size: 16px;
+            font-weight: 800;
+            color: #0c2214;
+        }
+
+        .taller-card-calendar-month {
+            font-family: var(--font-sans);
+            font-size: 9px;
+            font-weight: 800;
+            color: #1a6b3a;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .taller-card-more-dates-badge {
+            font-family: var(--font-sans);
+            font-size: 12px;
+            font-weight: 800;
+            color: #1a6b3a;
+            background-color: #e6f4ea;
+            border: 1px solid #ceead6;
+            border-radius: 8px;
+            padding: 4px 8px;
+        }
+
+        .taller-card-tag {
+            font-family: var(--font-sans);
+            font-size: 11px;
+            font-weight: 800;
+            color: #b3851b; /* Accent daurat/marró */
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .taller-card-info-block {
+            padding: 0 24px 20px 24px;
+            text-align: left;
+            flex-grow: 1;
+        }
+
+        .taller-card-title {
+            font-family: var(--font-serif);
+            font-style: italic;
+            font-size: 26px;
+            font-weight: 700;
+            color: #0c2214;
+            margin: 0 0 8px 0;
+            line-height: 1.25;
+        }
+
+        .taller-card-subtitle {
+            font-family: var(--font-sans);
+            font-size: 14px;
+            color: #5a665e;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .taller-card-bottom-row {
+            border-top: 1px solid #f5f2eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px 20px 24px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .taller-card-time {
+            font-family: var(--font-sans);
+            font-size: 14px;
+            color: #5a665e;
+            font-weight: 500;
+        }
+
+        .taller-card-price {
+            font-family: var(--font-sans);
+            font-size: 18px;
+            font-weight: 800;
+            color: #b3851b;
+        }
+
+        @media (max-width: 600px) {
+            .taller-card-wrapper {
+                border-radius: 12px;
+            }
+            .taller-card-top-row {
+                padding: 16px 16px 12px 16px;
+            }
+            .taller-card-calendar {
+                width: 44px;
+                height: 46px;
+                border-radius: 8px;
+            }
+            .taller-card-calendar-day {
+                font-size: 14px;
+            }
+            .taller-card-calendar-month {
+                font-size: 8px;
+            }
+            .taller-card-info-block {
+                padding: 0 16px 16px 16px;
+            }
+            .taller-card-title {
+                font-size: 21px;
+            }
+            .taller-card-bottom-row {
+                padding: 12px 16px 16px 16px;
+            }
+            .taller-card-price {
+                font-size: 16px;
+            }
+        }

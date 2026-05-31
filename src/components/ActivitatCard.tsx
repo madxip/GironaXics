@@ -3,10 +3,89 @@ import Image from './SafeImage';
 import { Activitat } from '@/lib/types';
 import { normalizeSlug, formatPreu } from '@/lib/utils';
 
+interface ParsedDate {
+  day: string;
+  month: string;
+}
+
+const parseTallerDates = (text: string): ParsedDate[] => {
+  if (!text) return [];
+  const normalized = text.toLowerCase();
+  
+  const months = [
+    { name: "gener", abbr: "GEN" },
+    { name: "febrer", abbr: "FEB" },
+    { name: "març", abbr: "MAR" },
+    { name: "abril", abbr: "ABR" },
+    { name: "maig", abbr: "MAIG" },
+    { name: "juny", abbr: "JUNY" },
+    { name: "juliol", abbr: "JUL" },
+    { name: "agost", abbr: "AGO" },
+    { name: "setembre", abbr: "SET" },
+    { name: "octubre", abbr: "OCT" },
+    { name: "novembre", abbr: "NOV" },
+    { name: "desembre", abbr: "DES" }
+  ];
+
+  const foundMonths: { index: number; abbr: string; name: string }[] = [];
+  months.forEach(m => {
+    let idx = normalized.indexOf(m.name);
+    while (idx !== -1) {
+      foundMonths.push({ index: idx, abbr: m.abbr, name: m.name });
+      idx = normalized.indexOf(m.name, idx + 1);
+    }
+  });
+  foundMonths.sort((a, b) => a.index - b.index);
+
+  const numberRegex = /\b\d{1,2}\b/g;
+  const foundNumbers: { index: number; val: string }[] = [];
+  let match;
+  while ((match = numberRegex.exec(normalized)) !== null) {
+    foundNumbers.push({ index: match.index, val: match[0] });
+  }
+
+  if (foundNumbers.length === 0 && foundMonths.length > 0) {
+    return [{ day: "--", month: foundMonths[0].abbr }];
+  }
+
+  if (foundNumbers.length > 0 && foundMonths.length === 0) {
+    return foundNumbers.map(n => ({ day: n.val, month: "TALL" }));
+  }
+
+  const result: ParsedDate[] = [];
+  foundNumbers.forEach(n => {
+    let assocMonth = foundMonths.find(m => m.index > n.index);
+    if (!assocMonth && foundMonths.length > 0) {
+      assocMonth = foundMonths[foundMonths.length - 1];
+    }
+    if (assocMonth) {
+      result.push({ day: n.val, month: assocMonth.abbr });
+    }
+  });
+
+  return result;
+};
+
+const formatTallerPrice = (preuRaw: string | number | undefined): string => {
+  if (preuRaw === undefined || preuRaw === null) return 'N/A';
+  const str = String(preuRaw).trim();
+  if (!str) return 'N/A';
+  if (str.toLowerCase() === 'gratuït' || str.toLowerCase() === 'gratuit') return 'Gratuït';
+  
+  if (/^[0-9\s.,]+$/.test(str)) {
+    return `${str}€`;
+  }
+  if (str.includes('€')) {
+    return str;
+  }
+  return `${str}€`;
+};
+
 export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
   const catSlug = normalizeSlug(activitat.categoria);
   const href = `/activitats/${catSlug}/${activitat.slug}`;
   const isCasal = activitat.tipus?.toLowerCase().includes('casal');
+  const isTaller = activitat.tipus?.toLowerCase().includes('taller') || activitat.tipus?.toLowerCase().includes('oci');
 
   if (isCasal) {
     const logoUrl = activitat.centreImatgeUrl;
@@ -107,6 +186,58 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
           <span className="casal-card-action-text">
             Reserva plaça →
           </span>
+        </div>
+      </Link>
+    );
+  }
+
+  if (isTaller) {
+    const parsedDates = parseTallerDates(activitat.dies || '');
+    const formattedPrice = formatTallerPrice(activitat.preu);
+
+    return (
+      <Link href={href} className="taller-card-wrapper">
+        {/* Top Row: Calendars and Tag */}
+        <div className="taller-card-top-row">
+          <div className="taller-card-calendars-container">
+            {parsedDates.length > 0 ? (
+              parsedDates.slice(0, 3).map((d, index) => (
+                <div key={index} className="taller-card-calendar">
+                  <span className="taller-card-calendar-day">{d.day}</span>
+                  <span className="taller-card-calendar-month">{d.month}</span>
+                </div>
+              ))
+            ) : (
+              <div className="taller-card-calendar">
+                <span className="taller-card-calendar-day">--</span>
+                <span className="taller-card-calendar-month">OCI</span>
+              </div>
+            )}
+            {parsedDates.length > 3 && (
+              <span className="taller-card-more-dates-badge">
+                +{parsedDates.length - 3}
+              </span>
+            )}
+          </div>
+          {activitat.subcategoria && (
+            <span className="taller-card-tag">
+              {activitat.subcategoria}
+            </span>
+          )}
+        </div>
+
+        {/* Info Block */}
+        <div className="taller-card-info-block">
+          <h4 className="taller-card-title">{activitat.nom}</h4>
+          <div className="taller-card-subtitle">
+            {activitat.centre} · {activitat.edat}
+          </div>
+        </div>
+
+        {/* Divider and Bottom row */}
+        <div className="taller-card-bottom-row">
+          <span className="taller-card-time">{activitat.horari}</span>
+          <span className="taller-card-price">{formattedPrice}</span>
         </div>
       </Link>
     );

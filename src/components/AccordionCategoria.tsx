@@ -72,16 +72,20 @@ export default function AccordionCategoria({
       </button>
       
       {(() => {
-        const isCasalGroup = activitats.some(a => a.tipus?.toLowerCase().includes('casal'));
+        const isGridGroup = activitats.some(a => 
+          a.tipus?.toLowerCase().includes('casal') || 
+          a.tipus?.toLowerCase().includes('taller') || 
+          a.tipus?.toLowerCase().includes('oci')
+        );
         return (
           <div 
             id={`accordion-content-${categoria.replace(/\s+/g, '-')}`} 
-            className={isCasalGroup ? `casals-responsive-grid ${hasSponsor ? 'single-column' : 'two-columns'}` : 'accordion-content'} 
+            className={isGridGroup ? `casals-responsive-grid ${hasSponsor ? 'single-column' : 'two-columns'}` : 'accordion-content'} 
             style={{ 
               padding: isOpen ? '16px 0' : '0', 
-              display: isOpen ? (isCasalGroup ? 'grid' : 'flex') : 'none', 
-              flexDirection: isCasalGroup ? undefined : 'column', 
-              gap: isCasalGroup ? undefined : '16px' 
+              display: isOpen ? (isGridGroup ? 'grid' : 'flex') : 'none', 
+              flexDirection: isGridGroup ? undefined : 'column', 
+              gap: isGridGroup ? undefined : '16px' 
             }}
           >
             {activitats.map(a => (
