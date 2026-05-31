@@ -6,7 +6,6 @@ import ActivityForm from "../ActivityForm";
 export const dynamic = "force-dynamic";
 
 const DEFAULT_CATEGORIES = [
-  "Arts plàstiques",
   "Creativitat i Expressió",
   "Cuina",
   "Dansa",
