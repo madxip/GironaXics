@@ -280,6 +280,12 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                 updateFilter('tipus', 'Extraescolars');
               } else {
                 updateFilter('tipus', 'Casals');
+                setTimeout(() => {
+                  const element = document.getElementById('filtres-header');
+                  if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                }, 100);
               }
             }}
             className={`casals-seasonal-banner ${selectedTipus === 'Casals' ? 'active' : ''}`}
@@ -397,6 +403,12 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                       updateFilter('tipus', 'Extraescolars');
                     } else {
                       updateFilter('tipus', 'Casals');
+                      setTimeout(() => {
+                        const element = document.getElementById('filtres-header');
+                        if (element) {
+                          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                      }, 100);
                     }
                   }}
                   className="casals-banner-action-btn"
@@ -421,7 +433,7 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
           </div>
 
           {/* 2. Pestanyes Segmentades (Extraescolars vs Tallers) */}
-          <div className="filter-tabs-container">
+          <div id="filtres-header" className="filter-tabs-container">
             <button 
               onClick={() => updateFilter('tipus', 'Extraescolars')}
               className={`filter-tab-button ${selectedTipus !== 'Tallers i Oci' && selectedTipus !== 'Casals' ? 'active' : ''}`}
