@@ -54,3 +54,15 @@ export interface Centre {
   interessat?: boolean; // Centre ha confirmat participació (casella Airtable)
 }
 
+export interface CasalsBanner {
+  id: string;
+  nom: string;
+  actiu: boolean;
+  kicker?: string;
+  titol?: string;
+  subtitol?: string;
+  dates?: string;
+  dataLimit?: string;
+}
+
+
