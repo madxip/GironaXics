@@ -53,15 +53,15 @@ export default function Stats({
         <div className="grid-12">
             <div className="stat-item">
                 <div className="stat-number stat-anim" data-val={numCentres} ref={el => { statRefs.current[0] = el; }}>0</div>
-                <div className="stat-label">centres adherits</div>
+                <div className="stat-label">centres</div>
             </div>
             <div className="stat-item">
                 <div className="stat-number stat-anim" data-val={numCategories} ref={el => { statRefs.current[1] = el; }}>0</div>
-                <div className="stat-label">categories<br/>d&apos;activitats</div>
+                <div className="stat-label">categories</div>
             </div>
             <div className="stat-item">
                 <div className="stat-number stat-anim" data-val={numActivitats} ref={el => { statRefs.current[2] = el; }}>+0</div>
-                <div className="stat-label">activitats disponibles</div>
+                <div className="stat-label">activitats</div>
             </div>
         </div>
     </section>
