@@ -132,8 +132,7 @@
 
         /* Hero */
         .hero {
-            height: auto;
-            min-height: 60vh;
+            height: 80vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -238,9 +237,11 @@
 
         /* Franja Estadístiques */
         .stats {
+            height: 20vh;
             background-color: var(--verd-fosc);
             color: white;
-            padding: 40px 0;
+            display: flex;
+            align-items: center;
         }
 
         .stats .grid-12 {
@@ -936,6 +937,7 @@
             }
 
             .hero {
+                height: auto !important;
                 min-height: auto;
                 padding: 100px 5vw 30px;
             }
@@ -965,6 +967,8 @@
 
             /* Estadístiques horitzontals compactes en mòbil */
             .stats {
+                height: auto !important;
+                display: block !important;
                 padding: 30px 0 !important;
             }
 
