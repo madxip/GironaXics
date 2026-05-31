@@ -23,7 +23,7 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
       }
       
       if (/^[0-9\s.,]+$/.test(str)) {
-        return { num: str, unit: '€ /setmana' };
+        return { num: str, unit: '€ /mes' };
       }
       
       if (str.includes('€')) {
@@ -35,7 +35,7 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
         } else if (unit) {
           unit = `€ / ${unit}`;
         } else {
-          unit = '€ /setmana';
+          unit = '€ /mes';
         }
         return { num, unit };
       }
