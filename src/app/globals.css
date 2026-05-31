@@ -132,11 +132,12 @@
 
         /* Hero */
         .hero {
-            height: 100vh;
+            height: auto;
+            min-height: 60vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            padding: 0 5vw;
+            padding: 120px 5vw 40px;
             position: relative;
         }
 
@@ -144,7 +145,7 @@
             font-family: var(--font-serif);
             font-size: clamp(64px, 12vw, 120px);
             line-height: 0.9;
-            margin-bottom: 60px;
+            margin-bottom: 32px;
         }
 
         .hero-title div {
@@ -172,7 +173,7 @@
         .hero-subtitle {
             position: absolute;
             right: 5vw;
-            bottom: 120px;
+            bottom: 30px;
             font-weight: 300;
             color: var(--muted);
             text-align: right;
@@ -239,7 +240,7 @@
         .stats {
             background-color: var(--verd-fosc);
             color: white;
-            padding: 80px 0;
+            padding: 40px 0;
         }
 
         .stats .grid-12 {
@@ -934,6 +935,11 @@
                 grid-template-columns: 1fr;
             }
 
+            .hero {
+                min-height: auto;
+                padding: 100px 5vw 30px;
+            }
+
             .hero-title {
                 font-size: 13vw;
             }
@@ -946,25 +952,54 @@
                 text-indent: 0vw;
             }
 
-            .hero-search {
-                margin-left: 5vw;
-            }
-
-            .hero-buttons {
-                margin-left: 5vw;
+            .hero-subtitle {
+                position: static !important;
+                margin-top: 16px !important;
+                text-align: left !important;
+                font-size: 14px !important;
             }
 
             .scroll-indicator {
                 display: none;
             }
 
+            /* Estadístiques horitzontals compactes en mòbil */
+            .stats {
+                padding: 30px 0 !important;
+            }
+
+            .stats .grid-12 {
+                grid-template-columns: repeat(3, 1fr) !important;
+                display: grid !important;
+                gap: 12px !important;
+            }
+
             .stat-item {
-                grid-column: span 1;
-                margin-bottom: 32px;
+                grid-column: span 1 !important;
+                margin-bottom: 0 !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: center !important;
+                text-align: center !important;
+                gap: 4px !important;
             }
 
             .stat-number {
-                font-size: 64px;
+                font-size: 38px !important;
+            }
+
+            .stat-label {
+                font-size: 12px !important;
+                max-width: none !important;
+                text-align: center !important;
+                white-space: nowrap !important;
+                color: rgba(255, 255, 255, 0.7) !important;
+            }
+
+            /* Text dels separadors pujat un parell de punts */
+            .sep-num {
+                font-size: 13px !important;
             }
 
             .map-container,
