@@ -29,6 +29,7 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
     const descripcio = formData.get("descripcio") as string;
     const durada = formData.get("durada") as string;
     const alumnes = formData.get("alumnes") as string;
+    const material = formData.get("material") as string;
     const inici = formData.get("inici") as string;
     const idioma = formData.get("idioma") as string;
     const qui_imparteix = formData.get("qui_imparteix") as string;
@@ -66,7 +67,7 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
       descripcio: descripcio || "",
       durada: durada || "",
       alumnes: alumnes || "",
-      material: "",
+      material: material || "",
       inici: inici || "",
       idioma: idioma || "",
       qui_imparteix: qui_imparteix || "",
@@ -142,6 +143,7 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
     const descripcio = formData.get("descripcio") as string;
     const durada = formData.get("durada") as string;
     const alumnes = formData.get("alumnes") as string;
+    const material = formData.get("material") as string;
     const inici = formData.get("inici") as string;
     const idioma = formData.get("idioma") as string;
     const qui_imparteix = formData.get("qui_imparteix") as string;
@@ -178,6 +180,7 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
       descripcio: descripcio || "",
       durada: durada || "",
       alumnes: alumnes || "",
+      material: material || "",
       inici: inici || "",
       idioma: idioma || "",
       qui_imparteix: qui_imparteix || "",
