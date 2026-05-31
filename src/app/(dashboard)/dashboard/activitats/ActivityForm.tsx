@@ -43,7 +43,7 @@ const TXT_GRATUIT = "Gratuït";
 const TXT_ALTRES_TEXT = "Altres / Text personalitzat";
 const TXT_DESCRIPCIO = "Descripció detallada";
 const TXT_DURADA = "Durada de la sessió";
-const TXT_MATERIAL = "Material";
+const TXT_MATERIAL = "Observacions";
 const TXT_DATA_INICI = "Data d'Inici";
 const TXT_IDIOMA = "Idioma";
 const TXT_QUI_IMPARTEIX = "Qui ho imparteix?";
@@ -1558,19 +1558,21 @@ export default function ActivityForm({
                   <label style={{ fontSize: "13px", fontWeight: "700", color: "var(--verd-fosc)", textTransform: "uppercase" }}>
                     {TXT_MATERIAL}
                   </label>
-                  <input
-                    type="text"
+                  <textarea
                     value={material}
                     onChange={(e) => setMaterial(e.target.value)}
-                    placeholder="Ex: Ordinadors inclosos, cal portar llibreta..."
+                    placeholder={"Ex: Opció de fer setmanes.\n1 setmana: 100 €\n2 setmanes: 190 €\n..."}
                     disabled={loading}
+                    rows={3}
                     style={{
                       padding: "12px 14px",
                       border: "1px solid rgba(26, 107, 58, 0.2)",
                       borderRadius: "8px",
                       fontSize: "15px",
                       outline: "none",
-                      color: "var(--fosc)"
+                      fontFamily: "inherit",
+                      color: "var(--fosc)",
+                      resize: "vertical"
                     }}
                   />
                 </div>
