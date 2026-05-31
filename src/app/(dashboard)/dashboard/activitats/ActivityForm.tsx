@@ -56,6 +56,134 @@ const TXT_GALERIA_DESC = "Pots afegir diverses imatges per mostrar la vida diàr
 const TXT_CANCELAR = "Cancel·lar";
 const TXT_ACTIVITAT_GRATUITA = "L'activitat es publicarà com a gratuïta";
 
+// --- HELPERS DE PARSEIG I FORMAT PER A LA FASE 2 ---
+const parseDateRange = (text: string): { start: string; end: string } => {
+  if (!text) return { start: "", end: "" };
+  const regex = /(\d{2})\/(\d{2})\/(\d{4})/g;
+  const match1 = regex.exec(text);
+  const match2 = regex.exec(text);
+  if (match1) {
+    const startStr = `${match1[3]}-${match1[2]}-${match1[1]}`;
+    const endStr = match2 ? `${match2[3]}-${match2[2]}-${match2[1]}` : "";
+    return { start: startStr, end: endStr };
+  }
+  const months = ["gener", "febrer", "març", "abril", "maig", "juny", "juliol", "agost", "setembre", "octubre", "novembre", "desembre"];
+  const lower = text.toLowerCase();
+  const yearMatch = text.match(/\b(20\d{2})\b/);
+  const year = yearMatch ? parseInt(yearMatch[1]) : new Date().getFullYear();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const parts = lower.split(/\bal\b/);
+  if (parts.length > 1) {
+    const firstPart = parts[0];
+    const secondPart = parts[1];
+    let endMonthIdx = -1;
+    for (let i = 0; i < months.length; i++) {
+      if (secondPart.includes(months[i])) { endMonthIdx = i; break; }
+    }
+    const endDayMatch = secondPart.match(/\b\d{1,2}\b/);
+    const endDay = endDayMatch ? parseInt(endDayMatch[0]) : 1;
+    let startMonthIdx = endMonthIdx;
+    for (let i = 0; i < months.length; i++) {
+      if (firstPart.includes(months[i])) { startMonthIdx = i; break; }
+    }
+    const startDayMatch = firstPart.match(/\b\d{1,2}\b/);
+    const startDay = startDayMatch ? parseInt(startDayMatch[0]) : 1;
+    if (startMonthIdx !== -1 && endMonthIdx !== -1) {
+      return {
+        start: `${year}-${pad(startMonthIdx + 1)}-${pad(startDay)}`,
+        end: `${year}-${pad(endMonthIdx + 1)}-${pad(endDay)}`
+      };
+    }
+  }
+  const singleMatch = text.match(/\b\d{1,2}\b/);
+  let mIdx = -1;
+  for (let i = 0; i < months.length; i++) {
+    if (lower.includes(months[i])) { mIdx = i; break; }
+  }
+  if (singleMatch && mIdx !== -1) {
+    return {
+      start: `${year}-${pad(mIdx + 1)}-${pad(parseInt(singleMatch[0]))}`,
+      end: ""
+    };
+  }
+  return { start: "", end: "" };
+};
+
+const parseSingleDate = (text: string): string => {
+  if (!text) return "";
+  const match = text.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+  if (match) return `${match[3]}-${match[2]}-${match[1]}`;
+  const months = ["gener", "febrer", "març", "abril", "maig", "juny", "juliol", "agost", "setembre", "octubre", "novembre", "desembre"];
+  const lower = text.toLowerCase();
+  const yearMatch = text.match(/\b(20\d{2})\b/);
+  const year = yearMatch ? parseInt(yearMatch[1]) : new Date().getFullYear();
+  let mIdx = -1;
+  for (let i = 0; i < months.length; i++) {
+    if (lower.includes(months[i])) { mIdx = i; break; }
+  }
+  const dayMatch = text.match(/\b\d{1,2}\b/);
+  if (dayMatch && mIdx !== -1) {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${year}-${pad(mIdx + 1)}-${pad(parseInt(dayMatch[0]))}`;
+  }
+  return "";
+};
+
+const parseMultipleDates = (text: string): string[] => {
+  if (!text) return [""];
+  const regex = /(\d{2})\/(\d{2})\/(\d{4})/g;
+  let match;
+  const matches = [];
+  while ((match = regex.exec(text)) !== null) {
+    matches.push(match);
+  }
+  if (matches.length > 0) {
+    return matches.map(m => `${m[3]}-${m[2]}-${m[1]}`);
+  }
+  const months = ["gener", "febrer", "març", "abril", "maig", "juny", "juliol", "agost", "setembre", "octubre", "novembre", "desembre"];
+  const lower = text.toLowerCase();
+  const yearMatch = text.match(/\b(20\d{2})\b/);
+  const year = yearMatch ? parseInt(yearMatch[1]) : new Date().getFullYear();
+  let monthIdx = -1;
+  for (let i = 0; i < months.length; i++) {
+    if (lower.includes(months[i])) { monthIdx = i; break; }
+  }
+  if (monthIdx === -1) return [""];
+  const monthWord = months[monthIdx];
+  const beforeMonth = lower.split(monthWord)[0];
+  const dayMatches = beforeMonth.match(/\b\d{1,2}\b/g);
+  if (!dayMatches) return [""];
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return dayMatches.map(d => `${year}-${pad(monthIdx + 1)}-${pad(parseInt(d))}`);
+};
+
+const formatMultipleDates = (dates: string[]) => {
+  const cleanDates = dates
+    .filter(Boolean)
+    .map(d => new Date(d))
+    .sort((a, b) => a.getTime() - b.getTime());
+  if (cleanDates.length === 0) return "";
+  const months = ["gener", "febrer", "març", "abril", "maig", "juny", "juliol", "agost", "setembre", "octubre", "novembre", "desembre"];
+  const firstDate = cleanDates[0];
+  const sameMonthAndYear = cleanDates.every(
+    d => d.getMonth() === firstDate.getMonth() && d.getFullYear() === firstDate.getFullYear()
+  );
+  if (sameMonthAndYear) {
+    const days = cleanDates.map(d => d.getDate());
+    let daysStr = "";
+    if (days.length === 1) daysStr = String(days[0]);
+    else if (days.length === 2) daysStr = `${days[0]} i ${days[1]}`;
+    else daysStr = `${days.slice(0, -1).join(", ")} i ${days[days.length - 1]}`;
+    return `${daysStr} de ${months[firstDate.getMonth()]} de ${firstDate.getFullYear()}`;
+  }
+  const strings = cleanDates.map(d => `${d.getDate()} de ${months[d.getMonth()]} de ${d.getFullYear()}`);
+  let finalStr = "";
+  if (strings.length === 1) finalStr = strings[0];
+  else if (strings.length === 2) finalStr = `${strings[0]} i ${strings[1]}`;
+  else finalStr = `${strings.slice(0, -1).join(", ")} i ${strings[strings.length - 1]}`;
+  return finalStr;
+};
+
 export default function ActivityForm({
   initialData,
   categories,
@@ -146,49 +274,89 @@ export default function ActivityForm({
   const [horari, setHorari] = useState(initialData?.horari || "");
   const [dies, setDies] = useState(initialData?.dies || "");
 
-  // Parse initial weekdays if it's an Extraescolar
+  // --- EXTRAESCOLARS WEEKDAYS STATE ---
   const [selectedWeekdays, setSelectedWeekdays] = useState<string[]>(() => {
-    const val = initialData?.dies || "";
-    const lower = val.toLowerCase();
-    const weekdays = [];
-    if (lower.includes("dilluns")) weekdays.push("Dilluns");
-    if (lower.includes("dimarts")) weekdays.push("Dimarts");
-    if (lower.includes("dimecres")) weekdays.push("Dimecres");
-    if (lower.includes("dijous")) weekdays.push("Dijous");
-    if (lower.includes("divendres")) weekdays.push("Divendres");
-    if (lower.includes("dissabte")) weekdays.push("Dissabte");
-    if (lower.includes("diumenge")) weekdays.push("Diumenge");
-    return weekdays;
+    if (initialData?.tipus === "Extraescolar") {
+      const val = initialData?.dies || "";
+      const lower = val.toLowerCase();
+      const weekdays = [];
+      if (lower.includes("dilluns")) weekdays.push("Dilluns");
+      if (lower.includes("dimarts")) weekdays.push("Dimarts");
+      if (lower.includes("dimecres")) weekdays.push("Dimecres");
+      if (lower.includes("dijous")) weekdays.push("Dijous");
+      if (lower.includes("divendres")) weekdays.push("Divendres");
+      if (lower.includes("dissabte")) weekdays.push("Dissabte");
+      if (lower.includes("diumenge")) weekdays.push("Diumenge");
+      return weekdays;
+    }
+    return [];
   });
 
-  // Try to parse initial date ranges for Casal (e.g. "Del 01/07/2026 al 31/07/2026")
+  // --- CASALS STATES (RANGE OR INDIVIDUAL) ---
+  const isCasalIndividual = (() => {
+    if (initialData?.tipus !== "Casal") return false;
+    const text = (initialData.dies || "").toLowerCase();
+    return (text.includes(",") || text.includes(" i ")) && !text.includes("del ") && !text.includes(" al ");
+  })();
+  
+  const [casalDateMode, setCasalDateMode] = useState<"range" | "individual">(isCasalIndividual ? "individual" : "range");
+
   const [startDate, setStartDate] = useState(() => {
-    if (initialData?.tipus === "Casal") {
-      const match = (initialData.dies || "").match(/(\d{2})\/(\d{2})\/(\d{4})/);
-      if (match) return `${match[3]}-${match[2]}-${match[1]}`;
+    if (initialData?.tipus === "Casal" && !isCasalIndividual) {
+      const parsed = parseDateRange(initialData.dies || "");
+      return parsed.start;
     }
     return "";
   });
   const [endDate, setEndDate] = useState(() => {
-    if (initialData?.tipus === "Casal") {
-      const regex = /(\d{2})\/(\d{2})\/(\d{4})/g;
-      const text = initialData.dies || "";
-      regex.exec(text); // skip first match
-      const secondMatch = regex.exec(text);
-      if (secondMatch) return `${secondMatch[3]}-${secondMatch[2]}-${secondMatch[1]}`;
+    if (initialData?.tipus === "Casal" && !isCasalIndividual) {
+      const parsed = parseDateRange(initialData.dies || "");
+      return parsed.end;
     }
     return "";
   });
 
-  // Try to parse initial single date for Taller
+  const [multipleDates, setMultipleDates] = useState<string[]>(() => {
+    if (initialData?.tipus === "Casal" && isCasalIndividual) {
+      const parsed = parseMultipleDates(initialData.dies || "");
+      return parsed.length > 0 ? parsed : [""];
+    }
+    return [""];
+  });
+
+  // --- TALLERS STATES (PUNTUAL OR RECURRENT) ---
+  const isRecurringTaller = !!(
+    initialData?.tipus?.toLowerCase().includes("taller") && 
+    (initialData.dies || "").toLowerCase().startsWith("cada")
+  );
+
+  const [tallerMode, setTallerMode] = useState<"puntual" | "recurrent">(isRecurringTaller ? "recurrent" : "puntual");
+  
   const [singleDate, setSingleDate] = useState(() => {
-    if (initialData?.tipus?.includes("Taller")) {
-      const match = (initialData.dies || "").match(/(\d{2})\/(\d{2})\/(\d{4})/);
-      if (match) return `${match[3]}-${match[2]}-${match[1]}`;
+    if (initialData?.tipus?.toLowerCase().includes("taller") && !isRecurringTaller) {
+      return parseSingleDate(initialData.dies || "");
     }
     return "";
   });
 
+  const [selectedTallerWeekdays, setSelectedTallerWeekdays] = useState<string[]>(() => {
+    if (initialData?.tipus?.toLowerCase().includes("taller") && isRecurringTaller) {
+      const val = initialData.dies || "";
+      const lower = val.toLowerCase();
+      const weekdays = [];
+      if (lower.includes("dilluns")) weekdays.push("Dilluns");
+      if (lower.includes("dimarts")) weekdays.push("Dimarts");
+      if (lower.includes("dimecres")) weekdays.push("Dimecres");
+      if (lower.includes("dijous")) weekdays.push("Dijous");
+      if (lower.includes("divendres")) weekdays.push("Divendres");
+      if (lower.includes("dissabte")) weekdays.push("Dissabte");
+      if (lower.includes("diumenge")) weekdays.push("Diumenge");
+      return weekdays;
+    }
+    return [];
+  });
+
+  // --- FORMATTERS ---
   const joinWeekdays = (days: string[]) => {
     const order = ["Dilluns", "Dimarts", "Dimecres", "Dijous", "Divendres", "Dissabte", "Diumenge"];
     const sorted = [...days].sort((a, b) => order.indexOf(a) - order.indexOf(b));
@@ -206,24 +374,20 @@ export default function ActivityForm({
     const startDay = start.getDate();
     const startMonth = months[start.getMonth()];
     const startYear = start.getFullYear();
-    
-    const pad = (n: number) => String(n).padStart(2, '0');
-    const startFormatted = `${pad(startDay)}/${pad(start.getMonth() + 1)}/${startYear}`;
 
     if (!endStr) {
-      return `A partir del ${startDay} de ${startMonth} de ${startYear} (${startFormatted})`;
+      return `A partir del ${startDay} de ${startMonth} de ${startYear}`;
     }
     
     const end = new Date(endStr);
     const endDay = end.getDate();
     const endMonth = months[end.getMonth()];
     const endYear = end.getFullYear();
-    const endFormatted = `${pad(endDay)}/${pad(end.getMonth() + 1)}/${endYear}`;
     
     if (startMonth === endMonth) {
-      return `Del ${startDay} al ${endDay} de ${startMonth} de ${endYear} (${startFormatted} - ${endFormatted})`;
+      return `Del ${startDay} al ${endDay} de ${startMonth} de ${endYear}`;
     }
-    return `Del ${startDay} de ${startMonth} al ${endDay} de ${endMonth} de ${endYear} (${startFormatted} - ${endFormatted})`;
+    return `Del ${startDay} de ${startMonth} al ${endDay} de ${endMonth} de ${endYear}`;
   };
 
   const formatSingleDate = (dateStr: string) => {
@@ -237,10 +401,13 @@ export default function ActivityForm({
     const month = months[date.getMonth()];
     const year = date.getFullYear();
     
-    const pad = (n: number) => String(n).padStart(2, '0');
-    const dateFormatted = `${pad(day)}/${pad(date.getMonth() + 1)}/${year}`;
-    
-    return `${dayName}, ${day} de ${month} de ${year} (${dateFormatted})`;
+    return `${dayName}, ${day} de ${month} de ${year}`;
+  };
+
+  const formatRecurringTaller = (days: string[]) => {
+    const joined = joinWeekdays(days);
+    if (!joined) return "";
+    return `Cada ${joined.toLowerCase()}`;
   };
   const [descripcio, setDescripcio] = useState(initialData?.descripcio || "");
   const [durada, setDurada] = useState(initialData?.durada || "");
@@ -793,92 +960,324 @@ export default function ActivityForm({
                   </div>
                 )}
 
-                {/* 2. Selector per a Casals (Interval de dates) */}
+                {/* 2. Selector per a Casals (Rang o Dies concrets) */}
                 {tipus === "Casal" && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                    <p style={{ fontSize: "13px", color: "var(--muted)", margin: 0 }}>
-                      Especifica les dates de funcionament del Casal (inici i final):
-                    </p>
-                    <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "6px", flex: "1 1 200px" }}>
-                        <span style={{ fontSize: "11px", fontWeight: "700", color: "var(--muted)" }}>DATA D'INICI</span>
-                        <input
-                          type="date"
-                          value={startDate}
-                          onChange={(e) => {
-                            setStartDate(e.target.value);
-                            const formatted = formatDateRange(e.target.value, endDate);
-                            setDies(formatted);
-                            if (formatted.trim()) {
-                              setValidationErrors(prev => ({ ...prev, dies: false }));
-                            }
-                          }}
-                          style={{
-                            padding: "10px 12px",
-                            border: "1px solid rgba(26, 107, 58, 0.2)",
-                            borderRadius: "8px",
-                            fontSize: "14px",
-                            color: "var(--fosc)",
-                            outline: "none"
-                          }}
-                        />
-                      </div>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "6px", flex: "1 1 200px" }}>
-                        <span style={{ fontSize: "11px", fontWeight: "700", color: "var(--muted)" }}>DATA DE FI (OPCIONAL)</span>
-                        <input
-                          type="date"
-                          value={endDate}
-                          onChange={(e) => {
-                            setEndDate(e.target.value);
-                            const formatted = formatDateRange(startDate, e.target.value);
-                            setDies(formatted);
-                            if (formatted.trim()) {
-                              setValidationErrors(prev => ({ ...prev, dies: false }));
-                            }
-                          }}
-                          style={{
-                            padding: "10px 12px",
-                            border: "1px solid rgba(26, 107, 58, 0.2)",
-                            borderRadius: "8px",
-                            fontSize: "14px",
-                            color: "var(--fosc)",
-                            outline: "none"
-                          }}
-                        />
-                      </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                    {/* Sub-selector tipus de Casal */}
+                    <div style={{ display: "flex", gap: "12px" }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCasalDateMode("range");
+                          const formatted = formatDateRange(startDate, endDate);
+                          setDies(formatted);
+                        }}
+                        style={{
+                          padding: "8px 16px",
+                          borderRadius: "8px",
+                          border: casalDateMode === "range" ? "2px solid var(--verd)" : "1px solid var(--crema-fosca)",
+                          backgroundColor: casalDateMode === "range" ? "rgba(26, 107, 58, 0.05)" : "white",
+                          color: "var(--verd-fosc)",
+                          fontWeight: "700",
+                          fontSize: "13px",
+                          cursor: "pointer",
+                          transition: "all 0.2s"
+                        }}
+                      >
+                        📅 Dates seguides (Interval de dates)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCasalDateMode("individual");
+                          const formatted = formatMultipleDates(multipleDates);
+                          setDies(formatted);
+                        }}
+                        style={{
+                          padding: "8px 16px",
+                          borderRadius: "8px",
+                          border: casalDateMode === "individual" ? "2px solid var(--verd)" : "1px solid var(--crema-fosca)",
+                          backgroundColor: casalDateMode === "individual" ? "rgba(26, 107, 58, 0.05)" : "white",
+                          color: "var(--verd-fosc)",
+                          fontWeight: "700",
+                          fontSize: "13px",
+                          cursor: "pointer",
+                          transition: "all 0.2s"
+                        }}
+                      >
+                        📌 Dies concrets (Llistat de dies solts)
+                      </button>
                     </div>
+
+                    {casalDateMode === "range" ? (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                        <p style={{ fontSize: "13px", color: "var(--muted)", margin: 0 }}>
+                          Especifica les dates de funcionament del Casal (inici i final):
+                        </p>
+                        <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "6px", flex: "1 1 200px" }}>
+                            <span style={{ fontSize: "11px", fontWeight: "700", color: "var(--muted)" }}>DATA D'INICI</span>
+                            <input
+                              type="date"
+                              value={startDate}
+                              onChange={(e) => {
+                                setStartDate(e.target.value);
+                                const formatted = formatDateRange(e.target.value, endDate);
+                                setDies(formatted);
+                                if (formatted.trim()) {
+                                  setValidationErrors(prev => ({ ...prev, dies: false }));
+                                }
+                              }}
+                              style={{
+                                padding: "10px 12px",
+                                border: "1px solid rgba(26, 107, 58, 0.2)",
+                                borderRadius: "8px",
+                                fontSize: "14px",
+                                color: "var(--fosc)",
+                                outline: "none"
+                              }}
+                            />
+                          </div>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "6px", flex: "1 1 200px" }}>
+                            <span style={{ fontSize: "11px", fontWeight: "700", color: "var(--muted)" }}>DATA DE FI (OPCIONAL)</span>
+                            <input
+                              type="date"
+                              value={endDate}
+                              onChange={(e) => {
+                                setEndDate(e.target.value);
+                                const formatted = formatDateRange(startDate, e.target.value);
+                                setDies(formatted);
+                                if (formatted.trim()) {
+                                  setValidationErrors(prev => ({ ...prev, dies: false }));
+                                }
+                              }}
+                              style={{
+                                padding: "10px 12px",
+                                border: "1px solid rgba(26, 107, 58, 0.2)",
+                                borderRadius: "8px",
+                                fontSize: "14px",
+                                color: "var(--fosc)",
+                                outline: "none"
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                        <p style={{ fontSize: "13px", color: "var(--muted)", margin: 0 }}>
+                          Afegeix els dies concrets en què tindrà lloc el Casal:
+                        </p>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                          {multipleDates.map((dateVal, idx) => (
+                            <div key={idx} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                              <input
+                                type="date"
+                                value={dateVal}
+                                onChange={(e) => {
+                                  const newDates = [...multipleDates];
+                                  newDates[idx] = e.target.value;
+                                  setMultipleDates(newDates);
+                                  const formatted = formatMultipleDates(newDates);
+                                  setDies(formatted);
+                                  if (formatted.trim()) {
+                                    setValidationErrors(prev => ({ ...prev, dies: false }));
+                                  }
+                                }}
+                                style={{
+                                  padding: "10px 12px",
+                                  border: "1px solid rgba(26, 107, 58, 0.2)",
+                                  borderRadius: "8px",
+                                  fontSize: "14px",
+                                  color: "var(--fosc)",
+                                  outline: "none",
+                                  flexGrow: 1,
+                                  maxWidth: "240px"
+                                }}
+                              />
+                              {multipleDates.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const newDates = multipleDates.filter((_, i) => i !== idx);
+                                    setMultipleDates(newDates);
+                                    const formatted = formatMultipleDates(newDates);
+                                    setDies(formatted);
+                                  }}
+                                  style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    padding: "10px",
+                                    borderRadius: "8px",
+                                    border: "1px solid #dc2626",
+                                    backgroundColor: "transparent",
+                                    color: "#dc2626",
+                                    cursor: "pointer",
+                                    transition: "all 0.2s"
+                                  }}
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                        <div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMultipleDates([...multipleDates, ""]);
+                            }}
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "8px",
+                              padding: "8px 16px",
+                              borderRadius: "8px",
+                              border: "1px dashed var(--verd)",
+                              backgroundColor: "#fbfcfb",
+                              color: "var(--verd)",
+                              fontSize: "13px",
+                              fontWeight: "700",
+                              cursor: "pointer",
+                              transition: "all 0.2s",
+                              marginTop: "4px"
+                            }}
+                          >
+                            <Plus size={14} />
+                            Afegir dia concret
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
-                {/* 3. Selector per a Tallers / Oci (Dia únic del taller) */}
+                {/* 3. Selector per a Tallers (Puntual o Recurrent) */}
                 {tipus === "Taller / Oci" && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                    <p style={{ fontSize: "13px", color: "var(--muted)", margin: 0 }}>
-                      Tria la data de celebració del taller o activitat puntual:
-                    </p>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxWidth: "300px" }}>
-                      <span style={{ fontSize: "11px", fontWeight: "700", color: "var(--muted)" }}>DATA DEL TALLER</span>
-                      <input
-                        type="date"
-                        value={singleDate}
-                        onChange={(e) => {
-                          setSingleDate(e.target.value);
-                          const formatted = formatSingleDate(e.target.value);
+                  <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                    {/* Sub-selector tipus de Taller */}
+                    <div style={{ display: "flex", gap: "12px" }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTallerMode("puntual");
+                          const formatted = formatSingleDate(singleDate);
                           setDies(formatted);
-                          if (formatted.trim()) {
-                            setValidationErrors(prev => ({ ...prev, dies: false }));
-                          }
                         }}
                         style={{
-                          padding: "10px 12px",
-                          border: "1px solid rgba(26, 107, 58, 0.2)",
+                          padding: "8px 16px",
                           borderRadius: "8px",
-                          fontSize: "14px",
-                          color: "var(--fosc)",
-                          outline: "none"
+                          border: tallerMode === "puntual" ? "2px solid var(--verd)" : "1px solid var(--crema-fosca)",
+                          backgroundColor: tallerMode === "puntual" ? "rgba(26, 107, 58, 0.05)" : "white",
+                          color: "var(--verd-fosc)",
+                          fontWeight: "700",
+                          fontSize: "13px",
+                          cursor: "pointer",
+                          transition: "all 0.2s"
                         }}
-                      />
+                      >
+                        ⚡ Taller puntual (Dia únic)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTallerMode("recurrent");
+                          const formatted = formatRecurringTaller(selectedTallerWeekdays);
+                          setDies(formatted);
+                        }}
+                        style={{
+                          padding: "8px 16px",
+                          borderRadius: "8px",
+                          border: tallerMode === "recurrent" ? "2px solid var(--verd)" : "1px solid var(--crema-fosca)",
+                          backgroundColor: tallerMode === "recurrent" ? "rgba(26, 107, 58, 0.05)" : "white",
+                          color: "var(--verd-fosc)",
+                          fontWeight: "700",
+                          fontSize: "13px",
+                          cursor: "pointer",
+                          transition: "all 0.2s"
+                        }}
+                      >
+                        🔄 Taller recurrent (Periòdic)
+                      </button>
                     </div>
+
+                    {tallerMode === "puntual" ? (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                        <p style={{ fontSize: "13px", color: "var(--muted)", margin: 0 }}>
+                          Tria la data de celebració del taller o activitat puntual:
+                        </p>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxWidth: "300px" }}>
+                          <span style={{ fontSize: "11px", fontWeight: "700", color: "var(--muted)" }}>DATA DEL TALLER</span>
+                          <input
+                            type="date"
+                            value={singleDate}
+                            onChange={(e) => {
+                              setSingleDate(e.target.value);
+                              const formatted = formatSingleDate(e.target.value);
+                              setDies(formatted);
+                              if (formatted.trim()) {
+                                setValidationErrors(prev => ({ ...prev, dies: false }));
+                              }
+                            }}
+                            style={{
+                              padding: "10px 12px",
+                              border: "1px solid rgba(26, 107, 58, 0.2)",
+                              borderRadius: "8px",
+                              fontSize: "14px",
+                              color: "var(--fosc)",
+                              outline: "none"
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                        <p style={{ fontSize: "13px", color: "var(--muted)", margin: 0 }}>
+                          Tria els dies de la setmana en què es fa el taller de manera recurrent:
+                        </p>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+                          {["Dilluns", "Dimarts", "Dimecres", "Dijous", "Divendres", "Dissabte", "Diumenge"].map((day) => {
+                            const isSelected = selectedTallerWeekdays.includes(day);
+                            return (
+                              <button
+                                key={day}
+                                type="button"
+                                onClick={() => {
+                                  let newDays = [];
+                                  if (isSelected) {
+                                    newDays = selectedTallerWeekdays.filter(d => d !== day);
+                                  } else {
+                                    newDays = [...selectedTallerWeekdays, day];
+                                  }
+                                  setSelectedTallerWeekdays(newDays);
+                                  const formatted = formatRecurringTaller(newDays);
+                                  setDies(formatted);
+                                  if (formatted.trim()) {
+                                    setValidationErrors(prev => ({ ...prev, dies: false }));
+                                  }
+                                }}
+                                style={{
+                                  padding: "10px 18px",
+                                  borderRadius: "30px",
+                                  border: isSelected ? "1px solid var(--verd)" : "1px solid var(--crema-fosca)",
+                                  backgroundColor: isSelected ? "var(--verd)" : "white",
+                                  color: isSelected ? "white" : "var(--fosc)",
+                                  fontFamily: "var(--font-sans)",
+                                  fontSize: "13px",
+                                  fontWeight: "700",
+                                  cursor: "pointer",
+                                  transition: "all 0.2s"
+                                }}
+                              >
+                                {day}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
