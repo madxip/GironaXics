@@ -182,26 +182,20 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
             /* Casals Banner Styles */
             .casals-seasonal-banner {
               display: flex;
-              align-items: center;
-              justify-content: space-between;
-              border-radius: 4px;
-              cursor: pointer;
-              transition: all 0.3s ease;
               width: 100%;
+              transition: transform 0.2s ease, border-color 0.2s ease;
             }
-            .casals-banner-content {
-              display: flex;
-              align-items: center;
-              gap: 16px;
+            .casals-seasonal-banner:hover {
+              transform: translateY(-2px);
+              border-color: #d95738 !important;
             }
-            .casals-banner-button {
-              font-family: var(--font-sans);
-              font-weight: 700;
-              text-transform: uppercase;
-              letter-spacing: 0.05em;
-              border-radius: 30px;
-              transition: all 0.3s ease;
-              flex-shrink: 0;
+            .casals-seasonal-banner:hover .casals-snowflake-svg {
+              opacity: 0.12 !important;
+              transform: translateY(-50%) rotate(15deg) !important;
+            }
+            .casals-banner-action-btn:hover {
+              background-color: #bd3f28 !important;
+              transform: scale(1.02);
             }
             
             /* Tabs Navigation Styles */
@@ -246,20 +240,27 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
             /* Responsive Mobile Enhancements */
             @media (max-width: 768px) {
               .casals-seasonal-banner {
+                padding: 32px 24px !important;
+                border-radius: 12px !important;
+              }
+              .casals-banner-title {
+                font-size: 28px !important;
+              }
+              .casals-banner-footer {
                 flex-direction: column;
-                align-items: stretch;
+                align-items: flex-start !important;
                 gap: 16px;
-                padding: 20px 24px !important;
               }
-              .casals-banner-content {
-                align-items: flex-start;
+              .casals-snowflake-svg {
+                width: 130px !important;
+                height: 130px !important;
+                right: -15px !important;
+                bottom: -15px !important;
+                top: auto !important;
+                transform: none !important;
               }
-              .casals-banner-content span {
-                font-size: 24px !important;
-                margin-top: 2px;
-              }
-              .casals-banner-button {
-                align-self: flex-end;
+              .casals-seasonal-banner:hover .casals-snowflake-svg {
+                transform: rotate(15deg) !important;
               }
               .filter-tabs-container {
                 gap: 16px;
@@ -283,56 +284,140 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
             }}
             className={`casals-seasonal-banner ${selectedTipus === 'Casals' ? 'active' : ''}`}
             style={{
-              background: selectedTipus === 'Casals' 
-                ? 'linear-gradient(135deg, #0c2214 0%, #091a10 100%)' 
-                : 'linear-gradient(135deg, #fbfaf7 0%, #f7eae1 100%)',
+              position: 'relative',
+              overflow: 'hidden',
+              background: '#062612',
               border: selectedTipus === 'Casals' 
-                ? '1px solid var(--taronja)' 
-                : '1px solid rgba(220, 100, 50, 0.2)',
-              borderLeft: '4px solid var(--taronja)',
-              padding: '28px 32px',
+                ? '2px solid #a83925' 
+                : '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '16px',
+              padding: '40px 48px',
               marginBottom: '24px',
-              boxShadow: selectedTipus === 'Casals' 
-                ? '0 8px 24px rgba(12, 34, 20, 0.2)' 
-                : '0 4px 12px rgba(220, 100, 50, 0.05)'
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 12px 32px rgba(6, 38, 18, 0.25)'
             }}
           >
-            <div className="casals-banner-content">
-              <span style={{ fontSize: '28px' }}>🌸</span>
-              <div style={{ textAlign: 'left' }}>
-                <h4 style={{ 
-                  margin: 0, 
+            {/* Background Snowflake decoration */}
+            <svg 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="1.2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+              className="casals-snowflake-svg"
+              style={{
+                position: 'absolute',
+                right: '40px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: '220px',
+                height: '220px',
+                opacity: 0.07,
+                color: 'var(--verd)',
+                pointerEvents: 'none',
+                transition: 'all 0.3s ease'
+              }}
+            >
+              <line x1="12" y1="2" x2="12" y2="22"></line>
+              <line x1="22" y1="12" x2="2" y2="12"></line>
+              <path d="m20 16-4-4 4-4"></path>
+              <path d="m4 8 4 4-4 4"></path>
+              <path d="m16 20-4-4-4 4"></path>
+              <path d="m8 4 4 4 4-4"></path>
+              <line x1="19.07" y1="4.93" x2="4.93" y2="19.07"></line>
+              <line x1="19.07" y1="19.07" x2="4.93" y2="4.93"></line>
+              <path d="m14 4 4 4v4"></path>
+              <path d="m10 4-4 4v4"></path>
+              <path d="m18 14v4l-4 4"></path>
+              <path d="m6 14v4l4 4"></path>
+            </svg>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', zIndex: 2, position: 'relative', textAlign: 'left', width: '100%' }}>
+              {/* Kicker */}
+              <span style={{ 
+                fontFamily: 'var(--font-sans)', 
+                fontSize: '11px', 
+                fontWeight: 800, 
+                color: '#d95738', 
+                textTransform: 'uppercase', 
+                letterSpacing: '0.08em' 
+              }}>
+                Temporada · Inscripcions obertes fins al 15 de desembre
+              </span>
+
+              {/* Title */}
+              <h3 className="casals-banner-title" style={{ 
+                margin: '8px 0', 
+                fontFamily: 'var(--font-serif)', 
+                fontStyle: 'italic', 
+                fontSize: '42px', 
+                color: '#ffffff', 
+                fontWeight: 500,
+                lineHeight: 1.2
+              }}>
+                Aquest any, fes <span style={{ color: '#d95738' }}>casals de Nadal</span>
+              </h3>
+
+              {/* Subtitle */}
+              <p style={{ 
+                margin: '0 0 32px 0', 
+                fontFamily: 'var(--font-sans)', 
+                fontSize: '15px', 
+                color: 'rgba(255, 255, 255, 0.85)',
+                maxWidth: '520px',
+                lineHeight: 1.5
+              }}>
+                Tallers, jocs i molta festa per a les vacances de Nadal.
+              </p>
+
+              {/* Footer row */}
+              <div className="casals-banner-footer" style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                width: '100%'
+              }}>
+                <span style={{ 
                   fontFamily: 'var(--font-serif)', 
                   fontStyle: 'italic', 
                   fontSize: '18px', 
-                  color: selectedTipus === 'Casals' ? '#fbfaf7' : 'var(--verd-fosc)',
-                  fontWeight: 700 
+                  color: '#eae6df',
+                  fontWeight: 500
                 }}>
-                  {selectedTipus === 'Casals' 
-                    ? 'Campanya Especial de Casals Activa' 
-                    : 'Inscripcions Obertes de Casals de Temporada'}
-                </h4>
-                <p style={{ 
-                  margin: '6px 0 0 0', 
-                  fontFamily: 'var(--font-sans)', 
-                  fontSize: '13px', 
-                  color: selectedTipus === 'Casals' ? 'rgba(255,255,255,0.8)' : 'rgba(12, 34, 20, 0.7)' 
-                }}>
-                  {selectedTipus === 'Casals' 
-                    ? 'Mostrant exclusivament casals d’estiu, nadal i setmana santa.' 
-                    : 'Troba els millors casals d’estiu, nadal i setmana santa a Girona!'}
-                </p>
+                  Del 23 de desembre al 4 de gener
+                </span>
+
+                <button 
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation(); // prevent double toggle
+                    if (selectedTipus === 'Casals') {
+                      updateFilter('tipus', 'Extraescolars');
+                    } else {
+                      updateFilter('tipus', 'Casals');
+                    }
+                  }}
+                  className="casals-banner-action-btn"
+                  style={{
+                    backgroundColor: '#a83925',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    padding: '12px 24px',
+                    fontFamily: 'var(--font-sans)',
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 4px 12px rgba(168, 57, 37, 0.3)'
+                  }}
+                >
+                  {selectedTipus === 'Casals' ? 'Tancar filtre ×' : 'Descobreix els casals →'}
+                </button>
               </div>
             </div>
-            <span className="casals-banner-button" style={{ 
-              fontSize: '12px', 
-              color: 'var(--taronja)',
-              border: '1px solid var(--taronja)',
-              padding: '6px 14px',
-              backgroundColor: selectedTipus === 'Casals' ? 'rgba(245, 166, 35, 0.1)' : 'transparent'
-            }}>
-              {selectedTipus === 'Casals' ? 'Tancar ×' : 'Explorar →'}
-            </span>
           </div>
 
           {/* 2. Pestanyes Segmentades (Extraescolars vs Tallers) */}
