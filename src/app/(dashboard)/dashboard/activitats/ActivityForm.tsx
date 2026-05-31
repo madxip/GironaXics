@@ -145,6 +145,103 @@ export default function ActivityForm({
   const [tipus, setTipus] = useState(initialData?.tipus || "Extraescolar");
   const [horari, setHorari] = useState(initialData?.horari || "");
   const [dies, setDies] = useState(initialData?.dies || "");
+
+  // Parse initial weekdays if it's an Extraescolar
+  const [selectedWeekdays, setSelectedWeekdays] = useState<string[]>(() => {
+    const val = initialData?.dies || "";
+    const lower = val.toLowerCase();
+    const weekdays = [];
+    if (lower.includes("dilluns")) weekdays.push("Dilluns");
+    if (lower.includes("dimarts")) weekdays.push("Dimarts");
+    if (lower.includes("dimecres")) weekdays.push("Dimecres");
+    if (lower.includes("dijous")) weekdays.push("Dijous");
+    if (lower.includes("divendres")) weekdays.push("Divendres");
+    if (lower.includes("dissabte")) weekdays.push("Dissabte");
+    if (lower.includes("diumenge")) weekdays.push("Diumenge");
+    return weekdays;
+  });
+
+  // Try to parse initial date ranges for Casal (e.g. "Del 01/07/2026 al 31/07/2026")
+  const [startDate, setStartDate] = useState(() => {
+    if (initialData?.tipus === "Casal") {
+      const match = (initialData.dies || "").match(/(\d{2})\/(\d{2})\/(\d{4})/);
+      if (match) return `${match[3]}-${match[2]}-${match[1]}`;
+    }
+    return "";
+  });
+  const [endDate, setEndDate] = useState(() => {
+    if (initialData?.tipus === "Casal") {
+      const regex = /(\d{2})\/(\d{2})\/(\d{4})/g;
+      const text = initialData.dies || "";
+      regex.exec(text); // skip first match
+      const secondMatch = regex.exec(text);
+      if (secondMatch) return `${secondMatch[3]}-${secondMatch[2]}-${secondMatch[1]}`;
+    }
+    return "";
+  });
+
+  // Try to parse initial single date for Taller
+  const [singleDate, setSingleDate] = useState(() => {
+    if (initialData?.tipus?.includes("Taller")) {
+      const match = (initialData.dies || "").match(/(\d{2})\/(\d{2})\/(\d{4})/);
+      if (match) return `${match[3]}-${match[2]}-${match[1]}`;
+    }
+    return "";
+  });
+
+  const joinWeekdays = (days: string[]) => {
+    const order = ["Dilluns", "Dimarts", "Dimecres", "Dijous", "Divendres", "Dissabte", "Diumenge"];
+    const sorted = [...days].sort((a, b) => order.indexOf(a) - order.indexOf(b));
+    if (sorted.length === 0) return "";
+    if (sorted.length === 1) return sorted[0];
+    if (sorted.length === 2) return `${sorted[0]} i ${sorted[1]}`;
+    return `${sorted.slice(0, -1).join(", ")} i ${sorted[sorted.length - 1]}`;
+  };
+
+  const formatDateRange = (startStr: string, endStr: string) => {
+    if (!startStr) return "";
+    const start = new Date(startStr);
+    const months = ["gener", "febrer", "març", "abril", "maig", "juny", "juliol", "agost", "setembre", "octubre", "novembre", "desembre"];
+    
+    const startDay = start.getDate();
+    const startMonth = months[start.getMonth()];
+    const startYear = start.getFullYear();
+    
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const startFormatted = `${pad(startDay)}/${pad(start.getMonth() + 1)}/${startYear}`;
+
+    if (!endStr) {
+      return `A partir del ${startDay} de ${startMonth} de ${startYear} (${startFormatted})`;
+    }
+    
+    const end = new Date(endStr);
+    const endDay = end.getDate();
+    const endMonth = months[end.getMonth()];
+    const endYear = end.getFullYear();
+    const endFormatted = `${pad(endDay)}/${pad(end.getMonth() + 1)}/${endYear}`;
+    
+    if (startMonth === endMonth) {
+      return `Del ${startDay} al ${endDay} de ${startMonth} de ${endYear} (${startFormatted} - ${endFormatted})`;
+    }
+    return `Del ${startDay} de ${startMonth} al ${endDay} de ${endMonth} de ${endYear} (${startFormatted} - ${endFormatted})`;
+  };
+
+  const formatSingleDate = (dateStr: string) => {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    const days = ["Diumenge", "Dilluns", "Dimarts", "Dimecres", "Dijous", "Divendres", "Dissabte"];
+    const months = ["gener", "febrer", "març", "abril", "maig", "juny", "juliol", "agost", "setembre", "octubre", "novembre", "desembre"];
+    
+    const dayName = days[date.getDay()];
+    const day = date.getDate();
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const dateFormatted = `${pad(day)}/${pad(date.getMonth() + 1)}/${year}`;
+    
+    return `${dayName}, ${day} de ${month} de ${year} (${dateFormatted})`;
+  };
   const [descripcio, setDescripcio] = useState(initialData?.descripcio || "");
   const [durada, setDurada] = useState(initialData?.durada || "");
   const [alumnes, setAlumnes] = useState(initialData?.alumnes || "");
@@ -643,35 +740,179 @@ export default function ActivityForm({
             </h3>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "20px" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", gridColumn: "1 / -1" }}>
                 <label style={{ fontSize: "13px", fontWeight: "700", color: "var(--verd-fosc)", textTransform: "uppercase" }}>
                   {TXT_DIES}
                 </label>
-                <input
-                  type="text"
-                  id="dies"
-                  value={dies}
-                  onChange={(e) => handleFieldChange("dies", e.target.value, setDies)}
-                  placeholder="Ex: Dilluns i Dimecres, Dissabtes matí..."
-                  disabled={loading}
-                  style={{
-                    padding: "12px 14px",
-                    border: validationErrors.dies 
-                      ? "2.5px solid #b91c1c" 
-                      : "1px solid rgba(26, 107, 58, 0.2)",
-                    borderRadius: "8px",
-                    fontSize: "15px",
-                    outline: "none",
-                    color: "var(--fosc)",
-                    backgroundColor: validationErrors.dies ? "#fef2f2" : "white",
-                    transition: "all 0.2s"
-                  }}
-                />
-                {validationErrors.dies && (
-                  <span style={{ color: "#b91c1c", fontSize: "12px", fontWeight: "600", marginTop: "-2px" }}>
-                    * Especificar els dies és obligatori
-                  </span>
+                
+                {/* 1. Selector per a Extraescolars (Setmana DL-DG) */}
+                {tipus === "Extraescolar" && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    <p style={{ fontSize: "13px", color: "var(--muted)", margin: 0 }}>
+                      Tria els dies de la setmana en què es fa l'activitat:
+                    </p>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+                      {["Dilluns", "Dimarts", "Dimecres", "Dijous", "Divendres", "Dissabte", "Diumenge"].map((day) => {
+                        const isSelected = selectedWeekdays.includes(day);
+                        return (
+                          <button
+                            key={day}
+                            type="button"
+                            onClick={() => {
+                              let newDays = [];
+                              if (isSelected) {
+                                newDays = selectedWeekdays.filter(d => d !== day);
+                              } else {
+                                newDays = [...selectedWeekdays, day];
+                              }
+                              setSelectedWeekdays(newDays);
+                              const joined = joinWeekdays(newDays);
+                              setDies(joined);
+                              if (joined.trim()) {
+                                setValidationErrors(prev => ({ ...prev, dies: false }));
+                              }
+                            }}
+                            style={{
+                              padding: "10px 18px",
+                              borderRadius: "30px",
+                              border: isSelected ? "1px solid var(--verd)" : "1px solid var(--crema-fosca)",
+                              backgroundColor: isSelected ? "var(--verd)" : "white",
+                              color: isSelected ? "white" : "var(--fosc)",
+                              fontFamily: "var(--font-sans)",
+                              fontSize: "13px",
+                              fontWeight: "700",
+                              cursor: "pointer",
+                              transition: "all 0.2s"
+                            }}
+                          >
+                            {day}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 )}
+
+                {/* 2. Selector per a Casals (Interval de dates) */}
+                {tipus === "Casal" && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    <p style={{ fontSize: "13px", color: "var(--muted)", margin: 0 }}>
+                      Especifica les dates de funcionament del Casal (inici i final):
+                    </p>
+                    <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "6px", flex: "1 1 200px" }}>
+                        <span style={{ fontSize: "11px", fontWeight: "700", color: "var(--muted)" }}>DATA D'INICI</span>
+                        <input
+                          type="date"
+                          value={startDate}
+                          onChange={(e) => {
+                            setStartDate(e.target.value);
+                            const formatted = formatDateRange(e.target.value, endDate);
+                            setDies(formatted);
+                            if (formatted.trim()) {
+                              setValidationErrors(prev => ({ ...prev, dies: false }));
+                            }
+                          }}
+                          style={{
+                            padding: "10px 12px",
+                            border: "1px solid rgba(26, 107, 58, 0.2)",
+                            borderRadius: "8px",
+                            fontSize: "14px",
+                            color: "var(--fosc)",
+                            outline: "none"
+                          }}
+                        />
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "6px", flex: "1 1 200px" }}>
+                        <span style={{ fontSize: "11px", fontWeight: "700", color: "var(--muted)" }}>DATA DE FI (OPCIONAL)</span>
+                        <input
+                          type="date"
+                          value={endDate}
+                          onChange={(e) => {
+                            setEndDate(e.target.value);
+                            const formatted = formatDateRange(startDate, e.target.value);
+                            setDies(formatted);
+                            if (formatted.trim()) {
+                              setValidationErrors(prev => ({ ...prev, dies: false }));
+                            }
+                          }}
+                          style={{
+                            padding: "10px 12px",
+                            border: "1px solid rgba(26, 107, 58, 0.2)",
+                            borderRadius: "8px",
+                            fontSize: "14px",
+                            color: "var(--fosc)",
+                            outline: "none"
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 3. Selector per a Tallers / Oci (Dia únic del taller) */}
+                {tipus === "Taller / Oci" && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    <p style={{ fontSize: "13px", color: "var(--muted)", margin: 0 }}>
+                      Tria la data de celebració del taller o activitat puntual:
+                    </p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxWidth: "300px" }}>
+                      <span style={{ fontSize: "11px", fontWeight: "700", color: "var(--muted)" }}>DATA DEL TALLER</span>
+                      <input
+                        type="date"
+                        value={singleDate}
+                        onChange={(e) => {
+                          setSingleDate(e.target.value);
+                          const formatted = formatSingleDate(e.target.value);
+                          setDies(formatted);
+                          if (formatted.trim()) {
+                            setValidationErrors(prev => ({ ...prev, dies: false }));
+                          }
+                        }}
+                        style={{
+                          padding: "10px 12px",
+                          border: "1px solid rgba(26, 107, 58, 0.2)",
+                          borderRadius: "8px",
+                          fontSize: "14px",
+                          color: "var(--fosc)",
+                          outline: "none"
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* 4. Input Text de control manual pre-omplert (Visible per defecte o editable per afegir matisos) */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "4px" }}>
+                  <span style={{ fontSize: "11px", fontWeight: "700", color: "var(--muted)" }}>
+                    TEXT DELS DIES GENERAT (POTS EDITAR-LO MANUALMENT) *
+                  </span>
+                  <input
+                    type="text"
+                    id="dies"
+                    value={dies}
+                    onChange={(e) => handleFieldChange("dies", e.target.value, setDies)}
+                    placeholder="Ex: Dilluns i Dimecres, Del 1 al 31 de juliol..."
+                    disabled={loading}
+                    style={{
+                      padding: "12px 14px",
+                      border: validationErrors.dies 
+                        ? "2.5px solid #b91c1c" 
+                        : "1px solid rgba(26, 107, 58, 0.2)",
+                      borderRadius: "8px",
+                      fontSize: "15px",
+                      outline: "none",
+                      color: "var(--fosc)",
+                      backgroundColor: validationErrors.dies ? "#fef2f2" : "white",
+                      transition: "all 0.2s"
+                    }}
+                  />
+                  {validationErrors.dies && (
+                    <span style={{ color: "#b91c1c", fontSize: "12px", fontWeight: "600", marginTop: "-2px" }}>
+                      * El text descriptiu dels dies o dates és obligatori
+                    </span>
+                  )}
+                </div>
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
