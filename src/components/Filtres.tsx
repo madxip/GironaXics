@@ -352,9 +352,9 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                 margin: '8px 0', 
                 fontFamily: 'var(--font-serif)', 
                 fontStyle: 'italic', 
-                fontSize: '42px', 
+                fontSize: '50px', 
                 color: '#ffffff', 
-                fontWeight: 500,
+                fontWeight: 700,
                 lineHeight: 1.2
               }}>
                 Aquest any, fes <span style={{ color: '#d95738' }}>casals de Nadal</span>
