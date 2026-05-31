@@ -78,6 +78,23 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
     router.replace(`?${params.toString()}`, { scroll: false });
   };
 
+  const scrollToFiltresHeader = () => {
+    setTimeout(() => {
+      const element = document.getElementById('filtres-header');
+      if (element) {
+        const isMobile = window.innerWidth <= 768;
+        const nav = document.getElementById('nav');
+        const navHeight = nav ? nav.offsetHeight : (isMobile ? 65 : 80);
+        // We want to show the bottom part of the banner (footer + bottom padding + margin) below the nav.
+        // On desktop: ~100px. On mobile: ~75px.
+        const bannerVisibleBottom = isMobile ? 75 : 100;
+        const offset = -(navHeight + bannerVisibleBottom);
+        const y = element.getBoundingClientRect().top + window.scrollY + offset;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }
+    }, 100);
+  };
+
   const handleSponsorClick = (sponsorNom: string) => {
     interface CustomWindow extends Window {
       gtag?: (
@@ -280,12 +297,7 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                 updateFilter('tipus', 'Extraescolars');
               } else {
                 updateFilter('tipus', 'Casals');
-                setTimeout(() => {
-                  const element = document.getElementById('filtres-header');
-                  if (element) {
-                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  }
-                }, 100);
+                scrollToFiltresHeader();
               }
             }}
             className={`casals-seasonal-banner ${selectedTipus === 'Casals' ? 'active' : ''}`}
@@ -403,12 +415,7 @@ export default function Filtres({ activitats, sponsors = [] }: { activitats: Act
                       updateFilter('tipus', 'Extraescolars');
                     } else {
                       updateFilter('tipus', 'Casals');
-                      setTimeout(() => {
-                        const element = document.getElementById('filtres-header');
-                        if (element) {
-                          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }
-                      }, 100);
+                      scrollToFiltresHeader();
                     }
                   }}
                   className="casals-banner-action-btn"
