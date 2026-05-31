@@ -33,8 +33,8 @@ const renderBannerIcon = (nom: string) => {
     transform: 'translateY(-50%)',
     width: '220px',
     height: '220px',
-    opacity: 0.07,
-    color: 'var(--verd)',
+    opacity: 0.12,
+    color: '#ffffff',
     pointerEvents: 'none',
     transition: 'all 0.3s ease'
   };
@@ -321,7 +321,7 @@ export default function Filtres({
               border-color: #d95738 !important;
             }
             .casals-seasonal-banner:hover .casals-snowflake-svg {
-              opacity: 0.12 !important;
+              opacity: 0.22 !important;
               transform: translateY(-50%) rotate(15deg) !important;
             }
             .casals-banner-action-btn:hover {
