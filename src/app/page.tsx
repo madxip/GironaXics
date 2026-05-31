@@ -1,4 +1,4 @@
-export const revalidate = 3600; // revalida cada hora
+export const revalidate = 60; // revalida cada minut en segon pla
 
 import Nav from '@/components/Nav';
 import Hero from '@/components/Hero';
