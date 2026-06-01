@@ -8,6 +8,8 @@ import { Activitat } from "@/lib/types";
 import { mapAirtableError } from "@/lib/utils";
 import Toast from "@/components/Toast";
 import RichTextEditor from "@/components/RichTextEditor";
+import MultiDatePicker from "@/components/MultiDatePicker";
+
 
 
 interface ActivityFormProps {
@@ -1070,89 +1072,20 @@ export default function ActivityForm({
                     ) : (
                       <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                         <p style={{ fontSize: "13px", color: "var(--muted)", margin: 0 }}>
-                          Afegeix els dies concrets en què tindrà lloc el Casal:
+                          Selecciona al calendari els dies concrets del Casal:
                         </p>
-                        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                          {multipleDates.map((dateVal, idx) => (
-                            <div key={idx} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                              <input
-                                type="date"
-                                value={dateVal}
-                                onChange={(e) => {
-                                  const newDates = [...multipleDates];
-                                  newDates[idx] = e.target.value;
-                                  setMultipleDates(newDates);
-                                  const formatted = formatMultipleDates(newDates);
-                                  setDies(formatted);
-                                  if (formatted.trim()) {
-                                    setValidationErrors(prev => ({ ...prev, dies: false }));
-                                  }
-                                }}
-                                style={{
-                                  padding: "10px 12px",
-                                  border: "1px solid rgba(26, 107, 58, 0.2)",
-                                  borderRadius: "8px",
-                                  fontSize: "14px",
-                                  color: "var(--fosc)",
-                                  outline: "none",
-                                  flexGrow: 1,
-                                  maxWidth: "240px"
-                                }}
-                              />
-                              {multipleDates.length > 1 && (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    const newDates = multipleDates.filter((_, i) => i !== idx);
-                                    setMultipleDates(newDates);
-                                    const formatted = formatMultipleDates(newDates);
-                                    setDies(formatted);
-                                  }}
-                                  style={{
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    padding: "10px",
-                                    borderRadius: "8px",
-                                    border: "1px solid #dc2626",
-                                    backgroundColor: "transparent",
-                                    color: "#dc2626",
-                                    cursor: "pointer",
-                                    transition: "all 0.2s"
-                                  }}
-                                >
-                                  <Trash2 size={16} />
-                                </button>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                        <div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setMultipleDates([...multipleDates, ""]);
-                            }}
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: "8px",
-                              padding: "8px 16px",
-                              borderRadius: "8px",
-                              border: "1px dashed var(--verd)",
-                              backgroundColor: "#fbfcfb",
-                              color: "var(--verd)",
-                              fontSize: "13px",
-                              fontWeight: "700",
-                              cursor: "pointer",
-                              transition: "all 0.2s",
-                              marginTop: "4px"
-                            }}
-                          >
-                            <Plus size={14} />
-                            Afegir dia concret
-                          </button>
-                        </div>
+                        <MultiDatePicker
+                          selectedDates={multipleDates.filter(Boolean)}
+                          onChange={(newDates) => {
+                            setMultipleDates(newDates.length > 0 ? newDates : [""]);
+                            const formatted = formatMultipleDates(newDates);
+                            setDies(formatted);
+                            if (formatted.trim()) {
+                              setValidationErrors(prev => ({ ...prev, dies: false }));
+                            }
+                          }}
+                          disabled={loading}
+                        />
                       </div>
                     )}
                   </div>
