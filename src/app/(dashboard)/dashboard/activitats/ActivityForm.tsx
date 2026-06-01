@@ -3,7 +3,7 @@
 import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Save, Loader2, Upload, Trash2, Image as ImageIcon, Plus } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Upload, Trash2, Image as ImageIcon, Plus, Eye, X } from "lucide-react";
 import { Activitat } from "@/lib/types";
 import { mapAirtableError } from "@/lib/utils";
 import Toast from "@/components/Toast";
@@ -188,6 +188,58 @@ const formatMultipleDates = (dates: string[]) => {
   return finalStr;
 };
 
+function parseMarkdownToReact(text: string) {
+  if (!text) return null;
+  
+  const lines = text.split('\n');
+  
+  return lines.map((line, lineIdx) => {
+    const bulletRegex = /^(\s*[-*•]\s+)(.*)/;
+    const matchBullet = line.match(bulletRegex);
+    
+    const parseInline = (inlineText: string) => {
+      const boldParts = inlineText.split(/\*\*([^*]+)\*\*/g);
+      return boldParts.map((bPart, bIdx) => {
+        const isBold = bIdx % 2 !== 0;
+        const italicParts = bPart.split(/\*([^*_]+)\*/g);
+        const renderedItalics = italicParts.map((iPart, iIdx) => {
+          const isItalic = iIdx % 2 !== 0;
+          if (isItalic) {
+            return <em key={iIdx}>{iPart}</em>;
+          }
+          return iPart;
+        });
+        
+        if (isBold) {
+          return <strong key={bIdx}>{renderedItalics}</strong>;
+        }
+        return <span key={bIdx}>{renderedItalics}</span>;
+      });
+    };
+    
+    if (matchBullet) {
+      const content = matchBullet[2];
+      return (
+        <ul key={lineIdx} style={{ margin: '4px 0 4px 24px', padding: 0, listStyleType: 'disc' }}>
+          <li style={{ marginBottom: '4px' }}>
+            {parseInline(content)}
+          </li>
+        </ul>
+      );
+    }
+    
+    if (line.trim() === '') {
+      return <div key={lineIdx} style={{ height: '0.8em' }} />;
+    }
+    
+    return (
+      <p key={lineIdx} style={{ margin: '0 0 10px 0' }}>
+        {parseInline(line)}
+      </p>
+    );
+  });
+}
+
 export default function ActivityForm({
   initialData,
   categories,
@@ -196,6 +248,8 @@ export default function ActivityForm({
   title
 }: ActivityFormProps) {
   const router = useRouter();
+  const [showPreview, setShowPreview] = useState(false);
+
 
   const [nom, setNom] = useState(initialData?.nom || "");
   const [barri, setBarri] = useState(initialData?.barri || "");
@@ -1816,10 +1870,12 @@ export default function ActivityForm({
           <div style={{
             display: "flex",
             justifyContent: "flex-end",
+            alignItems: "center",
             gap: "16px",
             borderTop: "1px solid var(--crema-fosca)",
             paddingTop: "28px",
-            marginTop: "12px"
+            marginTop: "12px",
+            flexWrap: "wrap"
           }}>
             <Link
               href="/dashboard"
@@ -1839,6 +1895,31 @@ export default function ActivityForm({
             >
               {TXT_CANCELAR}
             </Link>
+
+            <button
+              type="button"
+              onClick={() => setShowPreview(true)}
+              disabled={loading}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                backgroundColor: "white",
+                color: "var(--verd-fosc)",
+                border: "1px solid var(--verd)",
+                borderRadius: "8px",
+                padding: "12px 24px",
+                fontSize: "15px",
+                fontWeight: "600",
+                cursor: loading ? "not-allowed" : "pointer",
+                transition: "all 0.2s ease"
+              }}
+              onMouseOver={(e) => !loading && (e.currentTarget.style.backgroundColor = "var(--crema-fosca)")}
+              onMouseOut={(e) => !loading && (e.currentTarget.style.backgroundColor = "white")}
+            >
+              <Eye size={16} />
+              Previsualitzar fitxa
+            </button>
 
             <button
               type="submit"
@@ -1878,6 +1959,323 @@ export default function ActivityForm({
           </div>
         </form>
       </div>
+
+      {/* MODAL SUPERPOSAT DE PREVISUALITZACIÓ ULTRA-FIDEL */}
+      {showPreview && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "#fdfcf9",
+          zIndex: 99999,
+          overflowY: "auto",
+          display: "flex",
+          flexDirection: "column"
+        }}>
+          {/* Capçalera adhesiva de previsualització */}
+          <div style={{
+            position: "sticky",
+            top: 0,
+            backgroundColor: "#d95738",
+            color: "white",
+            padding: "12px 24px",
+            zIndex: 100,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            boxShadow: "0 2px 10px rgba(0,0,0,0.15)",
+            fontFamily: "var(--font-sans)"
+          }}>
+            <span style={{ fontWeight: "700", display: "flex", alignItems: "center", gap: "8px", fontSize: "14px" }}>
+              <Eye size={18} />
+              Mode Previsualització · La fitxa es veurà així per a les famílies
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowPreview(false)}
+              style={{
+                backgroundColor: "white",
+                color: "#d95738",
+                border: "none",
+                borderRadius: "6px",
+                padding: "6px 16px",
+                fontWeight: "700",
+                cursor: "pointer",
+                fontSize: "13px",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                transition: "all 0.2s"
+              }}
+              onMouseOver={(e) => e.currentTarget.style.opacity = "0.9"}
+              onMouseOut={(e) => e.currentTarget.style.opacity = "1"}
+            >
+              <X size={14} />
+              Tancar
+            </button>
+          </div>
+
+          {/* Contingut que clona el disseny de la fitxa pública */}
+          <div style={{ paddingBottom: "80px" }}>
+            {/* HERO SECTION */}
+            <div style={{
+              position: "relative",
+              width: "100%",
+              height: "350px",
+              backgroundColor: "#e5e7eb",
+              display: "flex",
+              alignItems: "flex-end",
+              overflow: "hidden"
+            }}>
+              {imatgeUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={imatgeUrl}
+                  alt={nom}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover"
+                  }}
+                />
+              ) : (
+                <div style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  background: "linear-gradient(135deg, var(--verd-fosc) 0%, var(--verd) 100%)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "rgba(255,255,255,0.2)"
+                }}>
+                  <ImageIcon size={96} />
+                </div>
+              )}
+              
+              {/* Gradient ombra */}
+              <div style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                background: "linear-gradient(to bottom, transparent 30%, rgba(9, 26, 15, 0.9) 100%)"
+              }} />
+
+              {/* Títol de l'Hero */}
+              <div style={{
+                position: "relative",
+                width: "100%",
+                maxWidth: "1200px",
+                margin: "0 auto",
+                padding: "24px 20px",
+                color: "white",
+                zIndex: 10
+              }}>
+                <h1 style={{
+                  fontFamily: "var(--font-serif)",
+                  fontSize: "36px",
+                  fontWeight: "700",
+                  margin: "0 0 8px 0",
+                  textShadow: "0 2px 4px rgba(0,0,0,0.3)"
+                }}>
+                  {nom || "Nom de l'activitat"}
+                </h1>
+              </div>
+
+              {/* Distintiu de Categoria */}
+              <div style={{
+                position: "absolute",
+                top: "24px",
+                right: "24px",
+                backgroundColor: "white",
+                color: "var(--verd-fosc)",
+                padding: "6px 12px",
+                borderRadius: "4px",
+                fontWeight: "700",
+                fontSize: "12px",
+                letterSpacing: "0.05em",
+                textTransform: "uppercase",
+                boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                zIndex: 10
+              }}>
+                {subSelectValue || customSubValue ? `${categoria} · ${subSelectValue === "Altres" ? customSubValue : (subSelectValue || customSubValue)}` : (categoria || "Categoria")}
+              </div>
+            </div>
+
+            {/* CONTINGUT DETALLAT */}
+            <div style={{
+              maxWidth: "1200px",
+              margin: "0 auto",
+              padding: "40px 20px 0",
+              fontFamily: "var(--font-sans)"
+            }}>
+              {/* Breadcrumbs */}
+              <div style={{ fontSize: "14px", marginBottom: "24px", opacity: 0.6 }}>
+                Inici / <span style={{ marginLeft: "4px" }}>{categoria || "Categoria"}</span> / <span style={{ marginLeft: "4px", fontWeight: "700" }}>{nom || "Nom"}</span>
+              </div>
+
+              {/* Metadades sub-títol */}
+              <div style={{ fontSize: "20px", color: "var(--muted)", marginBottom: "40px" }}>
+                {initialData?.centre || "El teu Centre"} · {barri || "Barri"} · {edat || "Edats"}
+              </div>
+
+              {/* Graella de dues columnes */}
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+                gap: "40px"
+              }}>
+                {/* Columna Esquerra: Descripció i Observacions */}
+                <div style={{ paddingRight: "20px" }}>
+                  <div style={{ fontSize: "18px", lineHeight: 1.6, color: "var(--fosc)" }}>
+                    {descripcio ? parseMarkdownToReact(descripcio) : (
+                      <p style={{ fontStyle: "italic", color: "var(--muted)" }}>Aquesta activitat no té cap descripció detallada encara.</p>
+                    )}
+                  </div>
+
+                  {material && (
+                    <div style={{ 
+                      marginTop: "32px", 
+                      padding: "24px", 
+                      backgroundColor: "var(--crema-fosca)", 
+                      borderLeft: "4px solid var(--verd)", 
+                      fontSize: "16px", 
+                      lineHeight: 1.5, 
+                      color: "var(--fosc)",
+                      borderRadius: "0 4px 4px 0",
+                      whiteSpace: "pre-line"
+                    }}>
+                      <strong style={{ display: "block", color: "var(--verd-fosc)", marginBottom: "8px", textTransform: "uppercase", fontSize: "12px", letterSpacing: "0.05em" }}>
+                        Observacions
+                      </strong>
+                      {material}
+                    </div>
+                  )}
+
+                  {/* Galeria de Fotos */}
+                  {galeria.length > 0 && (
+                    <div style={{ marginTop: "40px" }}>
+                      <h3 style={{
+                        fontFamily: "var(--font-serif)",
+                        fontStyle: "italic",
+                        fontSize: "22px",
+                        color: "var(--verd-fosc)",
+                        marginBottom: "16px"
+                      }}>
+                        Galeria de Fotos
+                      </h3>
+                      <div style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
+                        gap: "12px"
+                      }}>
+                        {galeria.map((img, idx) => (
+                          <div key={idx} style={{
+                            height: "100px",
+                            borderRadius: "8px",
+                            overflow: "hidden",
+                            backgroundColor: "#e5e7eb",
+                            border: "1px solid var(--crema-fosca)"
+                          }}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={img} alt="Galeria" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Columna Dreta: Targeta adhesiva informativa */}
+                <div>
+                  <div style={{
+                    backgroundColor: "white",
+                    padding: "32px",
+                    borderRadius: "12px",
+                    border: "1px solid var(--crema-fosca)",
+                    boxShadow: "0 4px 20px rgba(26,107,58,0.03)",
+                    position: "sticky",
+                    top: "80px"
+                  }}>
+                    {/* Preu */}
+                    <div style={{ fontSize: "32px", fontWeight: 700, color: "var(--verd-fosc)", marginBottom: "24px" }}>
+                      <strong style={{ display: "block", fontSize: "12px", textTransform: "uppercase", opacity: 0.5, marginBottom: "6px", letterSpacing: "0.05em", fontWeight: 700, color: "var(--muted)" }}>PREU:</strong>
+                      {(() => {
+                        let preuText = "Gratuït";
+                        if (priceUnit === "/mes" && priceVal) preuText = `${priceVal} €/mes`;
+                        else if (priceUnit === "/trimestre" && priceVal) preuText = `${priceVal} €/trimestre`;
+                        else if (priceUnit === "/any" && priceVal) preuText = `${priceVal} €/any`;
+                        else if (priceUnit === "gratuit") preuText = "Gratuït";
+                        else if (priceUnit === "personalitzat") preuText = customPrice || "Consultar";
+
+                        if (preuText.includes('/')) {
+                          const [priceV, priceU] = preuText.split('/');
+                          return (
+                            <>{priceV} <span style={{ fontSize: "16px", fontWeight: 400, opacity: 0.6 }}>/{priceU}</span></>
+                          );
+                        }
+                        return <>{preuText}</>;
+                      })()}
+                    </div>
+
+                    {/* Metadades informatives */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "32px", fontSize: "14px" }}>
+                      {qui_imparteix && <div><strong style={{ display: "block", fontSize: "11px", textTransform: "uppercase", opacity: 0.5, color: "var(--muted)" }}>Impartit per:</strong>{qui_imparteix}</div>}
+                      <div><strong style={{ display: "block", fontSize: "11px", textTransform: "uppercase", opacity: 0.5, color: "var(--muted)" }}>Horari:</strong>{horari || "Pendent"}</div>
+                      <div><strong style={{ display: "block", fontSize: "11px", textTransform: "uppercase", opacity: 0.5, color: "var(--muted)" }}>Dies:</strong>{dies || "Pendent"}</div>
+                      {durada && durada.trim() !== "" && <div><strong style={{ display: "block", fontSize: "11px", textTransform: "uppercase", opacity: 0.5, color: "var(--muted)" }}>Durada:</strong>{durada}</div>}
+                      {idioma && idioma.trim() !== "" && <div><strong style={{ display: "block", fontSize: "11px", textTransform: "uppercase", opacity: 0.5, color: "var(--muted)" }}>Idioma:</strong>{idioma}</div>}
+                    </div>
+
+                    {/* Targeta del centre patrocinador */}
+                    <div style={{
+                      paddingTop: "24px",
+                      borderTop: "1px solid var(--crema-fosca)",
+                      display: "flex",
+                      gap: "16px",
+                      alignItems: "center"
+                    }}>
+                      {initialData?.centreImatgeUrl && (
+                        <div style={{
+                          position: "relative",
+                          width: "60px",
+                          height: "60px",
+                          borderRadius: "8px",
+                          overflow: "hidden",
+                          border: "1px solid var(--crema-fosca)",
+                          flexShrink: 0,
+                          backgroundColor: "#fcfcfc",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center"
+                        }}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={initialData.centreImatgeUrl} alt="Logo" style={{ width: "90%", height: "90%", objectFit: "contain" }} />
+                        </div>
+                      )}
+                      <div>
+                        <h4 style={{ margin: "0 0 4px 0", fontSize: "16px", fontWeight: "700" }}>{initialData?.centre || "Nom del Centre"}</h4>
+                        <div style={{ fontSize: "13px", color: "var(--muted)" }}>
+                          Girona, Catalunya
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
