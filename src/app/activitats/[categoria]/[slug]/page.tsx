@@ -89,6 +89,58 @@ const TXT_SENSE_CONTACTE_DADES = 'Sense dades de contacte';
 const TXT_MES_ACTIVITATS_A = 'Més activitats a ';
 const TXT_ALTRES_ACTIVITATS_A = 'Altres activitats a ';
 
+function parseMarkdownToReact(text: string) {
+  if (!text) return null;
+  
+  const lines = text.split('\n');
+  
+  return lines.map((line, lineIdx) => {
+    const bulletRegex = /^(\s*[-*•]\s+)(.*)/;
+    const matchBullet = line.match(bulletRegex);
+    
+    const parseInline = (inlineText: string) => {
+      const boldParts = inlineText.split(/\*\*([^*]+)\*\*/g);
+      return boldParts.map((bPart, bIdx) => {
+        const isBold = bIdx % 2 !== 0;
+        const italicParts = bPart.split(/\*([^*_]+)\*/g);
+        const renderedItalics = italicParts.map((iPart, iIdx) => {
+          const isItalic = iIdx % 2 !== 0;
+          if (isItalic) {
+            return <em key={iIdx}>{iPart}</em>;
+          }
+          return iPart;
+        });
+        
+        if (isBold) {
+          return <strong key={bIdx}>{renderedItalics}</strong>;
+        }
+        return <span key={bIdx}>{renderedItalics}</span>;
+      });
+    };
+    
+    if (matchBullet) {
+      const content = matchBullet[2];
+      return (
+        <ul key={lineIdx} style={{ margin: '4px 0 4px 24px', padding: 0, listStyleType: 'disc' }}>
+          <li style={{ marginBottom: '4px' }}>
+            {parseInline(content)}
+          </li>
+        </ul>
+      );
+    }
+    
+    if (line.trim() === '') {
+      return <div key={lineIdx} style={{ height: '0.8em' }} />;
+    }
+    
+    return (
+      <p key={lineIdx} style={{ margin: '0 0 10px 0' }}>
+        {parseInline(line)}
+      </p>
+    );
+  });
+}
+
 export default async function ActivitatPage({ params }: { params: { categoria: string, slug: string } }) {
   const activitats = await getActivitats();
   const normalizedSearchSlug = normalizeSlug(decodeURIComponent(params.slug));
@@ -174,8 +226,8 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
 
           <div className="grid-12 detail-grid" style={{ marginBottom: '60px' }}>
             <div className="detail-col-left" style={{ gridColumn: 'span 6', paddingRight: '40px' }}>
-              <div style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', lineHeight: 1.6, color: 'var(--fosc)', whiteSpace: 'pre-line' }}>
-                {activitat.descripcio || TXT_SENSE_DESCRIPCIO}
+              <div style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', lineHeight: 1.6, color: 'var(--fosc)' }}>
+                {activitat.descripcio ? parseMarkdownToReact(activitat.descripcio) : TXT_SENSE_DESCRIPCIO}
               </div>
               {activitat.material && (
                 <div style={{ 

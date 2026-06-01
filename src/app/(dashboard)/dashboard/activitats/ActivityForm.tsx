@@ -428,6 +428,40 @@ export default function ActivityForm({
 
   const [loading, setLoading] = useState(false);
 
+  const insertFormatting = (syntax: 'bold' | 'italic' | 'bullet') => {
+    const textarea = document.getElementById('descripcio-textarea') as HTMLTextAreaElement;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+    const selectedText = text.substring(start, end);
+
+    let replacement = '';
+    let cursorOffset = 0;
+
+    if (syntax === 'bold') {
+      replacement = `**${selectedText || 'text'}**`;
+      cursorOffset = selectedText ? 0 : 2;
+    } else if (syntax === 'italic') {
+      replacement = `*${selectedText || 'text'}*`;
+      cursorOffset = selectedText ? 0 : 1;
+    } else if (syntax === 'bullet') {
+      const needsNewline = start > 0 && text.charAt(start - 1) !== '\n';
+      replacement = `${needsNewline ? '\n' : ''}- ${selectedText || 'punt'}`;
+      cursorOffset = 0;
+    }
+
+    const newText = text.substring(0, start) + replacement + text.substring(end);
+    setDescripcio(newText);
+
+    setTimeout(() => {
+      textarea.focus();
+      const newCursorPos = start + replacement.length - cursorOffset;
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
+    }, 50);
+  };
+
   const handleFeaturedUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -1492,12 +1526,86 @@ export default function ActivityForm({
                 <label style={{ fontSize: "13px", fontWeight: "700", color: "var(--verd-fosc)", textTransform: "uppercase" }}>
                   {TXT_DESCRIPCIO}
                 </label>
+                
+                {/* Formatting Helper Toolbar */}
+                <div style={{ display: "flex", gap: "6px", marginBottom: "4px" }}>
+                  <button
+                    type="button"
+                    onClick={() => insertFormatting('bold')}
+                    style={{
+                      padding: "6px 12px",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      border: "1px solid rgba(26, 107, 58, 0.15)",
+                      borderRadius: "6px",
+                      backgroundColor: "white",
+                      color: "var(--verd-fosc)",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      transition: "all 0.2s ease"
+                    }}
+                    onMouseOver={(e) => { e.currentTarget.style.backgroundColor = "var(--crema-fosca)"; e.currentTarget.style.borderColor = "var(--verd)"; }}
+                    onMouseOut={(e) => { e.currentTarget.style.backgroundColor = "white"; e.currentTarget.style.borderColor = "rgba(26, 107, 58, 0.15)"; }}
+                    title="Negreta (**text**)"
+                  >
+                    B
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => insertFormatting('italic')}
+                    style={{
+                      padding: "6px 12px",
+                      fontSize: "12px",
+                      fontStyle: "italic",
+                      border: "1px solid rgba(26, 107, 58, 0.15)",
+                      borderRadius: "6px",
+                      backgroundColor: "white",
+                      color: "var(--verd-fosc)",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      transition: "all 0.2s ease"
+                    }}
+                    onMouseOver={(e) => { e.currentTarget.style.backgroundColor = "var(--crema-fosca)"; e.currentTarget.style.borderColor = "var(--verd)"; }}
+                    onMouseOut={(e) => { e.currentTarget.style.backgroundColor = "white"; e.currentTarget.style.borderColor = "rgba(26, 107, 58, 0.15)"; }}
+                    title="Cursiva (*text*)"
+                  >
+                    I
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => insertFormatting('bullet')}
+                    style={{
+                      padding: "6px 12px",
+                      fontSize: "12px",
+                      border: "1px solid rgba(26, 107, 58, 0.15)",
+                      borderRadius: "6px",
+                      backgroundColor: "white",
+                      color: "var(--verd-fosc)",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      transition: "all 0.2s ease"
+                    }}
+                    onMouseOver={(e) => { e.currentTarget.style.backgroundColor = "var(--crema-fosca)"; e.currentTarget.style.borderColor = "var(--verd)"; }}
+                    onMouseOut={(e) => { e.currentTarget.style.backgroundColor = "white"; e.currentTarget.style.borderColor = "rgba(26, 107, 58, 0.15)"; }}
+                    title="Llista de punts (- punt)"
+                  >
+                    • Llista
+                  </button>
+                </div>
+
                 <textarea
+                  id="descripcio-textarea"
                   value={descripcio}
                   onChange={(e) => setDescripcio(e.target.value)}
-                  placeholder="Explica què faran els xics en aquesta activitat, quina metodologia es fa servir, beneficis, etc."
+                  placeholder="Explica què faran els xics en aquesta activitat, quina metodologia es fa servir, beneficis, etc. Pots fer servir els botons de format per afegir negretes, cursives i llistes."
                   disabled={loading}
-                  rows={4}
+                  rows={6}
                   style={{
                     padding: "12px 14px",
                     border: "1px solid rgba(26, 107, 58, 0.2)",
