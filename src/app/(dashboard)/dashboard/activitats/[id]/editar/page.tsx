@@ -1,5 +1,4 @@
-import React from "react";
-import { getActivitats } from "@/lib/airtable";
+import { getActivitats, getCentres } from "@/lib/airtable";
 import { updateActivitatAction } from "@/app/actions/activitats";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
@@ -93,6 +92,9 @@ export default async function EditarActivitatPage({ params }: EditarActivitatPag
     );
   }
 
+  const allCentres = await getCentres();
+  const centre = allCentres.find(c => c.id === session.user.centreId || c.nom === activitat.centre);
+
   // Build options
   const categories = Array.from(new Set([
     ...allActivitats.map(a => a.categoria?.trim()).filter(Boolean),
@@ -114,6 +116,7 @@ export default async function EditarActivitatPage({ params }: EditarActivitatPag
       barris={barris}
       submitAction={boundUpdateAction}
       title={`Editar Activitat: ${activitat.nom}`}
+      centre={centre}
     />
   );
 }

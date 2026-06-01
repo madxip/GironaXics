@@ -1,7 +1,10 @@
-import React from "react";
-import { getActivitats } from "@/lib/airtable";
+import { getActivitats, getCentres } from "@/lib/airtable";
 import { createActivitatAction } from "@/app/actions/activitats";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import ActivityForm from "../ActivityForm";
+
 
 export const dynamic = "force-dynamic";
 
@@ -41,8 +44,16 @@ const DEFAULT_BARRIS = [
 ];
 
 export default async function NovaActivitatPage() {
-  const activitats = await getActivitats();
+  const session = await getServerSession(authOptions);
   
+  if (!session || !session.user) {
+    redirect("/login");
+  }
+
+  const activitats = await getActivitats();
+  const allCentres = await getCentres();
+  const centre = allCentres.find(c => c.id === session.user.centreId);
+
   // Dynamically build list of categories and barris, merging with standard defaults
   const categories = Array.from(new Set([
     ...activitats.map(a => a.categoria?.trim()).filter(Boolean),
@@ -60,6 +71,7 @@ export default async function NovaActivitatPage() {
       barris={barris}
       submitAction={createActivitatAction}
       title="Nova Activitat Extraescolar"
+      centre={centre}
     />
   );
 }

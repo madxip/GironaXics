@@ -4,7 +4,7 @@ import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Save, Loader2, Upload, Trash2, Image as ImageIcon, Plus, Eye, X } from "lucide-react";
-import { Activitat } from "@/lib/types";
+import { Activitat, Centre } from "@/lib/types";
 import { mapAirtableError } from "@/lib/utils";
 import Toast from "@/components/Toast";
 import RichTextEditor from "@/components/RichTextEditor";
@@ -18,6 +18,7 @@ interface ActivityFormProps {
   barris: string[];
   submitAction: (prevState: unknown, formData: FormData) => Promise<{ success: boolean; error?: string }>;
   title: string;
+  centre?: Centre;
 }
 
 const PREDEFINED_SUBCATEGORIES: Map<string, string[]> = new Map([
@@ -245,10 +246,24 @@ export default function ActivityForm({
   categories,
   barris,
   submitAction,
-  title
+  title,
+  centre
 }: ActivityFormProps) {
   const router = useRouter();
   const [showPreview, setShowPreview] = useState(false);
+
+  React.useEffect(() => {
+    if (showPreview) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [showPreview]);
+
+
 
 
   const [nom, setNom] = useState(initialData?.nom || "");
@@ -2013,100 +2028,31 @@ export default function ActivityForm({
               onMouseOut={(e) => e.currentTarget.style.opacity = "1"}
             >
               <X size={14} />
-              Tancar
+              Tancar Previsualització
             </button>
           </div>
 
-          {/* Contingut que clona el disseny de la fitxa pública */}
+          {/* Contingut que clona exactament el disseny de la fitxa pública amb les classes de globals.css */}
           <div style={{ paddingBottom: "80px" }}>
             {/* HERO SECTION */}
-            <div style={{
-              position: "relative",
-              width: "100%",
-              height: "350px",
-              backgroundColor: "#e5e7eb",
-              display: "flex",
-              alignItems: "flex-end",
-              overflow: "hidden"
-            }}>
-              {imatgeUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={imatgeUrl}
-                  alt={nom}
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover"
-                  }}
-                />
-              ) : (
-                <div style={{
+            <div className="modal-hero" style={{ position: "relative" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={imatgeUrl || "https://images.unsplash.com/photo-1516627145497-ae6968895b74?q=80&w=2000&auto=format&fit=crop"}
+                alt={nom}
+                style={{
                   position: "absolute",
                   top: 0,
                   left: 0,
                   width: "100%",
                   height: "100%",
-                  background: "linear-gradient(135deg, var(--verd-fosc) 0%, var(--verd) 100%)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "rgba(255,255,255,0.2)"
-                }}>
-                  <ImageIcon size={96} />
-                </div>
-              )}
-              
-              {/* Gradient ombra */}
-              <div style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                height: "100%",
-                background: "linear-gradient(to bottom, transparent 30%, rgba(9, 26, 15, 0.9) 100%)"
-              }} />
-
-              {/* Títol de l'Hero */}
-              <div style={{
-                position: "relative",
-                width: "100%",
-                maxWidth: "1200px",
-                margin: "0 auto",
-                padding: "24px 20px",
-                color: "white",
-                zIndex: 10
-              }}>
-                <h1 style={{
-                  fontFamily: "var(--font-serif)",
-                  fontSize: "36px",
-                  fontWeight: "700",
-                  margin: "0 0 8px 0",
-                  textShadow: "0 2px 4px rgba(0,0,0,0.3)"
-                }}>
-                  {nom || "Nom de l'activitat"}
-                </h1>
+                  objectFit: "cover"
+                }}
+              />
+              <div className="modal-hero-gradient">
+                <h1 className="modal-hero-title">{nom || "Nom de l'activitat"}</h1>
               </div>
-
-              {/* Distintiu de Categoria */}
-              <div style={{
-                position: "absolute",
-                top: "24px",
-                right: "24px",
-                backgroundColor: "white",
-                color: "var(--verd-fosc)",
-                padding: "6px 12px",
-                borderRadius: "4px",
-                fontWeight: "700",
-                fontSize: "12px",
-                letterSpacing: "0.05em",
-                textTransform: "uppercase",
-                boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                zIndex: 10
-              }}>
+              <div className="modal-badge">
                 {subSelectValue || customSubValue ? `${categoria} · ${subSelectValue === "Altres" ? customSubValue : (subSelectValue || customSubValue)}` : (categoria || "Categoria")}
               </div>
             </div>
@@ -2125,17 +2071,13 @@ export default function ActivityForm({
 
               {/* Metadades sub-títol */}
               <div style={{ fontSize: "20px", color: "var(--muted)", marginBottom: "40px" }}>
-                {initialData?.centre || "El teu Centre"} · {barri || "Barri"} · {edat || "Edats"}
+                {centre?.nom || initialData?.centre || "El teu Centre"} · {barri || "Barri"} · {edat || "Edats"}
               </div>
 
-              {/* Graella de dues columnes */}
-              <div style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-                gap: "40px"
-              }}>
+              {/* Graella de dues columnes exactament com la fitxa pública */}
+              <div className="grid-12 detail-grid" style={{ marginBottom: "60px" }}>
                 {/* Columna Esquerra: Descripció i Observacions */}
-                <div style={{ paddingRight: "20px" }}>
+                <div className="detail-col-left" style={{ gridColumn: "span 6", paddingRight: "40px" }}>
                   <div style={{ fontSize: "18px", lineHeight: 1.6, color: "var(--fosc)" }}>
                     {descripcio ? parseMarkdownToReact(descripcio) : (
                       <p style={{ fontStyle: "italic", color: "var(--muted)" }}>Aquesta activitat no té cap descripció detallada encara.</p>
@@ -2196,7 +2138,7 @@ export default function ActivityForm({
                 </div>
 
                 {/* Columna Dreta: Targeta adhesiva informativa */}
-                <div>
+                <div className="detail-col-right" style={{ gridColumn: "span 6" }}>
                   <div style={{
                     backgroundColor: "white",
                     padding: "32px",
@@ -2240,15 +2182,16 @@ export default function ActivityForm({
                     <div style={{
                       paddingTop: "24px",
                       borderTop: "1px solid var(--crema-fosca)",
+                      marginBottom: "24px",
                       display: "flex",
-                      gap: "16px",
+                      gap: "20px",
                       alignItems: "center"
                     }}>
-                      {initialData?.centreImatgeUrl && (
+                      {(initialData?.centreImatgeUrl || centre?.imatgeUrl) && (
                         <div style={{
                           position: "relative",
-                          width: "60px",
-                          height: "60px",
+                          width: "80px",
+                          height: "80px",
                           borderRadius: "8px",
                           overflow: "hidden",
                           border: "1px solid var(--crema-fosca)",
@@ -2259,15 +2202,35 @@ export default function ActivityForm({
                           justifyContent: "center"
                         }}>
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={initialData.centreImatgeUrl} alt="Logo" style={{ width: "90%", height: "90%", objectFit: "contain" }} />
+                          <img src={initialData?.centreImatgeUrl || centre?.imatgeUrl} alt="Logo" style={{ width: "90%", height: "90%", objectFit: "contain" }} />
                         </div>
                       )}
-                      <div>
-                        <h4 style={{ margin: "0 0 4px 0", fontSize: "16px", fontWeight: "700" }}>{initialData?.centre || "Nom del Centre"}</h4>
-                        <div style={{ fontSize: "13px", color: "var(--muted)" }}>
-                          Girona, Catalunya
-                        </div>
+                      <div style={{ flexGrow: 1 }}>
+                        <h4 style={{ margin: "0 0 8px 0", fontSize: "18px", fontWeight: "700" }}>{centre?.nom || initialData?.centre || "Nom del Centre"}</h4>
+                        {centre ? (
+                          <div style={{ fontSize: "14px", color: "var(--muted)", display: "flex", flexDirection: "column", gap: "4px" }}>
+                            {centre.adreca && <div>{centre.adreca}</div>}
+                            {centre.telefon && <div>{centre.telefon}</div>}
+                            {centre.email && <div>{centre.email}</div>}
+                          </div>
+                        ) : (
+                          <div style={{ fontSize: "14px", color: "var(--muted)" }}>Sense dades de contacte.</div>
+                        )}
                       </div>
+                    </div>
+
+                    {/* Botons de crida a l'acció (CTA) exactes de la versió pública */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                      {centre?.telefon && (
+                        <div style={{ display: 'block', backgroundColor: 'var(--verd-fosc)', color: 'white', padding: '16px', textAlign: 'center', borderRadius: '4px', textDecoration: 'none', fontWeight: 700 }}>
+                          📞 {centre.telefon}
+                        </div>
+                      )}
+                      {centre?.email && (
+                        <div style={{ display: 'block', backgroundColor: 'var(--verd-fosc)', color: 'white', padding: '16px', textAlign: 'center', borderRadius: '4px', textDecoration: 'none', fontWeight: 700 }}>
+                          ✉ Envia un correu
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
