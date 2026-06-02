@@ -42,3 +42,9 @@ next-env.d.ts
 airtable_dump.json
 imatges airtable/
 src/lib/airtable-cache.json
+
+# backups locals (no pujar mai a GitHub)
+backups/
+
+# scripts temporals
+scratch/

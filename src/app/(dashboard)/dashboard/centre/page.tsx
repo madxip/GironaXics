@@ -4,28 +4,9 @@ import { authOptions } from "@/lib/auth";
 import { getCentres, getActivitats } from "@/lib/airtable";
 import { redirect } from "next/navigation";
 import CentreForm from "./CentreForm";
+import { BARRIS_GIRONA, BARRIS_SALT } from "@/lib/barris";
 
 export const dynamic = "force-dynamic";
-
-const DEFAULT_BARRIS = [
-  "Barri Vell",
-  "Centre",
-  "Devesa",
-  "Eixample",
-  "Fontajau",
-  "Germans Sàbat",
-  "Mas Xirgu",
-  "Montilivi",
-  "Palau",
-  "Pedret",
-  "Pont Major",
-  "Salt",
-  "Sant Daniel",
-  "Sant Narcís",
-  "Santa Eugènia",
-  "Vila-roja i Font de la Pólvora",
-  "Vista Alegre - Carme"
-];
 
 export default async function CentreDashboardPage() {
   const session = await getServerSession(authOptions);
@@ -46,12 +27,13 @@ export default async function CentreDashboardPage() {
     redirect("/dashboard");
   }
 
-  // Get active neighborhoods to merge with defaults for the dropdown selection
+  // Barris de Girona (excloent Salt) + els que surtin a les activitats
   const activitats = await getActivitats();
-  const barris = Array.from(new Set([
-    ...activitats.map(a => a.barri?.trim()).filter(Boolean),
-    ...DEFAULT_BARRIS.map(b => b.trim())
+  const barrisGirona = Array.from(new Set([
+    ...activitats.map(a => a.barri?.trim()).filter((b): b is string => !!b && b !== 'Salt'),
+    ...BARRIS_GIRONA
   ])).sort();
+  const barris = { girona: barrisGirona, salt: BARRIS_SALT };
 
   return (
     <CentreForm

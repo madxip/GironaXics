@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import ActivityForm from "../../ActivityForm";
+import { BARRIS_GIRONA, BARRIS_SALT } from "@/lib/barris";
 
 export const dynamic = "force-dynamic";
 
@@ -22,25 +23,6 @@ const DEFAULT_CATEGORIES = [
   "Teatre"
 ];
 
-const DEFAULT_BARRIS = [
-  "Barri Vell",
-  "Centre",
-  "Devesa",
-  "Eixample",
-  "Fontajau",
-  "Germans Sàbat",
-  "Mas Xirgu",
-  "Montilivi",
-  "Palau",
-  "Pedret",
-  "Pont Major",
-  "Salt",
-  "Sant Daniel",
-  "Sant Narcís",
-  "Santa Eugènia",
-  "Vila-roja i Font de la Pólvora",
-  "Vista Alegre - Carme"
-];
 
 interface EditarActivitatPageProps {
   params: {
@@ -101,10 +83,11 @@ export default async function EditarActivitatPage({ params }: EditarActivitatPag
     ...DEFAULT_CATEGORIES.map(c => c.trim())
   ])).sort();
 
-  const barris = Array.from(new Set([
-    ...allActivitats.map(a => a.barri?.trim()).filter(Boolean),
-    ...DEFAULT_BARRIS.map(b => b.trim())
+  const barrisGirona = Array.from(new Set([
+    ...allActivitats.map(a => a.barri?.trim()).filter((b): b is string => !!b && b !== 'Salt'),
+    ...BARRIS_GIRONA
   ])).sort();
+  const barris = { girona: barrisGirona, salt: BARRIS_SALT };
 
   // Bind the ID to the server action so the form can just call it
   const boundUpdateAction = updateActivitatAction.bind(null, id);

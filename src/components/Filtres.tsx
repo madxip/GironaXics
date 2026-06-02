@@ -262,9 +262,17 @@ export default function Filtres({
   const hasSubcategories = subcategories.length > 1;
 
   const barris = useMemo(() => {
-    const set = new Set<string>();
-    activitats.forEach(a => { if (a.barri) set.add(a.barri); });
-    return ['Totes', ...Array.from(set).sort()];
+    const gironaSet = new Set<string>();
+    let hasSalt = false;
+    activitats.forEach(a => {
+      if (!a.barri) return;
+      if (a.barri.trim() === 'Salt') hasSalt = true;
+      else gironaSet.add(a.barri.trim());
+    });
+    return {
+      girona: Array.from(gironaSet).sort(),
+      salt: hasSalt ? ['Salt'] : []
+    };
   }, [activitats]);
 
   const filtered = useMemo(() => {
@@ -598,7 +606,15 @@ export default function Filtres({
                         onChange={e => updateFilter('barri', e.target.value)}
                         style={{ width: '100%', padding: '12px 16px', borderRadius: '0', border: '1px solid var(--verd)', backgroundColor: 'transparent', color: 'var(--fosc)', fontFamily: 'var(--font-sans)', fontSize: '16px', outline: 'none', cursor: 'pointer' }}
                     >
-                        {barris.map(b => <option key={b} value={b}>{b}</option>)}
+                        <option value="Totes">Totes</option>
+                        <optgroup label="Barris de Girona">
+                          {barris.girona.map(b => <option key={b} value={b}>{b}</option>)}
+                        </optgroup>
+                        {barris.salt.length > 0 && (
+                          <optgroup label="Salt">
+                            {barris.salt.map(b => <option key={b} value={b}>{b}</option>)}
+                          </optgroup>
+                        )}
                     </select>
                 </div>
                 
