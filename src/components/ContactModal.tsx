@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { sendContactEmail } from '@/app/actions/sendEmail';
+import { trackEvent } from '@/lib/trackEvent';
 
 interface Props {
   centreEmail: string;
@@ -105,7 +106,10 @@ export default function ContactModal({ centreEmail, centreNom, activitatNom }: P
     <>
       {/* Botó principal */}
       <button
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          setOpen(true);
+          trackEvent('contact_email', activitatNom, centreEmail);
+        }}
         className="hoverable"
         style={{
           display: 'block', width: '100%',

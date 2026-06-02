@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Activitat, Sponsor, CasalsBanner } from '@/lib/types';
 import AccordionCategoria from './AccordionCategoria';
 import { normalizeSlug } from '@/lib/utils';
+import { trackEvent } from '@/lib/trackEvent';
 
 const renderBannerTitle = (title: string) => {
   if (!title) return null;
@@ -190,6 +191,14 @@ export default function Filtres({
       params.set(key, value);
     }
     router.replace(`?${params.toString()}`, { scroll: false });
+
+    // Tracking analytics
+    if (value !== 'Totes') {
+      if (key === 'categoria')    trackEvent('filter_categoria', value);
+      else if (key === 'barri')   trackEvent('filter_barri', value);
+      else if (key === 'edat')    trackEvent('filter_edat', value);
+      else if (key === 'tipus')   trackEvent('filter_tipus', value);
+    }
   };
 
   const scrollToFiltresHeader = () => {
@@ -210,29 +219,25 @@ export default function Filtres({
   };
 
   const handleSponsorClick = (sponsorNom: string) => {
+    // Tracking a Airtable
+    trackEvent('sponsor_click', sponsorNom, selectedCategoria);
+
+    // Tracking a Google Analytics (si l'usuari ha acceptat cookies)
     interface CustomWindow extends Window {
       gtag?: (
         command: 'event',
         eventName: string,
-        eventParams: {
-          event_category: string;
-          event_label: string;
-          category_name: string;
-        }
+        eventParams: { event_category: string; event_label: string; category_name: string }
       ) => void;
     }
-    
     if (typeof window !== 'undefined') {
-      const customWindow = window as unknown as CustomWindow;
-      if (customWindow.gtag) {
-        customWindow.gtag('event', 'sponsor_click', {
+      const cw = window as unknown as CustomWindow;
+      if (cw.gtag) {
+        cw.gtag('event', 'sponsor_click', {
           event_category: 'Sponsor',
           event_label: sponsorNom,
-          category_name: selectedCategoria
+          category_name: selectedCategoria,
         });
-        console.log(`[Google Analytics] Event enviat: sponsor_click (${sponsorNom})`);
-      } else {
-        console.log(`[Analytics Fallback] Clic registrat localment per a ${sponsorNom} (Sense Google Analytics)`);
       }
     }
   };
@@ -411,6 +416,7 @@ export default function Filtres({
                 if (selectedTipus === 'Casals') {
                   updateFilter('tipus', 'Extraescolars');
                 } else {
+                  trackEvent('casals_banner_click', casalsBanner.nom);
                   updateFilter('tipus', 'Casals');
                   scrollToFiltresHeader();
                 }

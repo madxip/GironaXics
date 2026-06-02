@@ -12,6 +12,7 @@ import ActivitatCard from '@/components/ActivitatCard';
 import CloseButton from '@/components/CloseButton';
 import Galeria from '@/components/Galeria';
 import ContactModal from '@/components/ContactModal';
+import ContactPhoneButton from '@/components/ContactPhoneButton';
 
 export async function generateStaticParams() {
   const activitats = await getActivitats();
@@ -303,9 +304,11 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {contactTelefon && (
-                    <a href={`tel:${contactTelefon}`} className="hoverable" style={{ display: 'block', backgroundColor: 'var(--verd-fosc)', color: 'white', padding: '16px', textAlign: 'center', borderRadius: '4px', textDecoration: 'none', fontWeight: 700 }}>
-                      📞 {contactTelefon}
-                    </a>
+                    <ContactPhoneButton
+                      telefon={contactTelefon}
+                      activitatNom={activitat.nom}
+                      activitatId={activitat.id}
+                    />
                   )}
                   {centre?.email ? (
                     <ContactModal
