@@ -2,6 +2,7 @@ import React from "react";
 import { getActivitats } from "@/lib/airtable";
 import { createActivitatAction } from "@/app/actions/activitats";
 import ActivityForm from "../ActivityForm";
+import { BARRIS_GIRONA, BARRIS_SALT } from "@/lib/barris";
 
 export const dynamic = "force-dynamic";
 
@@ -21,26 +22,6 @@ const DEFAULT_CATEGORIES = [
   "Teatre"
 ];
 
-const DEFAULT_BARRIS = [
-  "Barri Vell",
-  "Centre",
-  "Devesa",
-  "Eixample",
-  "Fontajau",
-  "Germans Sàbat",
-  "Mas Xirgu",
-  "Montilivi",
-  "Palau",
-  "Pedret",
-  "Pont Major",
-  "Salt",
-  "Sant Daniel",
-  "Sant Narcís",
-  "Santa Eugènia",
-  "Vila-roja i Font de la Pólvora",
-  "Vista Alegre - Carme"
-];
-
 export default async function NovaActivitatPage() {
   const activitats = await getActivitats();
   
@@ -50,10 +31,12 @@ export default async function NovaActivitatPage() {
     ...DEFAULT_CATEGORIES.map(c => c.trim())
   ])).sort();
 
-  const barris = Array.from(new Set([
-    ...activitats.map(a => a.barri?.trim()).filter(Boolean),
-    ...DEFAULT_BARRIS.map(b => b.trim())
+  // Barris de Girona (excloent Salt) + els que surtin a les activitats
+  const barrisGirona = Array.from(new Set([
+    ...activitats.map(a => a.barri?.trim()).filter((b): b is string => !!b && b !== 'Salt'),
+    ...BARRIS_GIRONA
   ])).sort();
+  const barris = { girona: barrisGirona, salt: BARRIS_SALT };
 
   return (
     <ActivityForm

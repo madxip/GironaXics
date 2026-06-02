@@ -9,7 +9,7 @@ import Toast from "@/components/Toast";
 
 interface CentreFormProps {
   initialData: Centre;
-  barris: string[];
+  barris: { girona: string[]; salt: string[] };
 }
 
 export default function CentreForm({ initialData, barris }: CentreFormProps) {
@@ -240,7 +240,7 @@ export default function CentreForm({ initialData, barris }: CentreFormProps) {
 
             <div style={{ gridColumn: "span 2" }}>
               <label style={{ display: "block", fontSize: "13px", fontWeight: 700, color: "var(--verd-fosc)", textTransform: "uppercase", marginBottom: "8px" }}>
-                Barri de Girona *
+                Barri / Municipi *
               </label>
               <select
                 id="barri"
@@ -261,10 +261,19 @@ export default function CentreForm({ initialData, barris }: CentreFormProps) {
                   transition: "all 0.2s"
                 }}
               >
-                <option value="">-- Tria un barri --</option>
-                {barris.map((b) => (
-                  <option key={b} value={b}>{b}</option>
-                ))}
+                <option value="">-- Tria un barri o municipi --</option>
+                <optgroup label="Barris de Girona">
+                  {barris.girona.map((b) => (
+                    <option key={b} value={b}>{b}</option>
+                  ))}
+                </optgroup>
+                {barris.salt.length > 0 && (
+                  <optgroup label="Salt">
+                    {barris.salt.map((b) => (
+                      <option key={b} value={b}>{b}</option>
+                    ))}
+                  </optgroup>
+                )}
               </select>
               {validationErrors.barri && (
                 <span style={{ color: "#b91c1c", fontSize: "12px", fontWeight: "600", marginTop: "4px", display: "block" }}>

@@ -11,7 +11,7 @@ import Toast from "@/components/Toast";
 interface ActivityFormProps {
   initialData?: Activitat;
   categories: string[];
-  barris: string[];
+  barris: { girona: string[]; salt: string[] };
   submitAction: (prevState: unknown, formData: FormData) => Promise<{ success: boolean; error?: string }>;
   title: string;
 }
@@ -585,9 +585,18 @@ export default function ActivityForm({
                   }}
                 >
                   <option value="">-- Tria un barri --</option>
-                  {barris.map((b) => (
-                    <option key={b} value={b}>{b}</option>
-                  ))}
+                  <optgroup label="Barris de Girona">
+                    {barris.girona.map((b) => (
+                      <option key={b} value={b}>{b}</option>
+                    ))}
+                  </optgroup>
+                  {barris.salt.length > 0 && (
+                    <optgroup label="Salt">
+                      {barris.salt.map((b) => (
+                        <option key={b} value={b}>{b}</option>
+                      ))}
+                    </optgroup>
+                  )}
                 </select>
                 {validationErrors.barri && (
                   <span style={{ color: "#b91c1c", fontSize: "12px", fontWeight: "600", marginTop: "-2px" }}>
