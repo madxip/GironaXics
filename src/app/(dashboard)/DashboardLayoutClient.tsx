@@ -75,12 +75,14 @@ function DashboardToastListener() {
 interface DashboardLayoutClientProps {
   centreNom: string;
   userEmail: string;
+  isAdmin?: boolean;
   children: React.ReactNode;
 }
 
 export default function DashboardLayoutClient({
   centreNom,
   userEmail,
+  isAdmin = false,
   children,
 }: DashboardLayoutClientProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -226,17 +228,17 @@ export default function DashboardLayoutClient({
               width: "42px",
               height: "42px",
               borderRadius: "50%",
-              backgroundColor: "var(--crema-fosca)",
+              backgroundColor: isAdmin ? "rgba(217,87,56,0.12)" : "var(--crema-fosca)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "var(--verd-fosc)",
+              color: isAdmin ? "#d95738" : "var(--verd-fosc)",
               fontWeight: 700,
               fontSize: "16px",
-              border: "2px solid var(--verd-pallid)",
+              border: isAdmin ? "2px solid rgba(217,87,56,0.3)" : "2px solid var(--verd-pallid)",
               flexShrink: 0
             }}>
-              {centreNom.charAt(0).toUpperCase()}
+              {isAdmin ? "★" : centreNom.charAt(0).toUpperCase()}
             </div>
             <div style={{ overflow: "hidden" }}>
               <div style={{
@@ -251,12 +253,13 @@ export default function DashboardLayoutClient({
               </div>
               <div style={{
                 fontSize: "12px",
-                color: "var(--muted)",
+                color: isAdmin ? "#d95738" : "var(--muted)",
                 whiteSpace: "nowrap",
                 overflow: "hidden",
-                textOverflow: "ellipsis"
+                textOverflow: "ellipsis",
+                fontWeight: isAdmin ? 600 : 400
               }}>
-                {userEmail}
+                {isAdmin ? "👑 Administrador" : userEmail}
               </div>
             </div>
           </div>

@@ -38,6 +38,7 @@ export const authOptions: NextAuthOptions = {
           name: user.nom,
           email: user.email,
           centreId: user.centreId || "",
+          isAdmin: user.isAdmin || false,
         };
       }
     })
@@ -47,6 +48,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.centreId = user.centreId;
+        token.isAdmin = user.isAdmin;
       }
       return token;
     },
@@ -54,6 +56,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id;
         session.user.centreId = token.centreId;
+        session.user.isAdmin = token.isAdmin;
       }
       return session;
     }

@@ -18,15 +18,18 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
+  const isAdmin = session.user.isAdmin;
+
   // Get center name to display in the dashboard
   const centres = await getCentres();
   const userCentre = centres.find(c => c.id === session.user.centreId);
-  const centreNom = userCentre ? userCentre.nom : "El teu Centre";
+  const centreNom = isAdmin ? "Administrador" : (userCentre ? userCentre.nom : "El teu Centre");
 
   return (
     <DashboardLayoutClient
       centreNom={centreNom}
       userEmail={session.user.email || ""}
+      isAdmin={isAdmin}
     >
       {children}
     </DashboardLayoutClient>

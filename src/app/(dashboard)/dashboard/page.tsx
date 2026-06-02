@@ -1,9 +1,9 @@
 import React from "react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { getActivitatsByCentreId, getCentres } from "@/lib/airtable";
+import { getActivitatsByCentreId, getActivitats, getCentres } from "@/lib/airtable";
 import Link from "next/link";
-import { Plus, Edit2, MapPin, Calendar, CircleDollarSign, Tag, Info, Activity } from "lucide-react";
+import { Plus, Edit2, MapPin, Calendar, CircleDollarSign, Tag, Info, Activity, ShieldCheck } from "lucide-react";
 import DeleteButton from "./DeleteButton";
 import TogglePublicada from "./TogglePublicada";
 
@@ -17,11 +17,16 @@ export default async function DashboardPage() {
   }
 
   const centreId = session.user.centreId;
-  const activitats = await getActivitatsByCentreId(centreId);
+  const isAdmin = session.user.isAdmin;
+
+  // Admin veu totes les activitats; els centres només les seves
+  const activitats = isAdmin
+    ? await getActivitats()
+    : await getActivitatsByCentreId(centreId);
 
   const centres = await getCentres();
   const userCentre = centres.find(c => c.id === centreId);
-  const centreNom = userCentre ? userCentre.nom : "El teu Centre";
+  const centreNom = isAdmin ? "Administrador" : (userCentre ? userCentre.nom : "El teu Centre");
 
   return (
     <div>
@@ -40,9 +45,30 @@ export default async function DashboardPage() {
             fontStyle: "italic",
             fontSize: "36px",
             color: "var(--verd-fosc)",
-            margin: 0
+            margin: 0,
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            flexWrap: "wrap"
           }}>
-            Benvingut, {centreNom}
+            {isAdmin ? "Totes les Activitats" : `Benvingut, ${centreNom}`}
+            {isAdmin && (
+              <span style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                fontSize: "13px",
+                fontStyle: "normal",
+                fontWeight: 700,
+                backgroundColor: "rgba(217,87,56,0.1)",
+                color: "#d95738",
+                padding: "4px 12px",
+                borderRadius: "99px",
+                border: "1px solid rgba(217,87,56,0.2)"
+              }}>
+                <ShieldCheck size={14} /> Admin
+              </span>
+            )}
           </h1>
           <p style={{
             fontSize: "15px",
@@ -50,7 +76,10 @@ export default async function DashboardPage() {
             marginTop: "6px",
             margin: 0
           }}>
-            Aquí pots crear, editar o eliminar les activitats extraescolars que ofereix el teu centre.
+            {isAdmin
+              ? `${activitats.length} activitats publicades a GironaXics`
+              : "Aquí pots crear, editar o eliminar les activitats extraescolars que ofereix el teu centre."
+            }
           </p>
         </div>
 
