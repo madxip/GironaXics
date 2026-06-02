@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
+import { getActivitatsByCentreId } from '@/lib/airtable';
 
 const API_KEY = process.env.AIRTABLE_API_KEY;
 const BASE_ID = process.env.AIRTABLE_BASE_ID;
@@ -94,6 +97,15 @@ function countBy(records: AirtableRecord[], field: 'event_label' | 'event_value'
 
 export async function GET(req: NextRequest) {
   try {
+    // Verificar sessió
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const isAdmin   = session.user.isAdmin;
+    const centreId  = session.user.centreId;
+
     const { searchParams } = new URL(req.url);
     const days = parseInt(searchParams.get('days') ?? '30', 10);
 
@@ -106,27 +118,45 @@ export async function GET(req: NextRequest) {
 
     const all = await fetchAllAnalytics(filterFormula || undefined);
 
+    // Si NO és admin → filtrar per les activitats del seu centre
+    let allowedActivityIds: Set<string> | null = null;
+    if (!isAdmin && centreId) {
+      const centreActivitats = await getActivitatsByCentreId(centreId);
+      allowedActivityIds = new Set(centreActivitats.map(a => a.id).filter(Boolean) as string[]);
+    }
+
+    // Filtre d'events per activitat (si no és admin)
+    const filterByActivity = (records: AirtableRecord[]) => {
+      if (!allowedActivityIds) return records; // admin veu tot
+      return records.filter(r => {
+        const aid = r.fields.activitat_id;
+        return aid && allowedActivityIds!.has(aid);
+      });
+    };
+
     // Segmentar per tipus
     const byType = (type: string) => all.filter(r => r.fields.event_type === type);
 
-    const activityViews      = byType('activity_view');
-    const contactPhone       = byType('contact_phone');
-    const contactEmail       = byType('contact_email');
+    const activityViewsAll   = filterByActivity(byType('activity_view'));
+    const contactPhoneAll    = filterByActivity(byType('contact_phone'));
+    const contactEmailAll    = filterByActivity(byType('contact_email'));
+
+    // Globals (només admin)
     const filterCategoria    = byType('filter_categoria');
     const filterBarri        = byType('filter_barri');
     const filterEdat         = byType('filter_edat');
     const sponsorClicks      = byType('sponsor_click');
     const casalsBannerClicks = byType('casals_banner_click');
 
-    // Top activitats vistes amb clics de contacte
+    // Top activitats
     const activityMap: Record<string, { label: string; views: number; contacts: number }> = {};
-    for (const r of activityViews) {
+    for (const r of activityViewsAll) {
       const id = r.fields.activitat_id ?? r.fields.event_label ?? 'desconegut';
       const label = r.fields.event_label ?? id;
       if (!activityMap[id]) activityMap[id] = { label, views: 0, contacts: 0 };
       activityMap[id].views++;
     }
-    for (const r of [...contactPhone, ...contactEmail]) {
+    for (const r of [...contactPhoneAll, ...contactEmailAll]) {
       const id = r.fields.activitat_id ?? r.fields.event_label ?? 'desconegut';
       if (!activityMap[id]) activityMap[id] = { label: r.fields.event_label ?? id, views: 0, contacts: 0 };
       activityMap[id].contacts++;
@@ -139,26 +169,30 @@ export async function GET(req: NextRequest) {
         ratio: a.views > 0 ? Math.round((a.contacts / a.views) * 100) : 0,
       }));
 
-    // Devices
-    const allWithDevice = all.filter(r => r.fields.device);
+    // Devices (només dels events filtrats)
+    const allFiltered = isAdmin ? all : [...activityViewsAll, ...contactPhoneAll, ...contactEmailAll];
+    const allWithDevice = allFiltered.filter(r => r.fields.device && r.fields.device !== 'server');
     const mobileCount  = allWithDevice.filter(r => r.fields.device === 'mobile').length;
     const desktopCount = allWithDevice.filter(r => r.fields.device === 'desktop').length;
 
     return NextResponse.json({
+      isAdmin,
       totals: {
-        activityViews:      activityViews.length,
-        contactPhone:       contactPhone.length,
-        contactEmail:       contactEmail.length,
-        totalContacts:      contactPhone.length + contactEmail.length,
-        sponsorClicks:      sponsorClicks.length,
-        casalsBannerClicks: casalsBannerClicks.length,
-        filterUses:         filterCategoria.length + filterBarri.length + filterEdat.length,
+        activityViews:      activityViewsAll.length,
+        contactPhone:       contactPhoneAll.length,
+        contactEmail:       contactEmailAll.length,
+        totalContacts:      contactPhoneAll.length + contactEmailAll.length,
+        // Globals (0 si no és admin)
+        sponsorClicks:      isAdmin ? sponsorClicks.length : 0,
+        casalsBannerClicks: isAdmin ? casalsBannerClicks.length : 0,
+        filterUses:         isAdmin ? filterCategoria.length + filterBarri.length + filterEdat.length : 0,
       },
       topActivitats,
-      topCategories:  countBy(filterCategoria, 'event_label').slice(0, 8),
-      topBarris:      countBy(filterBarri,     'event_label').slice(0, 8),
-      topEdats:       countBy(filterEdat,      'event_label').slice(0, 6),
-      topSponsors:    countBy(sponsorClicks,   'event_label').slice(0, 5),
+      // Seccions globals: buides si no és admin
+      topCategories:  isAdmin ? countBy(filterCategoria, 'event_label').slice(0, 8) : [],
+      topBarris:      isAdmin ? countBy(filterBarri,     'event_label').slice(0, 8) : [],
+      topEdats:       isAdmin ? countBy(filterEdat,      'event_label').slice(0, 6) : [],
+      topSponsors:    isAdmin ? countBy(sponsorClicks,   'event_label').slice(0, 5) : [],
       devices:        { mobile: mobileCount, desktop: desktopCount },
     });
   } catch (e) {
