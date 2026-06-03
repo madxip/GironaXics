@@ -15,7 +15,7 @@ import MultiDatePicker from "@/components/MultiDatePicker";
 interface ActivityFormProps {
   initialData?: Activitat;
   categories: string[];
-  barris: { girona: string[]; salt: string[] };
+  barris: { girona: string[]; altres: string[] };
   submitAction: (prevState: unknown, formData: FormData) => Promise<{ success: boolean; error?: string }>;
   title: string;
   centre?: Centre;
@@ -958,9 +958,9 @@ export default function ActivityForm({
                       <option key={b} value={b}>{b}</option>
                     ))}
                   </optgroup>
-                  {barris.salt.length > 0 && (
-                    <optgroup label="Salt">
-                      {barris.salt.map((b) => (
+                  {barris.altres.length > 0 && (
+                    <optgroup label="Altres poblacions">
+                      {barris.altres.map((b) => (
                         <option key={b} value={b}>{b}</option>
                       ))}
                     </optgroup>

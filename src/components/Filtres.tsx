@@ -6,6 +6,7 @@ import { Activitat, Sponsor, CasalsBanner } from '@/lib/types';
 import AccordionCategoria from './AccordionCategoria';
 import { normalizeSlug } from '@/lib/utils';
 import { trackEvent } from '@/lib/trackEvent';
+import { BARRIS_GIRONA_SET } from '@/lib/barris';
 
 const renderBannerTitle = (title: string) => {
   if (!title) return null;
@@ -263,15 +264,16 @@ export default function Filtres({
 
   const barris = useMemo(() => {
     const gironaSet = new Set<string>();
-    let hasSalt = false;
+    const altresSet = new Set<string>();
     activitats.forEach(a => {
       if (!a.barri) return;
-      if (a.barri.trim() === 'Salt') hasSalt = true;
-      else gironaSet.add(a.barri.trim());
+      const b = a.barri.trim();
+      if (BARRIS_GIRONA_SET.has(b)) gironaSet.add(b);
+      else altresSet.add(b);
     });
     return {
       girona: Array.from(gironaSet).sort(),
-      salt: hasSalt ? ['Salt'] : []
+      altres: Array.from(altresSet).sort()
     };
   }, [activitats]);
 
@@ -610,9 +612,9 @@ export default function Filtres({
                         <optgroup label="Barris de Girona">
                           {barris.girona.map(b => <option key={b} value={b}>{b}</option>)}
                         </optgroup>
-                        {barris.salt.length > 0 && (
-                          <optgroup label="Salt">
-                            {barris.salt.map(b => <option key={b} value={b}>{b}</option>)}
+                        {barris.altres.length > 0 && (
+                          <optgroup label="Altres poblacions">
+                            {barris.altres.map(b => <option key={b} value={b}>{b}</option>)}
                           </optgroup>
                         )}
                     </select>

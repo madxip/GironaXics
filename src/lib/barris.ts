@@ -1,10 +1,9 @@
 /**
- * Llista oficial de barris de Girona i municipis veïns.
+ * Llista oficial de barris de Girona.
  * S'usa als formularis del dashboard i al filtre públic.
  *
- * Salt no és un barri de Girona — és un municipi independent
- * separat físicament per un carrer, però amb molta relació.
- * Per això es mostra separat al selector.
+ * Qualsevol barri que no estigui en aquesta llista es considera
+ * "Altres poblacions" i s'agrupa automàticament al selector.
  */
 
 export const BARRIS_GIRONA: string[] = [
@@ -26,9 +25,5 @@ export const BARRIS_GIRONA: string[] = [
   "Vista Alegre - Carme",
 ];
 
-export const BARRIS_SALT: string[] = [
-  "Salt",
-];
-
-/** Tots els barris en un array pla (per compatibilitat amb filtres i kerques) */
-export const ALL_BARRIS: string[] = [...BARRIS_GIRONA, ...BARRIS_SALT];
+/** Set per a consultes O(1) — qualsevol barri absent d'aquí és "Altres poblacions" */
+export const BARRIS_GIRONA_SET = new Set<string>(BARRIS_GIRONA);

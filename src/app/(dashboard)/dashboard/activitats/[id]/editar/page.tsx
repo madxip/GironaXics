@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import ActivityForm from "../../ActivityForm";
-import { BARRIS_GIRONA, BARRIS_SALT } from "@/lib/barris";
+import { BARRIS_GIRONA, BARRIS_GIRONA_SET } from "@/lib/barris";
 
 export const dynamic = "force-dynamic";
 
@@ -83,11 +83,11 @@ export default async function EditarActivitatPage({ params }: EditarActivitatPag
     ...DEFAULT_CATEGORIES.map(c => c.trim())
   ])).sort();
 
-  const barrisGirona = Array.from(new Set([
-    ...allActivitats.map(a => a.barri?.trim()).filter((b): b is string => !!b && b !== 'Salt'),
-    ...BARRIS_GIRONA
-  ])).sort();
-  const barris = { girona: barrisGirona, salt: BARRIS_SALT };
+  // Barris de Girona (llista fixa) + Altres poblacions (qualsevol barri no reconegut)
+  const altresBarris = Array.from(new Set(
+    allActivitats.map(a => a.barri?.trim()).filter((b): b is string => !!b && !BARRIS_GIRONA_SET.has(b))
+  )).sort();
+  const barris = { girona: BARRIS_GIRONA, altres: altresBarris };
 
   // Bind the ID to the server action so the form can just call it
   const boundUpdateAction = updateActivitatAction.bind(null, id);
