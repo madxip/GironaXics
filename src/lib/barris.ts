@@ -10,6 +10,7 @@ export const BARRIS_GIRONA: string[] = [
   "Barri Vell",
   "Centre",
   "Devesa",
+  "Domeny - Fontajau",
   "Eixample",
   "Fontajau",
   "Germans Sàbat",
@@ -23,6 +24,7 @@ export const BARRIS_GIRONA: string[] = [
   "Santa Eugènia",
   "Vila-roja i Font de la Pólvora",
   "Vista Alegre - Carme",
+  "Domeny - Fomntajau"
 ];
 
 /** Set per a consultes O(1) — qualsevol barri absent d'aquí és "Altres poblacions" */
