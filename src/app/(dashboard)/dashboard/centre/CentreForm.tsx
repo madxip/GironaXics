@@ -9,7 +9,7 @@ import Toast from "@/components/Toast";
 
 interface CentreFormProps {
   initialData: Centre;
-  barris: { girona: string[]; salt: string[] };
+  barris: { girona: string[]; altres: string[] };
 }
 
 export default function CentreForm({ initialData, barris }: CentreFormProps) {
@@ -267,9 +267,9 @@ export default function CentreForm({ initialData, barris }: CentreFormProps) {
                     <option key={b} value={b}>{b}</option>
                   ))}
                 </optgroup>
-                {barris.salt.length > 0 && (
-                  <optgroup label="Salt">
-                    {barris.salt.map((b) => (
+                {barris.altres.length > 0 && (
+                  <optgroup label="Altres poblacions">
+                    {barris.altres.map((b) => (
                       <option key={b} value={b}>{b}</option>
                     ))}
                   </optgroup>
