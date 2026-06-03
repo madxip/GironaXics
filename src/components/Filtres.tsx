@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Activitat } from '@/lib/types';
 import AccordionCategoria from './AccordionCategoria';
+import { BARRIS_GIRONA_SET } from '@/lib/barris';
 
 const EDAT_GROUPS = [
   'Totes',
@@ -97,15 +98,16 @@ export default function Filtres({ activitats }: { activitats: Activitat[] }) {
 
   const barris = useMemo(() => {
     const gironaSet = new Set<string>();
-    let hasSalt = false;
+    const altresSet = new Set<string>();
     activitats.forEach(a => {
       if (!a.barri) return;
-      if (a.barri.trim() === 'Salt') hasSalt = true;
-      else gironaSet.add(a.barri.trim());
+      const b = a.barri.trim();
+      if (BARRIS_GIRONA_SET.has(b)) gironaSet.add(b);
+      else altresSet.add(b);
     });
     return {
       girona: Array.from(gironaSet).sort(),
-      salt: hasSalt ? ['Salt'] : []
+      altres: Array.from(altresSet).sort()
     };
   }, [activitats]);
 
@@ -192,9 +194,9 @@ export default function Filtres({ activitats }: { activitats: Activitat[] }) {
                         <optgroup label="Barris de Girona">
                           {barris.girona.map(b => <option key={b} value={b}>{b}</option>)}
                         </optgroup>
-                        {barris.salt.length > 0 && (
-                          <optgroup label="Salt">
-                            {barris.salt.map(b => <option key={b} value={b}>{b}</option>)}
+                        {barris.altres.length > 0 && (
+                          <optgroup label="Altres poblacions">
+                            {barris.altres.map(b => <option key={b} value={b}>{b}</option>)}
                           </optgroup>
                         )}
                     </select>
