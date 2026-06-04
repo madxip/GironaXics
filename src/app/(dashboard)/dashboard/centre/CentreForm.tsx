@@ -110,7 +110,7 @@ export default function CentreForm({ initialData, barris }: CentreFormProps) {
 
     const formData = new FormData();
     formData.append("nom", nom);
-    formData.append("centreId", initialData.id);
+    formData.append("centreId", initialData.id ?? "");
     formData.append("barri", barri);
     formData.append("adreca", adreca);
     formData.append("telefon", telefon);
