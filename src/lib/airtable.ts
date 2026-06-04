@@ -818,38 +818,65 @@ export async function updateCentre(id: string, data: Partial<Omit<Centre, 'id' |
 
 export async function getSponsors(): Promise<Sponsor[]> {
   if (!API_KEY || !BASE_ID) return [];
-  
+
   try {
     const records = await fetchAllRecords('Sponsors', '{actiu}=TRUE()');
     return records.map((r: { id: string; fields: Record<string, unknown> }) => {
-      // Logo / imatge del patrocinador
+      const f = r.fields;
+
+      // Logo del patrocinador (camp "imatge")
       let imatgeUrl = '';
-      if (Array.isArray(r.fields.imatge) && r.fields.imatge.length > 0) {
-        imatgeUrl = (r.fields.imatge[0] as { url: string }).url;
-      } else if (Array.isArray(r.fields.Imatge) && r.fields.Imatge.length > 0) {
-        imatgeUrl = (r.fields.Imatge[0] as { url: string }).url;
+      const logoField = f.imatge || f.Imatge;
+      if (Array.isArray(logoField) && logoField.length > 0) {
+        imatgeUrl = (logoField[0] as { url: string }).url;
       }
 
-      // Imatge de fons de la targeta del sponsor
+      // Imatge de fons de la targeta (camp "background")
       let imatgeFonsUrl = '';
-      const fonsField = r.fields.imatge_fons || r.fields.Imatge_fons || r.fields.imatgeFons || r.fields.ImatgeFons;
-      if (Array.isArray(fonsField) && fonsField.length > 0) {
-        imatgeFonsUrl = (fonsField[0] as { url: string }).url;
-      } else if (typeof fonsField === 'string' && fonsField) {
-        imatgeFonsUrl = fonsField;
+      const bgField = f.background || f.Background || f.imatge_fons || f.Imatge_fons;
+      if (Array.isArray(bgField) && bgField.length > 0) {
+        imatgeFonsUrl = (bgField[0] as { url: string }).url;
+      } else if (typeof bgField === 'string' && bgField) {
+        imatgeFonsUrl = bgField;
+      }
+
+      // Categoria: Airtable retorna un camp lookup "categoria (from Activitat enllaçada)"
+      // Cerquem dinàmicament el primer camp que comenci per "categoria"
+      let categoriaSlug = '';
+      const catKey = Object.keys(f).find(k => k.toLowerCase().startsWith('categoria'));
+      if (catKey) {
+        const catVal = f[catKey];
+        let catName = '';
+        if (Array.isArray(catVal) && catVal.length > 0) {
+          catName = String(catVal[0]);
+        } else if (typeof catVal === 'string') {
+          catName = catVal;
+        }
+        if (catName) {
+          categoriaSlug = catName.toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-|-$/g, '');
+        }
+      }
+      // Fallback: camp text directe si existeix
+      if (!categoriaSlug) {
+        categoriaSlug = (f.categoria_slug || f.Categoria_slug || '') as string;
       }
 
       return {
         id: r.id,
-        nom: (r.fields.nom || r.fields.Nom || '') as string,
-        categoriaSlug: (r.fields.categoria_slug || r.fields.Categoria_slug || r.fields.categoriaSlug || '') as string,
+        nom: (f.nom || f.Nom || '') as string,
+        categoriaSlug,
         imatgeUrl,
         imatgeFonsUrl,
-        titol: (r.fields.titol || r.fields.Titol || '') as string,
-        descripcio: (r.fields.descripcio || r.fields.Descripcio || '') as string,
-        enllac: (r.fields.enllac || r.fields.Enllac || '') as string,
-        // Tots els registres retornats ja han passat el filtre {actiu}=TRUE()
-        actiu: !!(r.fields.actiu ?? r.fields.Actiu ?? true),
+        // "slogan" és el títol de la targeta a Airtable
+        titol: (f.slogan || f.Slogan || f.titol || f.Titol || '') as string,
+        descripcio: (f.descripcio || f.Descripcio || '') as string,
+        enllac: (f.enllac || f.Enllac || '') as string,
+        // Tots els registres han passat el filtre {actiu}=TRUE() d'Airtable
+        actiu: true,
       };
     });
   } catch (error) {
@@ -857,6 +884,7 @@ export async function getSponsors(): Promise<Sponsor[]> {
     return [];
   }
 }
+
 
 
 export async function getCasalsBanner(): Promise<CasalsBanner | null> {
