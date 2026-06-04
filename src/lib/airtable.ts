@@ -1,4 +1,4 @@
-import { Activitat, Centre, Sponsor, CasalsBanner } from './types';
+import { Activitat, Centre, Sponsor } from './types';
 import activitatsSeed from '../../seed/activitats-inicials.json';
 import { normalizeSlug } from './utils';
 
@@ -400,7 +400,7 @@ export async function getCentreBySlug(slug: string): Promise<Centre | null> {
   return all.find(c => normalizeSlug(c.slug) === normalizedSearchSlug || (c.nom && normalizeSlug(c.nom) === normalizedSearchSlug)) || null;
 }
 
-export async function getUserByEmail(email: string): Promise<{ id: string; nom: string; email: string; passwordHash: string; centreId: string | null; aprovat: boolean; isAdmin: boolean } | null> {
+export async function getUserByEmail(email: string): Promise<{ id: string; nom: string; email: string; passwordHash: string; centreId: string | null; aprovat: boolean } | null> {
   if (!API_KEY || !BASE_ID) return null;
   try {
     const filter = `LOWER({Email})="${email.toLowerCase().trim()}"`;
@@ -414,7 +414,6 @@ export async function getUserByEmail(email: string): Promise<{ id: string; nom: 
       passwordHash: r.fields.PasswordHash as string,
       centreId: Array.isArray(r.fields.Centre) && r.fields.Centre.length > 0 ? (r.fields.Centre[0] as string) : null,
       aprovat: !!r.fields.Aprovat,
-      isAdmin: !!r.fields.isAdmin,
     };
   } catch (error) {
     console.error("[Airtable API] Error en getUserByEmail:", error);
@@ -636,7 +635,7 @@ export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'cen
         centre: '',
         centreId: data.centreId,
         barri: r.fields.barri as string,
-        categoria: Array.isArray(r.fields.categoria) ? (r.fields.categoria[0] as string) : (r.fields.categoria as string) || '',
+        categoria: r.fields.categoria as string,
         subcategoria: (r.fields.subcategoria || r.fields.Subcategoria) as string,
         edat: r.fields.edat as string,
         preu: r.fields.preu as string,
@@ -817,7 +816,6 @@ export async function updateCentre(id: string, data: Partial<Omit<Centre, 'id' |
 }
 
 export async function getSponsors(): Promise<Sponsor[]> {
-  // Trigger fresh build to load new Airtable sponsors
   if (!API_KEY || !BASE_ID) return [];
   
   try {
@@ -830,89 +828,13 @@ export async function getSponsors(): Promise<Sponsor[]> {
         imatgeUrl = (r.fields.Imatge[0] as { url: string }).url;
       }
       
-      // Busquem el camp de la categoria de forma intel·ligent (suporta text, single-select, i lookups com "Nom (from categoria...)")
-      let rawCategoria = '';
-      
-      // 1. Busquem primer un camp que contingui tant "nom" com "categoria" (típic de Lookups de nom de categoria, ex: "Nom (from categoria...)")
-      const lookupKey = Object.keys(r.fields).find(k => 
-        k.toLowerCase().includes('categoria') && 
-        k.toLowerCase().includes('nom') &&
-        k !== 'nom' && k !== 'Nom'
-      );
-      if (lookupKey) {
-        rawCategoria = r.fields[lookupKey] as string;
-      }
-      
-      // 2. Si no es troba, busquem qualsevol camp que contingui "categoria" (excloent "slug" i que no sigui un ID de registre "rec...")
-      if (!rawCategoria) {
-        const catKeys = Object.keys(r.fields).filter(k => 
-          k.toLowerCase().includes('categoria') && 
-          !k.toLowerCase().includes('slug')
-        );
-        for (const k of catKeys) {
-          const val = r.fields[k];
-          const valStr = Array.isArray(val) ? (val[0] as string) : (val as string);
-          if (valStr && !valStr.startsWith('rec')) {
-            rawCategoria = val as string;
-            break;
-          }
-        }
-      }
-      
-      // 3. Fallbacks de compatibilitat
-      if (!rawCategoria) rawCategoria = (r.fields.categoria || r.fields.Categoria || '') as string;
-      if (!rawCategoria) rawCategoria = (r.fields.categoria_slug || r.fields.Categoria_slug || '') as string;
-
-      const categoriaStr = Array.isArray(rawCategoria) 
-        ? (rawCategoria[0] as string) 
-        : (rawCategoria as string);
-
-      // Busquem el camp de la descripció del patrocinador de forma intel·ligent
-      let descripcio = '';
-      const descKey = Object.keys(r.fields).find(k => 
-        k.toLowerCase().includes('descripcio') || 
-        k.toLowerCase().includes('descripció') || 
-        k.toLowerCase().includes('text') || 
-        k.toLowerCase().includes('slogan') || 
-        k.toLowerCase().includes('tagline')
-      );
-      if (descKey) {
-        descripcio = r.fields[descKey] as string;
-      }
-
-      // Busquem la imatge de fons de forma intel·ligent (columna d'attachments)
-      let imatgeFonsUrl = '';
-      const fonsKey = Object.keys(r.fields).find(k => 
-        k.toLowerCase().includes('fons') || 
-        k.toLowerCase().includes('fond') || 
-        k.toLowerCase().includes('background')
-      );
-      if (fonsKey && Array.isArray(r.fields[fonsKey]) && (r.fields[fonsKey] as unknown[]).length > 0) {
-        imatgeFonsUrl = ((r.fields[fonsKey] as unknown[])[0] as { url: string }).url;
-      }
-
-      // Busquem un titular o títol personalitzat per al banner
-      let titol = '';
-      const titolKey = Object.keys(r.fields).find(k => 
-        k.toLowerCase().includes('titol') || 
-        k.toLowerCase().includes('títol') || 
-        k.toLowerCase().includes('headline') || 
-        k.toLowerCase().includes('titular')
-      );
-      if (titolKey) {
-        titol = r.fields[titolKey] as string;
-      }
-
       return {
         id: r.id,
         nom: (r.fields.nom || r.fields.Nom || '') as string,
-        categoriaSlug: normalizeSlug(categoriaStr),
+        categoriaSlug: (r.fields.categoria_slug || r.fields.Categoria_slug || '') as string,
         imatgeUrl,
         enllac: (r.fields.enllac || r.fields.Enllac || '') as string,
-        actiu: !!r.fields.actiu,
-        descripcio: descripcio || '',
-        imatgeFonsUrl,
-        titol
+        actiu: !!r.fields.actiu
       };
     });
   } catch (error) {
@@ -920,56 +842,3 @@ export async function getSponsors(): Promise<Sponsor[]> {
     return [];
   }
 }
-
-export async function getCasalsBanner(): Promise<CasalsBanner | null> {
-  try {
-    const records = await fetchAllRecords('Casals', '{actiu}=TRUE()');
-    if (!records || records.length === 0) return null;
-
-    // Get today's local date in YYYY-MM-DD format
-    const todayStr = new Date().toLocaleDateString('sv-SE');
-
-    for (const r of records) {
-      const f = r.fields;
-      
-      // Look for a deadline/limit date column dynamically
-      const limitKey = Object.keys(f).find(k => 
-        k.toLowerCase().includes('limit') || 
-        k.toLowerCase().includes('límit') || 
-        k.toLowerCase().includes('deadline')
-      );
-      
-      const rawLimit = limitKey ? f[limitKey] : undefined;
-      
-      if (rawLimit && typeof rawLimit === 'string') {
-        const limitStr = rawLimit.split('T')[0];
-        if (limitStr && todayStr > limitStr) {
-          // Exceeded deadline, hide it automatically
-          continue;
-        }
-      }
-      
-      // Map banner details dynamically with robust fallbacks
-      const kicker = (f.kicker || f.Kicker || '') as string;
-      const titol = (f.titol || f.Titol || f.Headline || '') as string;
-      const subtitol = (f.subtitol || f.Subtitol || f.descripcio || f.Descripcio || '') as string;
-      const dates = (f.dates || f.Dates || '') as string;
-      const dataLimit = typeof rawLimit === 'string' ? rawLimit : '';
-
-      return {
-        id: r.id,
-        nom: (f.nom || f.Nom || '') as string,
-        actiu: true,
-        kicker,
-        titol,
-        subtitol,
-        dates,
-        dataLimit
-      };
-    }
-  } catch (error) {
-    console.error("[Airtable API] Error en getCasalsBanner:", error);
-  }
-  return null;
-}
-
