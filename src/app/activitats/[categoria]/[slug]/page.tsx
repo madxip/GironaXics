@@ -6,6 +6,7 @@ import Link from 'next/link';
 import SafeImage from '@/components/SafeImage';
 import { getActivitatBySlug, getActivitats, getCentres } from '@/lib/airtable';
 import { normalizeSlug, safeJsonLd, formatPreu } from '@/lib/utils';
+import { isTallerExpiredOrEnded } from '@/lib/tallerDates';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import ActivitatCard from '@/components/ActivitatCard';
@@ -88,6 +89,7 @@ const TXT_SENSE_CONTACTE = 'Contacteu amb el centre per més informació.';
 const TXT_WEB_CENTRE = 'Visita la web del centre ↗';
 const TXT_SENSE_CONTACTE_DADES = 'Sense dades de contacte';
 const TXT_MES_ACTIVITATS_A = 'Més activitats a ';
+const TXT_MES_TALLERS_A = 'Més tallers a ';
 const TXT_ALTRES_ACTIVITATS_A = 'Altres activitats a ';
 
 function parseMarkdownToReact(text: string) {
@@ -156,11 +158,38 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
   const contactTelefon = centre?.telefon ?? null;
   const safeWeb = (centre?.web && /^https?:\/\//i.test(centre.web)) ? centre.web : null;
 
-  const totesBarri = activitats.filter(a => normalizeSlug(a.barri) === normalizeSlug(activitat.barri));
-  const altresBarri = totesBarri.filter(a => a.slug !== activitat.slug).slice(0, 3);
+  const isTaller = activitat.tipus?.toLowerCase().includes('taller');
 
-  const totesCentre = activitats.filter(a => normalizeSlug(a.centre) === normalizeSlug(activitat.centre));
-  const altresCentre = totesCentre.filter(a => a.slug !== activitat.slug);
+  // ── Secció CENTRE ──────────────────────────────────────────────────────────
+  // Totes les activitats del centre excepte la pròpia (exclou tallers expirats)
+  const totesCentre = activitats.filter(a =>
+    a.slug !== activitat.slug &&
+    normalizeSlug(a.centre) === normalizeSlug(activitat.centre) &&
+    !(a.tipus?.toLowerCase().includes('taller') && isTallerExpiredOrEnded(a.dies || ''))
+  );
+  // Si veiem un taller: mostra primer els altres tallers del centre
+  const tallersCentre = totesCentre.filter(a => a.tipus?.toLowerCase().includes('taller'));
+  const altresCentre = isTaller
+    ? (tallersCentre.length > 0 ? tallersCentre : totesCentre)
+    : totesCentre;
+
+  // ── Secció BARRI ───────────────────────────────────────────────────────────
+  // Totes les activitats del barri excepte la pròpia (exclou tallers expirats)
+  const totesBarri = activitats.filter(a =>
+    a.slug !== activitat.slug &&
+    normalizeSlug(a.barri) === normalizeSlug(activitat.barri) &&
+    !(a.tipus?.toLowerCase().includes('taller') && isTallerExpiredOrEnded(a.dies || ''))
+  );
+  const tallersBarri = totesBarri.filter(a => a.tipus?.toLowerCase().includes('taller'));
+  // Tallers: prefereix altres tallers del barri (max 6), fallback a totes
+  // Altres: max 3 com fins ara
+  const altresBarri = isTaller
+    ? (tallersBarri.length > 0 ? tallersBarri.slice(0, 6) : totesBarri.slice(0, 6))
+    : totesBarri.slice(0, 3);
+  // Títol dinàmic per a la secció de barri
+  const titolBarri = isTaller
+    ? (tallersBarri.length > 0 ? TXT_MES_TALLERS_A : TXT_ALTRES_ACTIVITATS_A)
+    : TXT_ALTRES_ACTIVITATS_A;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -346,7 +375,7 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
           {altresBarri.length > 0 && (
             <div style={{ borderTop: '1px solid var(--crema-fosca)', paddingTop: '60px' }}>
               <h2 style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: '32px', color: 'var(--verd-fosc)', marginBottom: '32px' }}>
-                {TXT_ALTRES_ACTIVITATS_A}{activitat.barri}
+                {titolBarri}{activitat.barri}
               </h2>
               <div className="modal-related-grid">
                 {altresBarri.map(a => (
