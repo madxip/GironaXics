@@ -1,4 +1,4 @@
-import { Activitat, Centre, Sponsor } from './types';
+import { Activitat, Centre, Sponsor, CasalsBanner } from './types';
 import activitatsSeed from '../../seed/activitats-inicials.json';
 import { normalizeSlug } from './utils';
 
