@@ -7,7 +7,7 @@ import AccordionCategoria from './AccordionCategoria';
 import { normalizeSlug } from '@/lib/utils';
 import { trackEvent } from '@/lib/trackEvent';
 import { BARRIS_GIRONA_SET } from '@/lib/barris';
-import { isTallerExpired, parseTallerDates, getNextUpcomingTallerDate } from '@/lib/tallerDates';
+import { isTallerExpiredOrEnded, getNextTallerDate } from '@/lib/tallerDates';
 
 const renderBannerTitle = (title: string) => {
   if (!title) return null;
@@ -299,23 +299,22 @@ export default function Filtres({
       return matchTipus && matchCat && matchSubcat && matchEdat && matchBarri;
     });
     const filtered = result.filter(a => {
-      // Amaga tallers expirats (totes les dates han passat)
+      // Amaga tallers expirats (puntuals acabats o recurrents fora de dates)
       const isTaller = a.tipus?.toLowerCase().includes('taller');
-      if (isTaller && isTallerExpired(a.dies || '')) return false;
+      if (isTaller && isTallerExpiredOrEnded(a.dies || '')) return false;
       return true;
     });
 
-    // Ordena: tallers per propera data, la resta per centreInteressat primer
+    // Ordena: tallers per propera data (puntual) o data d'inici (recurrent)
+    // La resta: centres interessats primer
     return filtered.sort((a, b) => {
       const aIsTaller = a.tipus?.toLowerCase().includes('taller');
       const bIsTaller = b.tipus?.toLowerCase().includes('taller');
 
       if (aIsTaller && bIsTaller) {
-        const aDates = parseTallerDates(a.dies || '');
-        const bDates = parseTallerDates(b.dies || '');
-        const aNext = getNextUpcomingTallerDate(aDates);
-        const bNext = getNextUpcomingTallerDate(bDates);
-        // Recurrents (sense data) van al final
+        const aNext = getNextTallerDate(a.dies || '');
+        const bNext = getNextTallerDate(b.dies || '');
+        // Sense data (recurrent sense inici) → al final
         if (!aNext && !bNext) return 0;
         if (!aNext) return 1;
         if (!bNext) return -1;

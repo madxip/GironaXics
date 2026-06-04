@@ -114,6 +114,45 @@ const parseDateRange = (text: string): { start: string; end: string } => {
   return { start: "", end: "" };
 };
 
+/**
+ * Parseja les dates d'inici i fi del camp `dies` d'un taller recurrent.
+ * Format: "Cada dimarts. Del 3 de setembre de 2025 al 20 de juny de 2026"
+ * o: "Cada dimarts. A partir del 3 de setembre de 2026"
+ */
+const parseRecurrentRange = (dies: string): { start: string; end: string } => {
+  if (!dies || !dies.toLowerCase().startsWith('cada')) return { start: '', end: '' };
+  const dotIdx = dies.indexOf('. ');
+  if (dotIdx === -1) return { start: '', end: '' };
+  const rangePart = dies.substring(dotIdx + 2);
+  const MONTHS_R = ["gener","febrer","mar\u00e7","abril","maig","juny","juliol","agost","setembre","octubre","novembre","desembre"];
+  const lower = rangePart.toLowerCase();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const allYears = [...rangePart.matchAll(/\b(20\d{2})\b/g)].map(m => parseInt(m[1]));
+  const alIdx = lower.indexOf(' al ');
+  if (alIdx === -1) {
+    const year = allYears[0] || new Date().getFullYear();
+    let mIdx = -1;
+    for (let i = 0; i < MONTHS_R.length; i++) { if (lower.includes(MONTHS_R[i])) { mIdx = i; break; } }
+    const dayM = lower.match(/\b(\d{1,2})\b/);
+    if (mIdx !== -1 && dayM) return { start: `${year}-${pad(mIdx + 1)}-${pad(parseInt(dayM[1]))}`, end: '' };
+    return { start: '', end: '' };
+  }
+  const startPart = lower.substring(0, alIdx);
+  const endPart = lower.substring(alIdx + 4);
+  let startMIdx = -1; for (let i = 0; i < MONTHS_R.length; i++) { if (startPart.includes(MONTHS_R[i])) { startMIdx = i; break; } }
+  let endMIdx = -1;   for (let i = 0; i < MONTHS_R.length; i++) { if (endPart.includes(MONTHS_R[i]))   { endMIdx = i; break; } }
+  const startDayM = startPart.match(/\b(\d{1,2})\b/);
+  const endDayM   = endPart.match(/\b(\d{1,2})\b/);
+  const startYearM = startPart.match(/\b(20\d{2})\b/);
+  const endYearM   = endPart.match(/\b(20\d{2})\b/);
+  const startYear = startYearM ? parseInt(startYearM[1]) : (allYears[0] || new Date().getFullYear());
+  const endYear   = endYearM   ? parseInt(endYearM[1])   : (allYears[allYears.length - 1] || new Date().getFullYear());
+  return {
+    start: (startMIdx !== -1 && startDayM) ? `${startYear}-${pad(startMIdx + 1)}-${pad(parseInt(startDayM[1]))}` : '',
+    end:   (endMIdx !== -1   && endDayM)   ? `${endYear}-${pad(endMIdx + 1)}-${pad(parseInt(endDayM[1]))}` : ''
+  };
+};
+
 const parseSingleDate = (text: string): string => {
   if (!text) return "";
   const match = text.match(/(\d{2})\/(\d{2})\/(\d{4})/);
@@ -432,6 +471,14 @@ export default function ActivityForm({
     return [];
   });
 
+  // Dates d'inici i fi per al mode recurrent
+  const [recurrentStart, setRecurrentStart] = useState(() =>
+    isRecurringTaller ? parseRecurrentRange(initialData?.dies || '').start : ''
+  );
+  const [recurrentEnd, setRecurrentEnd] = useState(() =>
+    isRecurringTaller ? parseRecurrentRange(initialData?.dies || '').end : ''
+  );
+
   // --- FORMATTERS ---
   const joinWeekdays = (days: string[]) => {
     const order = ["Dilluns", "Dimarts", "Dimecres", "Dijous", "Divendres", "Dissabte", "Diumenge"];
@@ -444,22 +491,22 @@ export default function ActivityForm({
 
   const formatDateRange = (startStr: string, endStr: string) => {
     if (!startStr) return "";
-    const start = new Date(startStr);
-    const months = ["gener", "febrer", "març", "abril", "maig", "juny", "juliol", "agost", "setembre", "octubre", "novembre", "desembre"];
-    
+    const start = new Date(startStr + 'T00:00:00');
+    const months = ["gener", "febrer", "mar\u00e7", "abril", "maig", "juny", "juliol", "agost", "setembre", "octubre", "novembre", "desembre"];
     const startDay = start.getDate();
     const startMonth = months[start.getMonth()];
     const startYear = start.getFullYear();
-
     if (!endStr) {
       return `A partir del ${startDay} de ${startMonth} de ${startYear}`;
     }
-    
-    const end = new Date(endStr);
+    const end = new Date(endStr + 'T00:00:00');
     const endDay = end.getDate();
     const endMonth = months[end.getMonth()];
     const endYear = end.getFullYear();
-    
+    // Cross-year: show both years explicitly
+    if (startYear !== endYear) {
+      return `Del ${startDay} de ${startMonth} de ${startYear} al ${endDay} de ${endMonth} de ${endYear}`;
+    }
     if (startMonth === endMonth) {
       return `Del ${startDay} al ${endDay} de ${startMonth} de ${endYear}`;
     }
@@ -484,6 +531,14 @@ export default function ActivityForm({
     const joined = joinWeekdays(days);
     if (!joined) return "";
     return `Cada ${joined.toLowerCase()}`;
+  };
+
+  // Construeix el text complet del camp `dies` per a tallers recurrents
+  const buildRecurrentDies = (weekdays: string[], start: string, end: string) => {
+    const weekdayText = formatRecurringTaller(weekdays);
+    if (!weekdayText) return weekdayText;
+    const rangeText = formatDateRange(start, end);
+    return rangeText ? `${weekdayText}. ${rangeText}` : weekdayText;
   };
   const [descripcio, setDescripcio] = useState(initialData?.descripcio || "");
   const [durada, setDurada] = useState(initialData?.durada || "");
@@ -1202,7 +1257,7 @@ export default function ActivityForm({
                         type="button"
                         onClick={() => {
                           setTallerMode("recurrent");
-                          const formatted = formatRecurringTaller(selectedTallerWeekdays);
+                          const formatted = buildRecurrentDies(selectedTallerWeekdays, recurrentStart, recurrentEnd);
                           setDies(formatted);
                         }}
                         style={{
@@ -1270,7 +1325,7 @@ export default function ActivityForm({
                                     newDays = [...selectedTallerWeekdays, day];
                                   }
                                   setSelectedTallerWeekdays(newDays);
-                                  const formatted = formatRecurringTaller(newDays);
+                                  const formatted = buildRecurrentDies(newDays, recurrentStart, recurrentEnd);
                                   setDies(formatted);
                                   if (formatted.trim()) {
                                     setValidationErrors(prev => ({ ...prev, dies: false }));
@@ -1293,6 +1348,39 @@ export default function ActivityForm({
                               </button>
                             );
                           })}
+                        </div>
+
+                        {/* Dates d'inici i fi opcionals per al taller recurrent */}
+                        <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>
+                            Dates del taller (opcional). Si les poses, el taller s'ordenarà per data d'inici i desapareixerà automàticament en acabar.
+                          </p>
+                          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                              <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--muted)' }}>DATA D'INICI (opcional)</span>
+                              <input
+                                type="date"
+                                value={recurrentStart}
+                                onChange={(e) => {
+                                  setRecurrentStart(e.target.value);
+                                  setDies(buildRecurrentDies(selectedTallerWeekdays, e.target.value, recurrentEnd));
+                                }}
+                                style={{ padding: '10px 12px', border: '1px solid rgba(26, 107, 58, 0.2)', borderRadius: '8px', fontSize: '14px', color: 'var(--fosc)', outline: 'none' }}
+                              />
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                              <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--muted)' }}>DATA DE FI (opcional)</span>
+                              <input
+                                type="date"
+                                value={recurrentEnd}
+                                onChange={(e) => {
+                                  setRecurrentEnd(e.target.value);
+                                  setDies(buildRecurrentDies(selectedTallerWeekdays, recurrentStart, e.target.value));
+                                }}
+                                style={{ padding: '10px 12px', border: '1px solid rgba(26, 107, 58, 0.2)', borderRadius: '8px', fontSize: '14px', color: 'var(--fosc)', outline: 'none' }}
+                              />
+                            </div>
+                          </div>
                         </div>
                       </div>
                     )}

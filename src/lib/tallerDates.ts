@@ -8,24 +8,27 @@ const CATALAN_MONTHS = [
   "juliol", "agost", "setembre", "octubre", "novembre", "desembre"
 ];
 
+// ─── TALLERS PUNTUALS ────────────────────────────────────────────────────────
+
 /**
- * Parseja totes les dates d'un text en català del camp `dies`.
- * Exemples d'entrada:
- *  - "Dissabte, 20 de juny de 2026"           → [Date(2026-06-20)]
- *  - "20, 21 i 22 de juny de 2026"            → [Date(2026-06-20), Date(2026-06-21), Date(2026-06-22)]
- *  - "20 de juny de 2026 i 5 de juliol de 2026" → [Date(2026-06-20), Date(2026-07-05)]
- *  - "Cada dimarts"                            → [] (recurrent, sense dates fixes)
+ * Parseja totes les dates d'un text en català del camp `dies` (tallers puntuals).
+ * Exemples:
+ *  - "Dissabte, 20 de juny de 2026"              → [Date(2026-06-20)]
+ *  - "20, 21 i 22 de juny de 2026"               → [Date(2026-06-20), …]
+ *  - "20 de juny de 2026 i 5 de juliol de 2026"  → [Date(2026-06-20), Date(2026-07-05)]
+ *  - "Cada dimarts"                               → [] (recurrent, sense dates fixes)
  */
 export function parseTallerDates(dies: string): Date[] {
   if (!dies) return [];
   const lower = dies.toLowerCase();
 
-  // Si no hi ha cap nom de mes → és un patró recurrent (sense dates concretes)
+  // Tallers recurrents no tenen dates concretes al primer tros
+  if (lower.startsWith("cada")) return [];
+
+  // Si no hi ha cap nom de mes → és un patró sense dates fixes
   if (!CATALAN_MONTHS.some(m => lower.includes(m))) return [];
 
   const results: Date[] = [];
-
-  // Treballem sobre còpies que anem truncant a mesura que consumim mesos
   let remaining = lower;
 
   for (let mi = 0; mi < CATALAN_MONTHS.length; mi++) {
@@ -36,7 +39,6 @@ export function parseTallerDates(dies: string): Date[] {
     // Any: busquem el primer any de 4 dígits que aparegui DESPRÉS del mes
     const afterMonth = remaining.substring(pos + monthName.length);
     const yearAfterMatch = afterMonth.match(/\b(20\d{2})\b/);
-    // Si no n'hi ha al darrere, usem el que hi hagi a la cadena original
     const yearFallbackMatch = lower.match(/\b(20\d{2})\b/);
     const year = yearAfterMatch
       ? parseInt(yearAfterMatch[1])
@@ -64,8 +66,8 @@ export function parseTallerDates(dies: string): Date[] {
 }
 
 /**
- * Retorna la propera data vigent (avui o futura) d'entre totes les dates
- * del taller. Retorna null si totes han passat.
+ * Retorna la propera data vigent (avui o futura) d'entre totes les dates.
+ * Retorna null si totes han passat.
  */
 export function getNextUpcomingTallerDate(dates: Date[]): Date | null {
   if (dates.length === 0) return null;
@@ -78,12 +80,112 @@ export function getNextUpcomingTallerDate(dates: Date[]): Date | null {
 }
 
 /**
- * Retorna true si el taller té dates concretes i totes han passat
- * (l'activitat s'ha d'amagar del llistat).
+ * Retorna true si el taller puntual té dates i totes han passat.
  */
 export function isTallerExpired(dies: string): boolean {
   const dates = parseTallerDates(dies);
-  // Si no té dates concretes (recurrent), no s'amaga mai
   if (dates.length === 0) return false;
   return getNextUpcomingTallerDate(dates) === null;
+}
+
+// ─── TALLERS RECURRENTS ──────────────────────────────────────────────────────
+
+/**
+ * Parseja les dates d'inici i fi del camp `dies` d'un taller recurrent.
+ * Format esperat: "Cada dimarts. Del 3 de setembre de 2025 al 20 de juny de 2026"
+ * o: "Cada dimarts. A partir del 3 de setembre de 2026"
+ * Retorna { start: Date | null, end: Date | null }
+ */
+export function parseTallerRecurrentRange(dies: string): { start: Date | null; end: Date | null } {
+  if (!dies || !dies.toLowerCase().startsWith("cada")) return { start: null, end: null };
+
+  const dotIdx = dies.indexOf(". ");
+  if (dotIdx === -1) return { start: null, end: null };
+
+  const rangePart = dies.substring(dotIdx + 2);
+  const lower = rangePart.toLowerCase();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const allYears = [...rangePart.matchAll(/\b(20\d{2})\b/g)].map(m => parseInt(m[1]));
+  const alIdx = lower.indexOf(" al ");
+
+  if (alIdx === -1) {
+    // "A partir del X de MES de YYYY"
+    const year = allYears[0] || new Date().getFullYear();
+    let mIdx = -1;
+    for (let i = 0; i < CATALAN_MONTHS.length; i++) {
+      if (lower.includes(CATALAN_MONTHS[i])) { mIdx = i; break; }
+    }
+    const dayM = lower.match(/\b(\d{1,2})\b/);
+    if (mIdx !== -1 && dayM) {
+      const d = new Date(year, mIdx, parseInt(dayM[1]));
+      return { start: isNaN(d.getTime()) ? null : d, end: null };
+    }
+    return { start: null, end: null };
+  }
+
+  const startPart = lower.substring(0, alIdx);
+  const endPart   = lower.substring(alIdx + 4);
+
+  let startMIdx = -1;
+  for (let i = 0; i < CATALAN_MONTHS.length; i++) {
+    if (startPart.includes(CATALAN_MONTHS[i])) { startMIdx = i; break; }
+  }
+  let endMIdx = -1;
+  for (let i = 0; i < CATALAN_MONTHS.length; i++) {
+    if (endPart.includes(CATALAN_MONTHS[i])) { endMIdx = i; break; }
+  }
+
+  const startDayM  = startPart.match(/\b(\d{1,2})\b/);
+  const endDayM    = endPart.match(/\b(\d{1,2})\b/);
+  const startYearM = startPart.match(/\b(20\d{2})\b/);
+  const endYearM   = endPart.match(/\b(20\d{2})\b/);
+  const startYear  = startYearM ? parseInt(startYearM[1]) : (allYears[0] || new Date().getFullYear());
+  const endYear    = endYearM   ? parseInt(endYearM[1])   : (allYears[allYears.length - 1] || new Date().getFullYear());
+
+  const start = (startMIdx !== -1 && startDayM)
+    ? new Date(startYear, startMIdx, parseInt(startDayM[1])) : null;
+  const end   = (endMIdx   !== -1 && endDayM)
+    ? new Date(endYear,   endMIdx,   parseInt(endDayM[1]))   : null;
+
+  return {
+    start: start && !isNaN(start.getTime()) ? start : null,
+    end:   end   && !isNaN(end.getTime())   ? end   : null,
+  };
+}
+
+/**
+ * Retorna true si el taller recurrent té una data de fi que ja ha passat.
+ */
+export function isRecurrentTallerExpired(dies: string): boolean {
+  const { end } = parseTallerRecurrentRange(dies);
+  if (!end) return false; // Sense data de fi → no expira mai
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return end < today;
+}
+
+// ─── FUNCIONS UNIFICADES (puntual + recurrent) ───────────────────────────────
+
+/**
+ * Retorna la propera data rellevant de qualsevol tipus de taller:
+ * - Puntual:   la pròxima data vigent
+ * - Recurrent: la data d'inici configurada (o null si no n'hi ha)
+ */
+export function getNextTallerDate(dies: string): Date | null {
+  if (!dies) return null;
+  if (dies.toLowerCase().startsWith("cada")) {
+    return parseTallerRecurrentRange(dies).start;
+  }
+  return getNextUpcomingTallerDate(parseTallerDates(dies));
+}
+
+/**
+ * Retorna true si el taller (puntual o recurrent) s'ha acabat i s'ha d'amagar.
+ */
+export function isTallerExpiredOrEnded(dies: string): boolean {
+  if (!dies) return false;
+  if (dies.toLowerCase().startsWith("cada")) {
+    return isRecurrentTallerExpired(dies);
+  }
+  return isTallerExpired(dies);
 }
