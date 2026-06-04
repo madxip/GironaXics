@@ -765,7 +765,7 @@ export default function Filtres({
                         .sponsor-premium-title {
                           font-family: var(--font-serif);
                           font-style: italic;
-                          font-size: 32px;
+                          font-size: 24px;
                           font-weight: 700;
                           color: white;
                           margin: 0;
@@ -775,7 +775,7 @@ export default function Filtres({
                         
                         .sponsor-premium-desc {
                           font-family: var(--font-sans);
-                          font-size: 13px;
+                          font-size: 12px;
                           color: rgba(255, 255, 255, 0.85);
                           line-height: 1.5;
                           margin: 0;
