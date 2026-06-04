@@ -400,7 +400,7 @@ export async function getCentreBySlug(slug: string): Promise<Centre | null> {
   return all.find(c => normalizeSlug(c.slug) === normalizedSearchSlug || (c.nom && normalizeSlug(c.nom) === normalizedSearchSlug)) || null;
 }
 
-export async function getUserByEmail(email: string): Promise<{ id: string; nom: string; email: string; passwordHash: string; centreId: string | null; aprovat: boolean } | null> {
+export async function getUserByEmail(email: string): Promise<{ id: string; nom: string; email: string; passwordHash: string; centreId: string | null; aprovat: boolean; isAdmin: boolean } | null> {
   if (!API_KEY || !BASE_ID) return null;
   try {
     const filter = `LOWER({Email})="${email.toLowerCase().trim()}"`;
@@ -414,6 +414,7 @@ export async function getUserByEmail(email: string): Promise<{ id: string; nom: 
       passwordHash: r.fields.PasswordHash as string,
       centreId: Array.isArray(r.fields.Centre) && r.fields.Centre.length > 0 ? (r.fields.Centre[0] as string) : null,
       aprovat: !!r.fields.Aprovat,
+      isAdmin: !!r.fields.isAdmin || !!r.fields.Admin || !!r.fields.admin,
     };
   } catch (error) {
     console.error("[Airtable API] Error en getUserByEmail:", error);
