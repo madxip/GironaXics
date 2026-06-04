@@ -343,7 +343,10 @@ export default function ActivityForm({
   const [priceVal, setPriceVal] = useState(initialPriceState.val);
   const [priceUnit, setPriceUnit] = useState(initialPriceState.unit);
   const [customPrice, setCustomPrice] = useState(initialPriceState.custom);
-  const [tipus, setTipus] = useState(initialData?.tipus || "Extraescolar");
+  const TIPUS_VALIDS = ["Extraescolar", "Casal", "Taller / Oci"];
+  const [tipus, setTipus] = useState(
+    TIPUS_VALIDS.includes(initialData?.tipus || "") ? (initialData?.tipus || "Extraescolar") : "Extraescolar"
+  );
   const [horari, setHorari] = useState(initialData?.horari || "");
   const [dies, setDies] = useState(initialData?.dies || "");
 
