@@ -822,20 +822,34 @@ export async function getSponsors(): Promise<Sponsor[]> {
   try {
     const records = await fetchAllRecords('Sponsors', '{actiu}=TRUE()');
     return records.map((r: { id: string; fields: Record<string, unknown> }) => {
+      // Logo / imatge del patrocinador
       let imatgeUrl = '';
       if (Array.isArray(r.fields.imatge) && r.fields.imatge.length > 0) {
         imatgeUrl = (r.fields.imatge[0] as { url: string }).url;
       } else if (Array.isArray(r.fields.Imatge) && r.fields.Imatge.length > 0) {
         imatgeUrl = (r.fields.Imatge[0] as { url: string }).url;
       }
-      
+
+      // Imatge de fons de la targeta del sponsor
+      let imatgeFonsUrl = '';
+      const fonsField = r.fields.imatge_fons || r.fields.Imatge_fons || r.fields.imatgeFons || r.fields.ImatgeFons;
+      if (Array.isArray(fonsField) && fonsField.length > 0) {
+        imatgeFonsUrl = (fonsField[0] as { url: string }).url;
+      } else if (typeof fonsField === 'string' && fonsField) {
+        imatgeFonsUrl = fonsField;
+      }
+
       return {
         id: r.id,
         nom: (r.fields.nom || r.fields.Nom || '') as string,
-        categoriaSlug: (r.fields.categoria_slug || r.fields.Categoria_slug || '') as string,
+        categoriaSlug: (r.fields.categoria_slug || r.fields.Categoria_slug || r.fields.categoriaSlug || '') as string,
         imatgeUrl,
+        imatgeFonsUrl,
+        titol: (r.fields.titol || r.fields.Titol || '') as string,
+        descripcio: (r.fields.descripcio || r.fields.Descripcio || '') as string,
         enllac: (r.fields.enllac || r.fields.Enllac || '') as string,
-        actiu: !!r.fields.actiu
+        // Tots els registres retornats ja han passat el filtre {actiu}=TRUE()
+        actiu: !!(r.fields.actiu ?? r.fields.Actiu ?? true),
       };
     });
   } catch (error) {
@@ -843,6 +857,7 @@ export async function getSponsors(): Promise<Sponsor[]> {
     return [];
   }
 }
+
 
 export async function getCasalsBanner(): Promise<CasalsBanner | null> {
   try {
