@@ -842,3 +842,55 @@ export async function getSponsors(): Promise<Sponsor[]> {
     return [];
   }
 }
+
+export async function getCasalsBanner(): Promise<CasalsBanner | null> {
+  try {
+    const records = await fetchAllRecords('Casals', '{actiu}=TRUE()');
+    if (!records || records.length === 0) return null;
+
+    // Get today's local date in YYYY-MM-DD format
+    const todayStr = new Date().toLocaleDateString('sv-SE');
+
+    for (const r of records) {
+      const f = r.fields;
+      
+      // Look for a deadline/limit date column dynamically
+      const limitKey = Object.keys(f).find(k => 
+        k.toLowerCase().includes('limit') || 
+        k.toLowerCase().includes('límit') || 
+        k.toLowerCase().includes('deadline')
+      );
+      
+      const rawLimit = limitKey ? f[limitKey] : undefined;
+      
+      if (rawLimit && typeof rawLimit === 'string') {
+        const limitStr = rawLimit.split('T')[0];
+        if (limitStr && todayStr > limitStr) {
+          // Exceeded deadline, hide it automatically
+          continue;
+        }
+      }
+      
+      // Map banner details dynamically with robust fallbacks
+      const kicker = (f.kicker || f.Kicker || '') as string;
+      const titol = (f.titol || f.Titol || f.Headline || '') as string;
+      const subtitol = (f.subtitol || f.Subtitol || f.descripcio || f.Descripcio || '') as string;
+      const dates = (f.dates || f.Dates || '') as string;
+      const dataLimit = typeof rawLimit === 'string' ? rawLimit : '';
+
+      return {
+        id: r.id,
+        nom: (f.nom || f.Nom || '') as string,
+        actiu: true,
+        kicker,
+        titol,
+        subtitol,
+        dates,
+        dataLimit
+      };
+    }
+  } catch (error) {
+    console.error("[Airtable API] Error en getCasalsBanner:", error);
+  }
+  return null;
+}
