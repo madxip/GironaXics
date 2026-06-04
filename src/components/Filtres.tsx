@@ -194,6 +194,17 @@ export default function Filtres({
     }
     router.replace(`?${params.toString()}`, { scroll: false });
 
+    // Scroll automàtic cap als resultats quan canvia qualsevol filtre
+    // (evita que l'usuari es quedi abaix de la pàgina quan els resultats es redueixen)
+    setTimeout(() => {
+      const el = document.getElementById('results-container');
+      if (el) {
+        const offset = window.innerWidth <= 768 ? 70 : 110;
+        const y = el.getBoundingClientRect().top + window.scrollY - offset;
+        window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+      }
+    }, 50);
+
     // Tracking analytics
     if (value !== 'Totes') {
       if (key === 'categoria')    trackEvent('filter_categoria', value);
@@ -202,6 +213,7 @@ export default function Filtres({
       else if (key === 'tipus')   trackEvent('filter_tipus', value);
     }
   };
+
 
   const scrollToFiltresHeader = () => {
     setTimeout(() => {
