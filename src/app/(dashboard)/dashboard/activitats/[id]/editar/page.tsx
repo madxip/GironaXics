@@ -60,7 +60,7 @@ export default async function EditarActivitatPage({ params }: EditarActivitatPag
     );
   }
 
-  if (activitat.centreId !== session.user.centreId) {
+  if (!session.user.isAdmin && activitat.centreId !== session.user.centreId) {
     return (
       <div style={{
         padding: "40px",
