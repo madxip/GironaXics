@@ -840,19 +840,14 @@ export async function getSponsors(): Promise<Sponsor[]> {
         imatgeFonsUrl = bgField;
       }
 
-      // Categoria: Airtable retorna un camp lookup "categoria (from Activitat enllaçada)"
-      // Cerquem dinàmicament el primer camp que comenci per "categoria"
+      // IMPORTANT: "categoria (from Activitat enllaçada)" retorna IDs de registre, NO noms.
+      // El nom de la categoria és a "Nom (from categoria (from Activitat enllaçada))" → ["Esports"]
       let categoriaSlug = '';
-      const catKey = Object.keys(f).find(k => k.toLowerCase().startsWith('categoria'));
-      if (catKey) {
-        const catVal = f[catKey];
-        let catName = '';
-        if (Array.isArray(catVal) && catVal.length > 0) {
-          catName = String(catVal[0]);
-        } else if (typeof catVal === 'string') {
-          catName = catVal;
-        }
-        if (catName) {
+      const nomCatKey = Object.keys(f).find(k => k.toLowerCase().startsWith('nom (from categor'));
+      if (nomCatKey) {
+        const catVal = f[nomCatKey];
+        if (Array.isArray(catVal) && catVal.length > 0 && typeof catVal[0] === 'string') {
+          const catName = catVal[0];
           categoriaSlug = catName.toLowerCase()
             .normalize('NFD')
             .replace(/[\u0300-\u036f]/g, '')
