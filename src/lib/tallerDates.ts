@@ -104,7 +104,6 @@ export function parseTallerRecurrentRange(dies: string): { start: Date | null; e
 
   const rangePart = dies.substring(dotIdx + 2);
   const lower = rangePart.toLowerCase();
-  const pad = (n: number) => String(n).padStart(2, "0");
   const allYears = [...rangePart.matchAll(/\b(20\d{2})\b/g)].map(m => parseInt(m[1]));
   const alIdx = lower.indexOf(" al ");
 
