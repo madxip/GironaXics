@@ -6,18 +6,26 @@ import { createActivitat, updateActivitat, deleteActivitat, getActivitats } from
 import { revalidatePath } from "next/cache";
 import { normalizeSlug } from "@/lib/utils";
 
-// Helper to check authentication and ownership
-async function getAuthenticatedCentreId() {
+// Helper: retorna centreId i si és admin
+async function getAuthInfo() {
   const session = await getServerSession(authOptions);
-  if (!session || !session.user || !session.user.centreId) {
+  if (!session || !session.user) {
     throw new Error("Sessió no autoritzada.");
   }
-  return session.user.centreId;
+  const isAdmin = !!session.user.isAdmin;
+  if (!isAdmin && !session.user.centreId) {
+    throw new Error("Sessió no autoritzada.");
+  }
+  return { centreId: session.user.centreId || "", isAdmin };
 }
 
 export async function createActivitatAction(prevState: unknown, formData: FormData) {
   try {
-    const centreId = await getAuthenticatedCentreId();
+    const { centreId: sessionCentreId, isAdmin } = await getAuthInfo();
+    // Admin pot especificar el centre via formData; usuari normal usa el seu centreId
+    const centreId = isAdmin
+      ? (formData.get("centreId") as string || sessionCentreId)
+      : sessionCentreId;
     
     const nom = formData.get("nom") as string;
     const barri = formData.get("barri") as string;
@@ -123,15 +131,15 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
 
 export async function updateActivitatAction(id: string, prevState: unknown, formData: FormData) {
   try {
-    const centreId = await getAuthenticatedCentreId();
+    const { centreId, isAdmin } = await getAuthInfo();
 
-    // Ownership check (IDOR/BOLA prevention)
+    // Ownership check (IDOR/BOLA prevention) — admin ho salta
     const activitats = await getActivitats();
     const activitat = activitats.find(a => a.id === id);
     if (!activitat) {
       return { success: false, error: "L'activitat no existeix." };
     }
-    if (activitat.centreId !== centreId) {
+    if (!isAdmin && activitat.centreId !== centreId) {
       return { success: false, error: "No tens permís per modificar aquesta activitat." };
     }
 
@@ -235,15 +243,15 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
 
 export async function deleteActivitatAction(id: string) {
   try {
-    const centreId = await getAuthenticatedCentreId();
+    const { centreId, isAdmin } = await getAuthInfo();
 
-    // Ownership check (IDOR/BOLA prevention)
+    // Ownership check (IDOR/BOLA prevention) — admin ho salta
     const activitats = await getActivitats();
     const activitat = activitats.find(a => a.id === id);
     if (!activitat) {
       return { success: false, error: "L'activitat no existeix o ja ha estat eliminada." };
     }
-    if (activitat.centreId !== centreId) {
+    if (!isAdmin && activitat.centreId !== centreId) {
       return { success: false, error: "No tens permís per eliminar aquesta activitat." };
     }
 
@@ -274,15 +282,15 @@ export async function deleteActivitatAction(id: string) {
 
 export async function togglePublicadaAction(id: string, publicada: boolean) {
   try {
-    const centreId = await getAuthenticatedCentreId();
+    const { centreId, isAdmin } = await getAuthInfo();
 
-    // Ownership check (IDOR/BOLA prevention)
+    // Ownership check (IDOR/BOLA prevention) — admin ho salta
     const activitats = await getActivitats();
     const activitat = activitats.find(a => a.id === id);
     if (!activitat) {
       return { success: false, error: "L'activitat no existeix." };
     }
-    if (activitat.centreId !== centreId) {
+    if (!isAdmin && activitat.centreId !== centreId) {
       return { success: false, error: "No tens permís per canviar l'estat d'aquesta activitat." };
     }
 
