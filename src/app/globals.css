@@ -920,6 +920,26 @@
             color: white;
         }
 
+        .footer-social {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 40px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .footer-social a {
+            color: rgba(255, 255, 255, 0.7);
+            transition: color 0.3s, transform 0.3s;
+            display: inline-flex;
+        }
+
+        .footer-social a:hover {
+            color: var(--taronja);
+            transform: scale(1.1);
+        }
+
         .footer-bottom {
             text-align: center;
             font-family: var(--font-serif);
