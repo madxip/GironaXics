@@ -7,6 +7,7 @@ import AccordionCategoria from './AccordionCategoria';
 import { normalizeSlug } from '@/lib/utils';
 import { trackEvent } from '@/lib/trackEvent';
 import { BARRIS_GIRONA_SET } from '@/lib/barris';
+import { isTallerExpired, parseTallerDates, getNextUpcomingTallerDate } from '@/lib/tallerDates';
 
 const renderBannerTitle = (title: string) => {
   if (!title) return null;
@@ -297,8 +298,31 @@ export default function Filtres({
       const matchBarri = selectedBarri === 'Totes' || a.barri === selectedBarri;
       return matchTipus && matchCat && matchSubcat && matchEdat && matchBarri;
     });
-    // Centres confirmats primer, la resta per ordre natural
-    return result.sort((a, b) => {
+    const filtered = result.filter(a => {
+      // Amaga tallers expirats (totes les dates han passat)
+      const isTaller = a.tipus?.toLowerCase().includes('taller');
+      if (isTaller && isTallerExpired(a.dies || '')) return false;
+      return true;
+    });
+
+    // Ordena: tallers per propera data, la resta per centreInteressat primer
+    return filtered.sort((a, b) => {
+      const aIsTaller = a.tipus?.toLowerCase().includes('taller');
+      const bIsTaller = b.tipus?.toLowerCase().includes('taller');
+
+      if (aIsTaller && bIsTaller) {
+        const aDates = parseTallerDates(a.dies || '');
+        const bDates = parseTallerDates(b.dies || '');
+        const aNext = getNextUpcomingTallerDate(aDates);
+        const bNext = getNextUpcomingTallerDate(bDates);
+        // Recurrents (sense data) van al final
+        if (!aNext && !bNext) return 0;
+        if (!aNext) return 1;
+        if (!bNext) return -1;
+        return aNext.getTime() - bNext.getTime();
+      }
+
+      // No tallers: centres interessats primer
       const aInt = a.centreInteressat ? 1 : 0;
       const bInt = b.centreInteressat ? 1 : 0;
       return bInt - aInt;
