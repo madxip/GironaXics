@@ -48,7 +48,7 @@ export function parseTallerDates(dies: string): Date[] {
 
     // Dies: tots els números d'1 o 2 dígits que apareguin ABANS del mes
     const beforeMonth = remaining.substring(0, pos);
-    const dayMatches = [...beforeMonth.matchAll(/\b(\d{1,2})\b/g)];
+    const dayMatches = Array.from(beforeMonth.matchAll(/\b(\d{1,2})\b/g));
 
     for (const dm of dayMatches) {
       const day = parseInt(dm[1]);
@@ -104,7 +104,7 @@ export function parseTallerRecurrentRange(dies: string): { start: Date | null; e
 
   const rangePart = dies.substring(dotIdx + 2);
   const lower = rangePart.toLowerCase();
-  const allYears = [...rangePart.matchAll(/\b(20\d{2})\b/g)].map(m => parseInt(m[1]));
+  const allYears = Array.from(rangePart.matchAll(/\b(20\d{2})\b/g)).map(m => parseInt(m[1]));
   const alIdx = lower.indexOf(" al ");
 
   if (alIdx === -1) {
