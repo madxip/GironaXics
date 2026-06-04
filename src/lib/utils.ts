@@ -120,9 +120,7 @@ export function mapAirtableError(err: unknown): string {
   }
 
   if (lower.includes("422")) {
-    // Mostra el cos complet de l'error d'Airtable per facilitar el diagnòstic
-    const body = msg.replace(/^Failed to (update|create|delete) \w+: 422 /, "");
-    return `Error de validació Airtable 422: ${body}`;
+    return "Error de validació de dades (Airtable 422). Si us plau, revisa que no hagis introduït caràcters incorrectes o tipus de dades incompatibles.";
   }
 
   // General fallback

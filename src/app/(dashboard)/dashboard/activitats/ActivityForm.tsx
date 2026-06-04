@@ -343,7 +343,7 @@ export default function ActivityForm({
   const [priceVal, setPriceVal] = useState(initialPriceState.val);
   const [priceUnit, setPriceUnit] = useState(initialPriceState.unit);
   const [customPrice, setCustomPrice] = useState(initialPriceState.custom);
-  const TIPUS_VALIDS = ["Extraescolar", "Casal", "Taller / Oci"];
+  const TIPUS_VALIDS = ["Extraescolar", "Casal", "Taller"];
   const [tipus, setTipus] = useState(
     TIPUS_VALIDS.includes(initialData?.tipus || "") ? (initialData?.tipus || "Extraescolar") : "Extraescolar"
   );
@@ -855,7 +855,7 @@ export default function ActivityForm({
                 >
                   <option value="Extraescolar">Extraescolar (Setmanal / Curs anual)</option>
                   <option value="Casal">Casal (Estiu, Nadal, Setmana Santa)</option>
-                  <option value="Taller / Oci">Taller o Oci (Monogràfic, escape room, aniversari, puntual)</option>
+                  <option value="Taller">Taller o Oci (Monogràfic, escape room, aniversari, puntual)</option>
                 </select>
               </div>
 
@@ -1173,7 +1173,7 @@ export default function ActivityForm({
                 )}
 
                 {/* 3. Selector per a Tallers (Puntual o Recurrent) */}
-                {tipus === "Taller / Oci" && (
+                {(tipus === "Taller" || tipus === "Taller / Oci") && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                     {/* Sub-selector tipus de Taller */}
                     <div style={{ display: "flex", gap: "12px" }}>
