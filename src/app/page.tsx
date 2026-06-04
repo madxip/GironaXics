@@ -10,6 +10,7 @@ import ComFunciona from '@/components/ComFunciona';
 import BannerCentres from '@/components/BannerCentres';
 import Footer from '@/components/Footer';
 import { getActivitats, getActivitatsDestacades, getCentres, getSponsors, getCasalsBanner } from '@/lib/airtable';
+import type { Activitat } from '@/lib/types';
 import { Suspense } from 'react';
 
 export default async function Home() {
@@ -21,7 +22,7 @@ export default async function Home() {
     getCasalsBanner()
   ]);
 
-  const uniqueCategories = new Set(activitats.map(a => a.categoria?.trim()).filter(Boolean));
+  const uniqueCategories = new Set(activitats.map((a: Activitat) => a.categoria?.trim()).filter(Boolean));
   const numCategories = uniqueCategories.size;
 
   return (
