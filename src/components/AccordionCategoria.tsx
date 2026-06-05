@@ -7,24 +7,32 @@ import ActivitatCard from './ActivitatCard';
 export default function AccordionCategoria({ 
   categoria, 
   activitats, 
-  defaultOpen = false,
+  forceOpen = false,
   hasSponsor = false
 }: { 
   categoria: string, 
   activitats: Activitat[], 
-  defaultOpen?: boolean,
+  forceOpen?: boolean,
   hasSponsor?: boolean
 }) {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
+  // Per defecte sempre tancat. forceOpen s'usa quan hi ha una única categoria
+  // filtrada (el cas "categoria seleccionada") i obre directament sense consultar
+  // la sessionStorage.
+  const [isOpen, setIsOpen] = useState(forceOpen);
 
   useEffect(() => {
+    if (forceOpen) {
+      // Categoria única filtrada → sempre obre
+      setIsOpen(true);
+      return;
+    }
+    // Vista multi-categoria: llegim el darrer estat manual de l'usuari
     if (typeof window !== 'undefined') {
       const stored = sessionStorage.getItem(`accordion-open-${categoria}`);
-      if (stored !== null) {
-        setIsOpen(stored === 'true');
-      }
+      // Si no hi ha res emmagatzemat: per defecte tancat
+      setIsOpen(stored === 'true');
     }
-  }, [categoria]);
+  }, [categoria, forceOpen]);
 
   const handleToggle = () => {
     const nextState = !isOpen;

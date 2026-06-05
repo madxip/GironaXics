@@ -353,7 +353,17 @@ export async function getCentres(): Promise<Centre[]> {
 
   try {
     const records = await fetchAllRecords('Centres');
-    const formattedCentres = records.map((r: { id: string; fields: Record<string, unknown> }) => {
+    // Filtre per camp "actiu" (casella de selecció a Airtable):
+    // - Si ALGUN centre té actiu=true → mostrem només els actius
+    // - Si CAP centre té actiu=true (camp no existeix o no hi ha cap marcat) → mostrem tots
+    // Això permet compatibilitat retroactiva: si l'usuari no ha afegit el camp "actiu"
+    // a Airtable, el comportament és idèntic a l'anterior (tots els centres visibles).
+    const anyActiu = records.some(r => r.fields.actiu === true || r.fields.Actiu === true);
+    const recordsToShow = anyActiu
+      ? records.filter(r => r.fields.actiu === true || r.fields.Actiu === true)
+      : records;
+
+    const formattedCentres = recordsToShow.map((r: { id: string; fields: Record<string, unknown> }) => {
       const f = { ...r.fields } as unknown as Centre;
       f.id = r.id;
       f.adreca = (r.fields.adreça || r.fields.adreca || "") as string;

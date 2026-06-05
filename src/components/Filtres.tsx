@@ -933,7 +933,7 @@ export default function Filtres({
                                   key={categoria}
                                   categoria={categoria}
                                   activitats={activitatsCat}
-                                  defaultOpen={numCats <= 3 || idx === 0}
+                                  forceOpen={numCats === 1}
                                   hasSponsor={!!activeSponsor}
                                 />
                               ));
