@@ -928,7 +928,7 @@ export default function Filtres({
                             {(() => {
                               const entries = Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b));
                               const numCats = entries.length;
-                              return entries.map(([categoria, activitatsCat], idx) => (
+                              return entries.map(([categoria, activitatsCat]) => (
                                 <AccordionCategoria
                                   key={categoria}
                                   categoria={categoria}
