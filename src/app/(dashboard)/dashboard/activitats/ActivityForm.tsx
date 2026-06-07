@@ -318,6 +318,12 @@ export default function ActivityForm({
   );
   const [centreSearch, setCentreSearch] = useState("");
 
+  // Per a la previsualització: si l'admin té un centre seleccionat, usem aquell; sinó el centre del prop
+  const safeCentres = allCentres ?? [];
+  const centrePreview = (isAdmin && safeCentres.length > 0 && selectedCentreId)
+    ? safeCentres.find(c => c.id === selectedCentreId) ?? centre
+    : centre;
+
   const [validationErrors, setValidationErrors] = useState<Record<string, boolean>>({});
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
@@ -2409,16 +2415,16 @@ export default function ActivityForm({
                           justifyContent: "center"
                         }}>
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={initialData?.centreImatgeUrl || centre?.imatgeUrl} alt="Logo" style={{ width: "90%", height: "90%", objectFit: "contain" }} />
+                          <img src={initialData?.centreImatgeUrl || centrePreview?.imatgeUrl} alt="Logo" style={{ width: "90%", height: "90%", objectFit: "contain" }} />
                         </div>
                       )}
                       <div style={{ flexGrow: 1 }}>
-                        <h4 style={{ margin: "0 0 8px 0", fontSize: "18px", fontWeight: "700" }}>{centre?.nom || initialData?.centre || "Nom del Centre"}</h4>
-                        {centre ? (
+                        <h4 style={{ margin: "0 0 8px 0", fontSize: "18px", fontWeight: "700" }}>{centrePreview?.nom || initialData?.centre || "Nom del Centre"}</h4>
+                        {centrePreview ? (
                           <div style={{ fontSize: "14px", color: "var(--muted)", display: "flex", flexDirection: "column", gap: "4px" }}>
-                            {centre.adreca && <div>{centre.adreca}</div>}
-                            {centre.telefon && <div>{centre.telefon}</div>}
-                            {centre.email && <div>{centre.email}</div>}
+                            {centrePreview.adreca && <div>{centrePreview.adreca}</div>}
+                            {centrePreview.telefon && <div>{centrePreview.telefon}</div>}
+                            {centrePreview.email && <div>{centrePreview.email}</div>}
                           </div>
                         ) : (
                           <div style={{ fontSize: "14px", color: "var(--muted)" }}>Sense dades de contacte.</div>
@@ -2428,12 +2434,12 @@ export default function ActivityForm({
 
                     {/* Botons de crida a l'acció (CTA) exactes de la versió pública */}
                     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                      {centre?.telefon && (
+                      {centrePreview?.telefon && (
                         <div style={{ display: 'block', backgroundColor: 'var(--verd-fosc)', color: 'white', padding: '16px', textAlign: 'center', borderRadius: '4px', textDecoration: 'none', fontWeight: 700 }}>
-                          📞 {centre.telefon}
+                          📞 {centrePreview.telefon}
                         </div>
                       )}
-                      {centre?.email && (
+                      {centrePreview?.email && (
                         <div style={{ display: 'block', backgroundColor: 'var(--verd-fosc)', color: 'white', padding: '16px', textAlign: 'center', borderRadius: '4px', textDecoration: 'none', fontWeight: 700 }}>
                           ✉ Envia un correu
                         </div>

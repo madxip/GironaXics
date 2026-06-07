@@ -17,7 +17,14 @@ export async function POST(req: NextRequest) {
   try {
     // 0. Verificar autenticació
     const session = await getServerSession(authOptions);
-    if (!session?.user?.centreId) {
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: "No autoritzat. Cal iniciar sessió per pujar fitxers." },
+        { status: 401 }
+      );
+    }
+    // Admins no tenen centreId però sí poden pujar imatges
+    if (!session.user.centreId && !session.user.isAdmin) {
       return NextResponse.json(
         { error: "No autoritzat. Cal iniciar sessió per pujar fitxers." },
         { status: 401 }
