@@ -1,4 +1,4 @@
-import { getActivitats, getCentres } from "@/lib/airtable";
+import { getAllActivitats, getCentres } from "@/lib/airtable";
 import { updateActivitatAction } from "@/app/actions/activitats";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
@@ -38,7 +38,7 @@ export default async function EditarActivitatPage({ params }: EditarActivitatPag
   }
 
   const { id } = params;
-  const allActivitats = await getActivitats();
+  const allActivitats = await getAllActivitats();
   const activitat = allActivitats.find(a => a.id === id);
 
   // Security check: Verify that the activity exists and belongs to the connected center
