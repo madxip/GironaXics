@@ -14,6 +14,10 @@ interface CacheStructure {
     timestamp: number;
     data: Activitat[];
   };
+  allActivitats?: {
+    timestamp: number;
+    data: Activitat[];
+  };
   centres?: {
     timestamp: number;
     data: Centre[];
@@ -30,6 +34,9 @@ function readCache(): CacheStructure {
 function writeCache(data: CacheStructure) {
   if (data.activitats !== undefined) {
     memoryCache.activitats = data.activitats;
+  }
+  if (data.allActivitats !== undefined) {
+    memoryCache.allActivitats = data.allActivitats;
   }
   if (data.centres !== undefined) {
     memoryCache.centres = data.centres;
@@ -304,6 +311,66 @@ export async function getActivitats(): Promise<Activitat[]> {
       console.warn("[Airtable Cache] Fallback activat. Retornant cache anterior per evitar errors visualitzadors.");
       return cache.activitats.data;
     }
+    return [];
+  }
+}
+
+/**
+ * Retorna TOTES les activitats sense filtre de publicació.
+ * Únicament per al panell d'administrador, per poder veure i gestionar
+ * activitats no publicades (esborranys) sense haver d'anar a Airtable.
+ */
+export async function getAllActivitats(): Promise<Activitat[]> {
+  if (!API_KEY || !BASE_ID) {
+    return getFallbackActivitats().map(a => ({ ...a }));
+  }
+
+  const cache = readCache();
+  const now = Date.now();
+  if (cache.allActivitats && (now - cache.allActivitats.timestamp < CACHE_TTL)) {
+    return cache.allActivitats.data;
+  }
+
+  try {
+    // Sense filtre de publicada
+    const records = await fetchAllRecords('Activitats');
+
+    let centresRecords: { id: string; fields: Record<string, unknown> }[] = [];
+    try {
+      centresRecords = await fetchAllRecords('Centres');
+    } catch { /* Ignore */ }
+
+    const centreMap = new Map<string, string>();
+    const centreImatgeMap = new Map<string, string>();
+    const centreInteressatMap = new Map<string, boolean>();
+
+    centresRecords.forEach((c) => {
+      if (c.fields?.nom) centreMap.set(c.id, c.fields.nom as string);
+      if (c.fields) {
+        const attachmentField = c.fields.Imatge || c.fields.imatge || c.fields.Logo || c.fields.logo || c.fields.Logotip || c.fields.logotip;
+        if (Array.isArray(attachmentField) && attachmentField.length > 0) {
+          const url = (attachmentField[0] as { url: string }).url;
+          centreImatgeMap.set(c.id, url);
+          if (c.fields.nom) centreImatgeMap.set(c.fields.nom as string, url);
+        }
+        const interessat = !!(c.fields.interessat || c.fields.Interessat || c.fields['col·laborador'] || c.fields['Col·laborador'] || c.fields.partner || c.fields.Partner);
+        centreInteressatMap.set(c.id, interessat);
+        if (c.fields.nom) centreInteressatMap.set(c.fields.nom as string, interessat);
+      }
+    });
+
+    const formattedActivitats = records.map((r) =>
+      mapActivitatRecord(r, centreMap, centreImatgeMap, centreInteressatMap)
+    );
+
+    const updatedCache = readCache();
+    updatedCache.allActivitats = { timestamp: Date.now(), data: formattedActivitats };
+    writeCache(updatedCache);
+
+    return formattedActivitats;
+  } catch (error) {
+    console.error('[Airtable API] Error en getAllActivitats:', error);
+    if (cache.allActivitats) return cache.allActivitats.data;
     return [];
   }
 }
@@ -669,6 +736,7 @@ export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'cen
     if (resData.records && resData.records.length > 0) {
       const r = resData.records[0];
       delete memoryCache.activitats;
+      delete memoryCache.allActivitats;
       
       return {
         id: r.id,
@@ -766,6 +834,7 @@ export async function updateActivitat(id: string, data: Partial<Omit<Activitat, 
     }
 
     delete memoryCache.activitats;
+    delete memoryCache.allActivitats;
 
     return true;
   } catch (error) {
@@ -792,6 +861,7 @@ export async function deleteActivitat(id: string): Promise<boolean> {
     }
 
     delete memoryCache.activitats;
+    delete memoryCache.allActivitats;
 
     return true;
   } catch (error) {

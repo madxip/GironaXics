@@ -1,7 +1,7 @@
 import React from "react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { getActivitatsByCentreId, getActivitats, getCentres } from "@/lib/airtable";
+import { getActivitatsByCentreId, getActivitats, getAllActivitats, getCentres } from "@/lib/airtable";
 import Link from "next/link";
 import { Plus, Activity, ShieldCheck, Info } from "lucide-react";
 import ActivitatsTable from "./ActivitatsTable";
@@ -18,10 +18,12 @@ export default async function DashboardPage() {
   const centreId = session.user.centreId;
   const isAdmin = session.user.isAdmin;
 
-  // Admin veu totes les activitats; els centres només les seves
+  // Admin veu TOTES les activitats (publicades + no publicades); els centres només les seves
   const activitats = isAdmin
-    ? await getActivitats()
+    ? await getAllActivitats()
     : await getActivitatsByCentreId(centreId);
+
+  const publicadesCount = isAdmin ? activitats.filter(a => a.publicada).length : activitats.length;
 
   const centres = await getCentres();
   const userCentre = centres.find(c => c.id === centreId);
@@ -42,7 +44,7 @@ export default async function DashboardPage() {
           </h1>
           <p style={{ fontSize: "15px", color: "var(--muted)", marginTop: "6px", margin: 0 }}>
             {isAdmin
-              ? `${activitats.length} activitats publicades a GironaXics`
+              ? `${activitats.length} activitats en total · ${publicadesCount} publicades · ${activitats.length - publicadesCount} esborranys`
               : "Aquí pots crear, editar o eliminar les activitats extraescolars que ofereix el teu centre."
             }
           </p>
