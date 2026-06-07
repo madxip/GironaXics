@@ -6,15 +6,15 @@ import { createActivitat, updateActivitat, deleteActivitat, getActivitatRawById 
 import { revalidatePath } from "next/cache";
 import { normalizeSlug } from "@/lib/utils";
 
-// Helper: retorna centreId i si és admin
+// Helper: retorna centreId i si Ã©s admin
 async function getAuthInfo() {
   const session = await getServerSession(authOptions);
   if (!session || !session.user) {
-    throw new Error("Sessió no autoritzada.");
+    throw new Error("SessiÃ³ no autoritzada.");
   }
   const isAdmin = !!session.user.isAdmin;
   if (!isAdmin && !session.user.centreId) {
-    throw new Error("Sessió no autoritzada.");
+    throw new Error("SessiÃ³ no autoritzada.");
   }
   return { centreId: session.user.centreId || "", isAdmin };
 }
@@ -59,8 +59,14 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
     }
 
     if (!nom || !barri || !categoria || !edat || !horari || !dies) {
-      return { success: false, error: "Si us plau, omple com a mínim els camps obligatoris (Nom, Barri, Categoria, Edat, Horari i Dies)." };
+      return { success: false, error: "Si us plau, omple com a mÃ­nim els camps obligatoris (Nom, Barri, Categoria, Edat, Horari i Dies)." };
     }
+
+    // Validacio: admin ha de seleccionar un centre; sense centreId Airtable retornaria INVALID_RECORD_ID
+    if (!centreId) {
+      return { success: false, error: "Has de seleccionar un centre per a aquesta activitat." };
+    }
+
 
     const preu = preuStr ? preuStr.trim() : undefined;
 
@@ -124,7 +130,7 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
     return { success: true };
   } catch (error) {
     console.error("[Create Activity Action] Error:", error);
-    const message = error instanceof Error ? error.message : "S'ha produït un error inesperat.";
+    const message = error instanceof Error ? error.message : "S'ha produÃ¯t un error inesperat.";
     return { success: false, error: message };
   }
 }
@@ -133,16 +139,16 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
   try {
     const { centreId, isAdmin } = await getAuthInfo();
 
-    // Ownership check (IDOR/BOLA prevention) — admin ho salta.
+    // Ownership check (IDOR/BOLA prevention) â€” admin ho salta.
     // Usem getActivitatRawById per obtenir el registre directament d'Airtable
-    // sense cap filtre de publicació (getActivitats() filtra {publicada}=TRUE()
+    // sense cap filtre de publicaciÃ³ (getActivitats() filtra {publicada}=TRUE()
     // i no trobaria activitats no publicades).
     const activitat = await getActivitatRawById(id);
     if (!activitat) {
       return { success: false, error: "L'activitat no existeix." };
     }
     if (!isAdmin && activitat.centreId !== centreId) {
-      return { success: false, error: "No tens permís per modificar aquesta activitat." };
+      return { success: false, error: "No tens permÃ­s per modificar aquesta activitat." };
     }
 
     const nom = formData.get("nom") as string;
@@ -176,7 +182,7 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
     }
 
     if (!nom || !barri || !categoria || !edat || !horari || !dies) {
-      return { success: false, error: "Si us plau, omple com a mínim els camps obligatoris (Nom, Barri, Categoria, Edat, Horari i Dies)." };
+      return { success: false, error: "Si us plau, omple com a mÃ­nim els camps obligatoris (Nom, Barri, Categoria, Edat, Horari i Dies)." };
     }
 
     const preu = preuStr ? preuStr.trim() : undefined;
@@ -238,7 +244,7 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
     return { success: true };
   } catch (error) {
     console.error("[Update Activity Action] Error:", error);
-    const message = error instanceof Error ? error.message : "S'ha produït un error inesperat.";
+    const message = error instanceof Error ? error.message : "S'ha produÃ¯t un error inesperat.";
     return { success: false, error: message };
   }
 }
@@ -247,16 +253,16 @@ export async function deleteActivitatAction(id: string) {
   try {
     const { centreId, isAdmin } = await getAuthInfo();
 
-    // Ownership check (IDOR/BOLA prevention) — admin ho salta.
+    // Ownership check (IDOR/BOLA prevention) â€” admin ho salta.
     // Usem getActivitatRawById per obtenir el registre directament d'Airtable
-    // sense cap filtre de publicació (getActivitats() filtra {publicada}=TRUE()
+    // sense cap filtre de publicaciÃ³ (getActivitats() filtra {publicada}=TRUE()
     // i no trobaria activitats no publicades).
     const activitat = await getActivitatRawById(id);
     if (!activitat) {
       return { success: false, error: "L'activitat no existeix o ja ha estat eliminada." };
     }
     if (!isAdmin && activitat.centreId !== centreId) {
-      return { success: false, error: "No tens permís per eliminar aquesta activitat." };
+      return { success: false, error: "No tens permÃ­s per eliminar aquesta activitat." };
     }
 
     const success = await deleteActivitat(id);
@@ -279,7 +285,7 @@ export async function deleteActivitatAction(id: string) {
     return { success: true };
   } catch (error) {
     console.error("[Delete Activity Action] Error:", error);
-    const message = error instanceof Error ? error.message : "S'ha produït un error inesperat.";
+    const message = error instanceof Error ? error.message : "S'ha produÃ¯t un error inesperat.";
     return { success: false, error: message };
   }
 }
@@ -288,23 +294,23 @@ export async function togglePublicadaAction(id: string, publicada: boolean) {
   try {
     const { centreId, isAdmin } = await getAuthInfo();
 
-    // Ownership check (IDOR/BOLA prevention) — admin ho salta.
+    // Ownership check (IDOR/BOLA prevention) â€” admin ho salta.
     // Usem getActivitatRawById per obtenir el registre directament d'Airtable
-    // sense cap filtre de publicació.
+    // sense cap filtre de publicaciÃ³.
     const activitat = await getActivitatRawById(id);
     if (!activitat) {
       return { success: false, error: "L'activitat no existeix." };
     }
     if (!isAdmin && activitat.centreId !== centreId) {
-      return { success: false, error: "No tens permís per canviar l'estat d'aquesta activitat." };
+      return { success: false, error: "No tens permÃ­s per canviar l'estat d'aquesta activitat." };
     }
 
     const success = await updateActivitat(id, { publicada });
     if (!success) {
-      return { success: false, error: "No s'ha pogut canviar l'estat de publicació." };
+      return { success: false, error: "No s'ha pogut canviar l'estat de publicaciÃ³." };
     }
 
-    // Revalidar memòria cau a Vercel on-demand per a que es reflecteixi immediatament
+    // Revalidar memÃ²ria cau a Vercel on-demand per a que es reflecteixi immediatament
     try {
       revalidatePath("/");
     } catch (e) {
@@ -319,7 +325,7 @@ export async function togglePublicadaAction(id: string, publicada: boolean) {
     return { success: true };
   } catch (error) {
     console.error("[Toggle Publicada Action] Error:", error);
-    const message = error instanceof Error ? error.message : "S'ha produït un error inesperat.";
+    const message = error instanceof Error ? error.message : "S'ha produÃ¯t un error inesperat.";
     return { success: false, error: message };
   }
 }
