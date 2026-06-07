@@ -836,7 +836,7 @@ export async function updateActivitat(id: string, data: Partial<Omit<Activitat, 
         const errData = JSON.parse(text);
         const errMsg = errData?.error?.message || errData?.error?.type || text;
         throw new Error(`Airtable 422: ${errMsg}`);
-      } catch (_parseErr) {
+      } catch {
         throw new Error(`Failed to update activity: ${res.status} ${text}`);
       }
     }
