@@ -648,7 +648,7 @@ export default function Filtres({
                         style={{ width: '100%', padding: '12px 16px', borderRadius: '0', border: '1px solid var(--verd)', backgroundColor: 'transparent', color: 'var(--fosc)', fontFamily: 'var(--font-sans)', fontSize: '16px', outline: 'none', cursor: 'pointer' }}
                     >
                         <option value="Totes">Totes les poblacions</option>
-                        <option value="Girona" style={{ fontWeight: 700 }}>📍 Girona (tots els barris)</option>
+                        <option value="Girona" style={{ fontWeight: 700 }}>Girona (tots els barris)</option>
                         <option disabled style={{ color: '#ccc', fontSize: '10px' }}>──────────────</option>
                         {barris.girona.map(b => <option key={b} value={b}>{b}</option>)}
                         {barris.altres.length > 0 && (
