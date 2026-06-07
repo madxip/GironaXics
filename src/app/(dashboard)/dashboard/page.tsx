@@ -5,6 +5,7 @@ import { getActivitatsByCentreId, getAllActivitats, getCentres } from "@/lib/air
 import Link from "next/link";
 import { Plus, Activity, ShieldCheck, Info } from "lucide-react";
 import ActivitatsTable from "./ActivitatsTable";
+import RefreshCacheButton from "./RefreshCacheButton";
 
 export const dynamic = "force-dynamic";
 
@@ -50,14 +51,17 @@ export default async function DashboardPage() {
           </p>
         </div>
 
-        <Link
-          href="/dashboard/activitats/nova"
-          style={{ display: "inline-flex", alignItems: "center", gap: "8px", backgroundColor: "var(--verd)", color: "white", padding: "12px 24px", borderRadius: "8px", textDecoration: "none", fontWeight: 600, fontSize: "15px", fontFamily: "var(--font-serif)", fontStyle: "italic", boxShadow: "0 4px 12px rgba(26,107,58,0.15)", transition: "all 0.2s" }}
-          className="dashboard-primary-btn"
-        >
-          <Plus size={18} />
-          Afegir Activitat
-        </Link>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+          {isAdmin && <RefreshCacheButton />}
+          <Link
+            href="/dashboard/activitats/nova"
+            style={{ display: "inline-flex", alignItems: "center", gap: "8px", backgroundColor: "var(--verd)", color: "white", padding: "12px 24px", borderRadius: "8px", textDecoration: "none", fontWeight: 600, fontSize: "15px", fontFamily: "var(--font-serif)", fontStyle: "italic", boxShadow: "0 4px 12px rgba(26,107,58,0.15)", transition: "all 0.2s" }}
+            className="dashboard-primary-btn"
+          >
+            <Plus size={18} />
+            Afegir Activitat
+          </Link>
+        </div>
       </div>
 
       {/* Contingut principal */}
@@ -81,7 +85,11 @@ export default async function DashboardPage() {
           <ActivitatsTable activitats={activitats} isAdmin={isAdmin} />
           <div style={{ marginTop: "16px", padding: "14px 20px", backgroundColor: "white", borderRadius: "12px", border: "1px solid var(--verd-pallid)", display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: "var(--muted)" }}>
             <Info size={14} style={{ color: "var(--verd)", flexShrink: 0 }} />
-            <span>Els canvis que realitzis es veuran reflectits de manera instantània a la pàgina web pública.</span>
+            <span>
+              {isAdmin
+                ? "Els canvis via panell s'apliquen immediatament. Si has modificat dades directament a Airtable, fes servir el botó \"Actualitzar dades\"."
+                : "Els canvis que realitzis es veuran reflectits de manera instantània a la pàgina web pública."}
+            </span>
           </div>
         </>
       )}

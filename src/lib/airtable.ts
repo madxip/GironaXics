@@ -7,7 +7,7 @@ const BASE_ID = process.env.AIRTABLE_BASE_ID;
 
 // Cache en memòria compatible amb entorns serverless (Vercel, etc.)
 // El sistema de cache basat en fitxers (fs) no funciona en serverless perquè el FS és read-only.
-const CACHE_TTL = 5 * 60 * 1000; // 5 minuts de validesa de la cache
+const CACHE_TTL = 60 * 1000; // 60 segons — alineat amb revalidate=60 de les pàgines
 
 interface CacheStructure {
   activitats?: {
@@ -41,6 +41,13 @@ function writeCache(data: CacheStructure) {
   if (data.centres !== undefined) {
     memoryCache.centres = data.centres;
   }
+}
+
+/** Neteja tota la memòria cau (activitats + centres). Cridat des de l'acció admin. */
+export function clearAllCache(): void {
+  delete memoryCache.activitats;
+  delete memoryCache.allActivitats;
+  delete memoryCache.centres;
 }
 
 // Fallback per desenvolupament si no hi ha Airtable configurat
