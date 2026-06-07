@@ -31,6 +31,7 @@ export default async function NovaActivitatPage() {
     redirect("/login");
   }
 
+  const isAdmin = !!session.user.isAdmin;
   const activitats = await getActivitats();
   const allCentres = await getCentres();
   const centre = allCentres.find(c => c.id === session.user.centreId);
@@ -54,6 +55,8 @@ export default async function NovaActivitatPage() {
       submitAction={createActivitatAction}
       title="Nova Activitat Extraescolar"
       centre={centre}
+      allCentres={isAdmin ? allCentres : undefined}
+      isAdmin={isAdmin}
     />
   );
 }

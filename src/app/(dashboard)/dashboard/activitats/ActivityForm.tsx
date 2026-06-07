@@ -19,6 +19,8 @@ interface ActivityFormProps {
   submitAction: (prevState: unknown, formData: FormData) => Promise<{ success: boolean; error?: string }>;
   title: string;
   centre?: Centre;
+  allCentres?: Centre[];
+  isAdmin?: boolean;
 }
 
 const PREDEFINED_SUBCATEGORIES: Map<string, string[]> = new Map([
@@ -286,7 +288,9 @@ export default function ActivityForm({
   barris,
   submitAction,
   title,
-  centre
+  centre,
+  allCentres,
+  isAdmin,
 }: ActivityFormProps) {
   const router = useRouter();
   const [showPreview, setShowPreview] = useState(false);
@@ -308,6 +312,11 @@ export default function ActivityForm({
   const [nom, setNom] = useState(initialData?.nom || "");
   const [barri, setBarri] = useState(initialData?.barri || "");
   const [categoria, setCategoria] = useState(initialData?.categoria || "");
+  // Admin: centre seleccionat quan crea una activitat per a un altre centre
+  const [selectedCentreId, setSelectedCentreId] = useState<string>(
+    initialData?.centreId || centre?.id || ""
+  );
+  const [centreSearch, setCentreSearch] = useState("");
 
   const [validationErrors, setValidationErrors] = useState<Record<string, boolean>>({});
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
@@ -803,7 +812,104 @@ export default function ActivityForm({
         )}
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
-          
+
+          {/* Camp ocult per enviar el centreId sempre */}
+          <input type="hidden" name="centreId" value={selectedCentreId} />
+
+          {/* Selector de Centre (visible només per admin en mode creació) */}
+          {isAdmin && !initialData && allCentres && allCentres.length > 0 && (
+            <div style={{
+              background: "linear-gradient(135deg, rgba(217,87,56,0.06), rgba(217,87,56,0.02))",
+              border: "1.5px solid rgba(217,87,56,0.25)",
+              borderRadius: "14px",
+              padding: "22px 24px"
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
+                <span style={{
+                  background: "rgba(217,87,56,0.12)",
+                  color: "#d95738",
+                  borderRadius: "6px",
+                  padding: "4px 10px",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase"
+                }}>⚙ Admin</span>
+                <h3 style={{
+                  fontSize: "15px",
+                  fontWeight: 700,
+                  color: "var(--verd-fosc)",
+                  margin: 0
+                }}>Crea l&apos;activitat per a un centre</h3>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                <label style={{ fontSize: "13px", fontWeight: 700, color: "var(--verd-fosc)", textTransform: "uppercase" }}>
+                  Selecciona el Centre *
+                </label>
+                <input
+                  type="text"
+                  placeholder="Cerca per nom de centre..."
+                  value={centreSearch}
+                  onChange={e => setCentreSearch(e.target.value)}
+                  style={{
+                    padding: "10px 14px",
+                    border: "1px solid rgba(26,107,58,0.25)",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    outline: "none",
+                    background: "white"
+                  }}
+                />
+                <div style={{
+                  maxHeight: "220px",
+                  overflowY: "auto",
+                  border: "1px solid rgba(26,107,58,0.15)",
+                  borderRadius: "10px",
+                  background: "white"
+                }}>
+                  {allCentres
+                    .filter(c => !centreSearch || c.nom?.toLowerCase().includes(centreSearch.toLowerCase()))
+                    .sort((a, b) => (a.nom || "").localeCompare(b.nom || ""))
+                    .map(c => (
+                      <div
+                        key={c.id}
+                        onClick={() => {
+                          setSelectedCentreId(c.id || "");
+                          setCentreSearch(c.nom || "");
+                        }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "12px",
+                          padding: "10px 14px",
+                          cursor: "pointer",
+                          background: selectedCentreId === c.id ? "rgba(26,107,58,0.08)" : "transparent",
+                          borderBottom: "1px solid rgba(0,0,0,0.05)",
+                          transition: "background 0.15s"
+                        }}
+                      >
+                        {c.imatgeUrl && (
+                          <img src={c.imatgeUrl} alt={c.nom} style={{ width: "28px", height: "28px", objectFit: "contain", borderRadius: "4px", flexShrink: 0 }} />
+                        )}
+                        <span style={{ fontSize: "14px", fontWeight: selectedCentreId === c.id ? 700 : 400, color: "var(--verd-fosc)" }}>
+                          {c.nom}
+                        </span>
+                        {selectedCentreId === c.id && (
+                          <span style={{ marginLeft: "auto", color: "var(--verd)", fontSize: "16px" }}>✓</span>
+                        )}
+                      </div>
+                    ))
+                  }
+                </div>
+                {selectedCentreId && (
+                  <p style={{ margin: 0, fontSize: "13px", color: "var(--verd)", fontWeight: 600 }}>
+                    ✓ Centre seleccionat: {allCentres.find(c => c.id === selectedCentreId)?.nom}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Section 1: Informació Bàsica */}
           <div>
             <h3 style={{
