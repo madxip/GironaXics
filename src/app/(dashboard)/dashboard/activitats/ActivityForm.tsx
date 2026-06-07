@@ -310,7 +310,17 @@ export default function ActivityForm({
 
 
   const [nom, setNom] = useState(initialData?.nom || "");
-  const [barri, setBarri] = useState(initialData?.barri || "");
+  const NOVA_POBLACIO = "__nova_poblacio__";
+  const [barri, setBarri] = useState(
+    (initialData?.barri && !barris.girona.includes(initialData.barri) && !barris.altres.includes(initialData.barri))
+      ? NOVA_POBLACIO
+      : (initialData?.barri || "")
+  );
+  const [customPoblacio, setCustomPoblacio] = useState(
+    (initialData?.barri && !barris.girona.includes(initialData.barri) && !barris.altres.includes(initialData.barri))
+      ? initialData.barri
+      : ""
+  );
   const [categoria, setCategoria] = useState(initialData?.categoria || "");
   // Admin: centre seleccionat quan crea una activitat per a un altre centre
   const [selectedCentreId, setSelectedCentreId] = useState<string>(
@@ -668,7 +678,7 @@ export default function ActivityForm({
 
     const errors: Record<string, boolean> = {};
     if (!nom.trim()) errors.nom = true;
-    if (!barri.trim()) errors.barri = true;
+    if (!barri.trim() || (barri === NOVA_POBLACIO && !customPoblacio.trim())) errors.barri = true;
     if (!categoria.trim()) errors.categoria = true;
     if (!edat.trim()) errors.edat = true;
     if (!horari.trim()) errors.horari = true;
@@ -695,7 +705,7 @@ export default function ActivityForm({
     try {
       const formData = new FormData();
       formData.append("nom", nom);
-      formData.append("barri", barri);
+      formData.append("barri", barri === NOVA_POBLACIO ? customPoblacio.trim() : barri);
       formData.append("categoria", categoria);
       
       const subcategoria = predefinedSubs 
@@ -1140,7 +1150,33 @@ export default function ActivityForm({
                       ))}
                     </optgroup>
                   )}
+                  {isAdmin && (
+                    <option value={NOVA_POBLACIO} style={{ fontWeight: 600, color: "var(--verd-fosc)" }}>
+                      ＋ Afegir nova població...
+                    </option>
+                  )}
                 </select>
+                {/* Input per nova població (admin) */}
+                {isAdmin && barri === NOVA_POBLACIO && (
+                  <input
+                    type="text"
+                    placeholder="Escriu el nom de la nova població (ex: Salt, Sarrià de Ter...)"
+                    value={customPoblacio}
+                    onChange={(e) => setCustomPoblacio(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "12px 16px",
+                      border: validationErrors.barri ? "2px solid #b91c1c" : "1px solid rgba(26, 107, 58, 0.4)",
+                      borderRadius: "8px",
+                      fontSize: "15px",
+                      marginTop: "8px",
+                      outline: "none",
+                      backgroundColor: "#f0fdf4",
+                      color: "var(--fosc)",
+                    }}
+                    autoFocus
+                  />
+                )}
                 {validationErrors.barri && (
                   <span style={{ color: "#b91c1c", fontSize: "12px", fontWeight: "600", marginTop: "-2px" }}>
                     * Selecciona un barri obligatori
