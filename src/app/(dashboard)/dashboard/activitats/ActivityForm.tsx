@@ -3,10 +3,14 @@
 import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Save, Loader2, Upload, Trash2, Image as ImageIcon, Plus } from "lucide-react";
-import { Activitat } from "@/lib/types";
+import { ArrowLeft, Save, Loader2, Upload, Trash2, Image as ImageIcon, Plus, Eye, X } from "lucide-react";
+import { Activitat, Centre } from "@/lib/types";
 import { mapAirtableError } from "@/lib/utils";
 import Toast from "@/components/Toast";
+import RichTextEditor from "@/components/RichTextEditor";
+import MultiDatePicker from "@/components/MultiDatePicker";
+
+
 
 interface ActivityFormProps {
   initialData?: Activitat;
@@ -14,6 +18,9 @@ interface ActivityFormProps {
   barris: { girona: string[]; altres: string[] };
   submitAction: (prevState: unknown, formData: FormData) => Promise<{ success: boolean; error?: string }>;
   title: string;
+  centre?: Centre;
+  allCentres?: Centre[];
+  isAdmin?: boolean;
 }
 
 const PREDEFINED_SUBCATEGORIES: Map<string, string[]> = new Map([
@@ -56,18 +63,276 @@ const TXT_GALERIA_DESC = "Pots afegir diverses imatges per mostrar la vida diàr
 const TXT_CANCELAR = "Cancel·lar";
 const TXT_ACTIVITAT_GRATUITA = "L'activitat es publicarà com a gratuïta";
 
+// --- HELPERS DE PARSEIG I FORMAT PER A LA FASE 2 ---
+const parseDateRange = (text: string): { start: string; end: string } => {
+  if (!text) return { start: "", end: "" };
+  const regex = /(\d{2})\/(\d{2})\/(\d{4})/g;
+  const match1 = regex.exec(text);
+  const match2 = regex.exec(text);
+  if (match1) {
+    const startStr = `${match1[3]}-${match1[2]}-${match1[1]}`;
+    const endStr = match2 ? `${match2[3]}-${match2[2]}-${match2[1]}` : "";
+    return { start: startStr, end: endStr };
+  }
+  const months = ["gener", "febrer", "març", "abril", "maig", "juny", "juliol", "agost", "setembre", "octubre", "novembre", "desembre"];
+  const lower = text.toLowerCase();
+  const yearMatch = text.match(/\b(20\d{2})\b/);
+  const year = yearMatch ? parseInt(yearMatch[1]) : new Date().getFullYear();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const parts = lower.split(/\bal\b/);
+  if (parts.length > 1) {
+    const firstPart = parts[0];
+    const secondPart = parts[1];
+    let endMonthIdx = -1;
+    for (let i = 0; i < months.length; i++) {
+      if (secondPart.includes(months[i])) { endMonthIdx = i; break; }
+    }
+    const endDayMatch = secondPart.match(/\b\d{1,2}\b/);
+    const endDay = endDayMatch ? parseInt(endDayMatch[0]) : 1;
+    let startMonthIdx = endMonthIdx;
+    for (let i = 0; i < months.length; i++) {
+      if (firstPart.includes(months[i])) { startMonthIdx = i; break; }
+    }
+    const startDayMatch = firstPart.match(/\b\d{1,2}\b/);
+    const startDay = startDayMatch ? parseInt(startDayMatch[0]) : 1;
+    if (startMonthIdx !== -1 && endMonthIdx !== -1) {
+      return {
+        start: `${year}-${pad(startMonthIdx + 1)}-${pad(startDay)}`,
+        end: `${year}-${pad(endMonthIdx + 1)}-${pad(endDay)}`
+      };
+    }
+  }
+  const singleMatch = text.match(/\b\d{1,2}\b/);
+  let mIdx = -1;
+  for (let i = 0; i < months.length; i++) {
+    if (lower.includes(months[i])) { mIdx = i; break; }
+  }
+  if (singleMatch && mIdx !== -1) {
+    return {
+      start: `${year}-${pad(mIdx + 1)}-${pad(parseInt(singleMatch[0]))}`,
+      end: ""
+    };
+  }
+  return { start: "", end: "" };
+};
+
+/**
+ * Parseja les dates d'inici i fi del camp `dies` d'un taller recurrent.
+ * Format: "Cada dimarts. Del 3 de setembre de 2025 al 20 de juny de 2026"
+ * o: "Cada dimarts. A partir del 3 de setembre de 2026"
+ */
+const parseRecurrentRange = (dies: string): { start: string; end: string } => {
+  if (!dies || !dies.toLowerCase().startsWith('cada')) return { start: '', end: '' };
+  const dotIdx = dies.indexOf('. ');
+  if (dotIdx === -1) return { start: '', end: '' };
+  const rangePart = dies.substring(dotIdx + 2);
+  const MONTHS_R = ["gener","febrer","mar\u00e7","abril","maig","juny","juliol","agost","setembre","octubre","novembre","desembre"];
+  const lower = rangePart.toLowerCase();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const allYears = Array.from(rangePart.matchAll(/\b(20\d{2})\b/g)).map(m => parseInt(m[1]));
+  const alIdx = lower.indexOf(' al ');
+  if (alIdx === -1) {
+    const year = allYears[0] || new Date().getFullYear();
+    let mIdx = -1;
+    for (let i = 0; i < MONTHS_R.length; i++) { if (lower.includes(MONTHS_R[i])) { mIdx = i; break; } }
+    const dayM = lower.match(/\b(\d{1,2})\b/);
+    if (mIdx !== -1 && dayM) return { start: `${year}-${pad(mIdx + 1)}-${pad(parseInt(dayM[1]))}`, end: '' };
+    return { start: '', end: '' };
+  }
+  const startPart = lower.substring(0, alIdx);
+  const endPart = lower.substring(alIdx + 4);
+  let startMIdx = -1; for (let i = 0; i < MONTHS_R.length; i++) { if (startPart.includes(MONTHS_R[i])) { startMIdx = i; break; } }
+  let endMIdx = -1;   for (let i = 0; i < MONTHS_R.length; i++) { if (endPart.includes(MONTHS_R[i]))   { endMIdx = i; break; } }
+  const startDayM = startPart.match(/\b(\d{1,2})\b/);
+  const endDayM   = endPart.match(/\b(\d{1,2})\b/);
+  const startYearM = startPart.match(/\b(20\d{2})\b/);
+  const endYearM   = endPart.match(/\b(20\d{2})\b/);
+  const startYear = startYearM ? parseInt(startYearM[1]) : (allYears[0] || new Date().getFullYear());
+  const endYear   = endYearM   ? parseInt(endYearM[1])   : (allYears[allYears.length - 1] || new Date().getFullYear());
+  return {
+    start: (startMIdx !== -1 && startDayM) ? `${startYear}-${pad(startMIdx + 1)}-${pad(parseInt(startDayM[1]))}` : '',
+    end:   (endMIdx !== -1   && endDayM)   ? `${endYear}-${pad(endMIdx + 1)}-${pad(parseInt(endDayM[1]))}` : ''
+  };
+};
+
+const parseSingleDate = (text: string): string => {
+  if (!text) return "";
+  const match = text.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+  if (match) return `${match[3]}-${match[2]}-${match[1]}`;
+  const months = ["gener", "febrer", "març", "abril", "maig", "juny", "juliol", "agost", "setembre", "octubre", "novembre", "desembre"];
+  const lower = text.toLowerCase();
+  const yearMatch = text.match(/\b(20\d{2})\b/);
+  const year = yearMatch ? parseInt(yearMatch[1]) : new Date().getFullYear();
+  let mIdx = -1;
+  for (let i = 0; i < months.length; i++) {
+    if (lower.includes(months[i])) { mIdx = i; break; }
+  }
+  const dayMatch = text.match(/\b\d{1,2}\b/);
+  if (dayMatch && mIdx !== -1) {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${year}-${pad(mIdx + 1)}-${pad(parseInt(dayMatch[0]))}`;
+  }
+  return "";
+};
+
+const parseMultipleDates = (text: string): string[] => {
+  if (!text) return [""];
+  const regex = /(\d{2})\/(\d{2})\/(\d{4})/g;
+  let match;
+  const matches = [];
+  while ((match = regex.exec(text)) !== null) {
+    matches.push(match);
+  }
+  if (matches.length > 0) {
+    return matches.map(m => `${m[3]}-${m[2]}-${m[1]}`);
+  }
+  const months = ["gener", "febrer", "març", "abril", "maig", "juny", "juliol", "agost", "setembre", "octubre", "novembre", "desembre"];
+  const lower = text.toLowerCase();
+  const yearMatch = text.match(/\b(20\d{2})\b/);
+  const year = yearMatch ? parseInt(yearMatch[1]) : new Date().getFullYear();
+  let monthIdx = -1;
+  for (let i = 0; i < months.length; i++) {
+    if (lower.includes(months[i])) { monthIdx = i; break; }
+  }
+  if (monthIdx === -1) return [""];
+  const monthWord = months[monthIdx];
+  const beforeMonth = lower.split(monthWord)[0];
+  const dayMatches = beforeMonth.match(/\b\d{1,2}\b/g);
+  if (!dayMatches) return [""];
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return dayMatches.map(d => `${year}-${pad(monthIdx + 1)}-${pad(parseInt(d))}`);
+};
+
+const formatMultipleDates = (dates: string[]) => {
+  const cleanDates = dates
+    .filter(Boolean)
+    .map(d => new Date(d))
+    .sort((a, b) => a.getTime() - b.getTime());
+  if (cleanDates.length === 0) return "";
+  const months = ["gener", "febrer", "març", "abril", "maig", "juny", "juliol", "agost", "setembre", "octubre", "novembre", "desembre"];
+  const firstDate = cleanDates[0];
+  const sameMonthAndYear = cleanDates.every(
+    d => d.getMonth() === firstDate.getMonth() && d.getFullYear() === firstDate.getFullYear()
+  );
+  if (sameMonthAndYear) {
+    const days = cleanDates.map(d => d.getDate());
+    let daysStr = "";
+    if (days.length === 1) daysStr = String(days[0]);
+    else if (days.length === 2) daysStr = `${days[0]} i ${days[1]}`;
+    else daysStr = `${days.slice(0, -1).join(", ")} i ${days[days.length - 1]}`;
+    return `${daysStr} de ${months[firstDate.getMonth()]} de ${firstDate.getFullYear()}`;
+  }
+  const strings = cleanDates.map(d => `${d.getDate()} de ${months[d.getMonth()]} de ${d.getFullYear()}`);
+  let finalStr = "";
+  if (strings.length === 1) finalStr = strings[0];
+  else if (strings.length === 2) finalStr = `${strings[0]} i ${strings[1]}`;
+  else finalStr = `${strings.slice(0, -1).join(", ")} i ${strings[strings.length - 1]}`;
+  return finalStr;
+};
+
+function parseMarkdownToReact(text: string) {
+  if (!text) return null;
+  
+  const lines = text.split('\n');
+  
+  return lines.map((line, lineIdx) => {
+    const bulletRegex = /^(\s*[-*•]\s+)(.*)/;
+    const matchBullet = line.match(bulletRegex);
+    
+    const parseInline = (inlineText: string) => {
+      const boldParts = inlineText.split(/\*\*([^*]+)\*\*/g);
+      return boldParts.map((bPart, bIdx) => {
+        const isBold = bIdx % 2 !== 0;
+        const italicParts = bPart.split(/\*([^*_]+)\*/g);
+        const renderedItalics = italicParts.map((iPart, iIdx) => {
+          const isItalic = iIdx % 2 !== 0;
+          if (isItalic) {
+            return <em key={iIdx}>{iPart}</em>;
+          }
+          return iPart;
+        });
+        
+        if (isBold) {
+          return <strong key={bIdx}>{renderedItalics}</strong>;
+        }
+        return <span key={bIdx}>{renderedItalics}</span>;
+      });
+    };
+    
+    if (matchBullet) {
+      const content = matchBullet[2];
+      return (
+        <ul key={lineIdx} style={{ margin: '4px 0 4px 24px', padding: 0, listStyleType: 'disc' }}>
+          <li style={{ marginBottom: '4px' }}>
+            {parseInline(content)}
+          </li>
+        </ul>
+      );
+    }
+    
+    if (line.trim() === '') {
+      return <div key={lineIdx} style={{ height: '0.8em' }} />;
+    }
+    
+    return (
+      <p key={lineIdx} style={{ margin: '0 0 10px 0' }}>
+        {parseInline(line)}
+      </p>
+    );
+  });
+}
+
 export default function ActivityForm({
   initialData,
   categories,
   barris,
   submitAction,
-  title
+  title,
+  centre,
+  allCentres,
+  isAdmin,
 }: ActivityFormProps) {
   const router = useRouter();
+  const [showPreview, setShowPreview] = useState(false);
+
+  React.useEffect(() => {
+    if (showPreview) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [showPreview]);
+
+
+
 
   const [nom, setNom] = useState(initialData?.nom || "");
-  const [barri, setBarri] = useState(initialData?.barri || "");
+  const NOVA_POBLACIO = "__nova_poblacio__";
+  const [barri, setBarri] = useState(
+    (initialData?.barri && !barris.girona.includes(initialData.barri) && !barris.altres.includes(initialData.barri))
+      ? NOVA_POBLACIO
+      : (initialData?.barri || "")
+  );
+  const [customPoblacio, setCustomPoblacio] = useState(
+    (initialData?.barri && !barris.girona.includes(initialData.barri) && !barris.altres.includes(initialData.barri))
+      ? initialData.barri
+      : ""
+  );
   const [categoria, setCategoria] = useState(initialData?.categoria || "");
+  // Admin: centre seleccionat quan crea una activitat per a un altre centre
+  const [selectedCentreId, setSelectedCentreId] = useState<string>(
+    initialData?.centreId || centre?.id || ""
+  );
+  const [centreSearch, setCentreSearch] = useState("");
+
+  // Per a la previsualització: si l'admin té un centre seleccionat, usem aquell; sinó el centre del prop
+  const safeCentres = allCentres ?? [];
+  const centrePreview = (isAdmin && safeCentres.length > 0 && selectedCentreId)
+    ? safeCentres.find(c => c.id === selectedCentreId) ?? centre
+    : centre;
 
   const [validationErrors, setValidationErrors] = useState<Record<string, boolean>>({});
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
@@ -142,8 +407,164 @@ export default function ActivityForm({
   const [priceVal, setPriceVal] = useState(initialPriceState.val);
   const [priceUnit, setPriceUnit] = useState(initialPriceState.unit);
   const [customPrice, setCustomPrice] = useState(initialPriceState.custom);
+  const TIPUS_VALIDS = ["Extraescolar", "Casal", "Taller"];
+  const [tipus, setTipus] = useState(
+    TIPUS_VALIDS.includes(initialData?.tipus || "") ? (initialData?.tipus || "Extraescolar") : "Extraescolar"
+  );
   const [horari, setHorari] = useState(initialData?.horari || "");
   const [dies, setDies] = useState(initialData?.dies || "");
+
+  // --- EXTRAESCOLARS WEEKDAYS STATE ---
+  const [selectedWeekdays, setSelectedWeekdays] = useState<string[]>(() => {
+    if (initialData?.tipus === "Extraescolar") {
+      const val = initialData?.dies || "";
+      const lower = val.toLowerCase();
+      const weekdays = [];
+      if (lower.includes("dilluns")) weekdays.push("Dilluns");
+      if (lower.includes("dimarts")) weekdays.push("Dimarts");
+      if (lower.includes("dimecres")) weekdays.push("Dimecres");
+      if (lower.includes("dijous")) weekdays.push("Dijous");
+      if (lower.includes("divendres")) weekdays.push("Divendres");
+      if (lower.includes("dissabte")) weekdays.push("Dissabte");
+      if (lower.includes("diumenge")) weekdays.push("Diumenge");
+      return weekdays;
+    }
+    return [];
+  });
+
+  // --- CASALS STATES (RANGE OR INDIVIDUAL) ---
+  const isCasalIndividual = (() => {
+    if (initialData?.tipus !== "Casal") return false;
+    const text = (initialData.dies || "").toLowerCase();
+    return (text.includes(",") || text.includes(" i ")) && !text.includes("del ") && !text.includes(" al ");
+  })();
+  
+  const [casalDateMode, setCasalDateMode] = useState<"range" | "individual">(isCasalIndividual ? "individual" : "range");
+
+  const [startDate, setStartDate] = useState(() => {
+    if (initialData?.tipus === "Casal" && !isCasalIndividual) {
+      const parsed = parseDateRange(initialData.dies || "");
+      return parsed.start;
+    }
+    return "";
+  });
+  const [endDate, setEndDate] = useState(() => {
+    if (initialData?.tipus === "Casal" && !isCasalIndividual) {
+      const parsed = parseDateRange(initialData.dies || "");
+      return parsed.end;
+    }
+    return "";
+  });
+
+  const [multipleDates, setMultipleDates] = useState<string[]>(() => {
+    if (initialData?.tipus === "Casal" && isCasalIndividual) {
+      const parsed = parseMultipleDates(initialData.dies || "");
+      return parsed.length > 0 ? parsed : [""];
+    }
+    return [""];
+  });
+
+  // --- TALLERS STATES (PUNTUAL OR RECURRENT) ---
+  const isRecurringTaller = !!(
+    initialData?.tipus?.toLowerCase().includes("taller") && 
+    (initialData.dies || "").toLowerCase().startsWith("cada")
+  );
+
+  const [tallerMode, setTallerMode] = useState<"puntual" | "recurrent">(isRecurringTaller ? "recurrent" : "puntual");
+  
+  const [singleDate, setSingleDate] = useState(() => {
+    if (initialData?.tipus?.toLowerCase().includes("taller") && !isRecurringTaller) {
+      return parseSingleDate(initialData.dies || "");
+    }
+    return "";
+  });
+
+  const [selectedTallerWeekdays, setSelectedTallerWeekdays] = useState<string[]>(() => {
+    if (initialData?.tipus?.toLowerCase().includes("taller") && isRecurringTaller) {
+      const val = initialData.dies || "";
+      const lower = val.toLowerCase();
+      const weekdays = [];
+      if (lower.includes("dilluns")) weekdays.push("Dilluns");
+      if (lower.includes("dimarts")) weekdays.push("Dimarts");
+      if (lower.includes("dimecres")) weekdays.push("Dimecres");
+      if (lower.includes("dijous")) weekdays.push("Dijous");
+      if (lower.includes("divendres")) weekdays.push("Divendres");
+      if (lower.includes("dissabte")) weekdays.push("Dissabte");
+      if (lower.includes("diumenge")) weekdays.push("Diumenge");
+      return weekdays;
+    }
+    return [];
+  });
+
+  // Dates d'inici i fi per al mode recurrent
+  const [recurrentStart, setRecurrentStart] = useState(() =>
+    isRecurringTaller ? parseRecurrentRange(initialData?.dies || '').start : ''
+  );
+  const [recurrentEnd, setRecurrentEnd] = useState(() =>
+    isRecurringTaller ? parseRecurrentRange(initialData?.dies || '').end : ''
+  );
+
+  // --- FORMATTERS ---
+  const joinWeekdays = (days: string[]) => {
+    const order = ["Dilluns", "Dimarts", "Dimecres", "Dijous", "Divendres", "Dissabte", "Diumenge"];
+    const sorted = [...days].sort((a, b) => order.indexOf(a) - order.indexOf(b));
+    if (sorted.length === 0) return "";
+    if (sorted.length === 1) return sorted[0];
+    if (sorted.length === 2) return `${sorted[0]} i ${sorted[1]}`;
+    return `${sorted.slice(0, -1).join(", ")} i ${sorted[sorted.length - 1]}`;
+  };
+
+  const formatDateRange = (startStr: string, endStr: string) => {
+    if (!startStr) return "";
+    const start = new Date(startStr + 'T00:00:00');
+    const months = ["gener", "febrer", "mar\u00e7", "abril", "maig", "juny", "juliol", "agost", "setembre", "octubre", "novembre", "desembre"];
+    const startDay = start.getDate();
+    const startMonth = months[start.getMonth()];
+    const startYear = start.getFullYear();
+    if (!endStr) {
+      return `A partir del ${startDay} de ${startMonth} de ${startYear}`;
+    }
+    const end = new Date(endStr + 'T00:00:00');
+    const endDay = end.getDate();
+    const endMonth = months[end.getMonth()];
+    const endYear = end.getFullYear();
+    // Cross-year: show both years explicitly
+    if (startYear !== endYear) {
+      return `Del ${startDay} de ${startMonth} de ${startYear} al ${endDay} de ${endMonth} de ${endYear}`;
+    }
+    if (startMonth === endMonth) {
+      return `Del ${startDay} al ${endDay} de ${startMonth} de ${endYear}`;
+    }
+    return `Del ${startDay} de ${startMonth} al ${endDay} de ${endMonth} de ${endYear}`;
+  };
+
+  const formatSingleDate = (dateStr: string) => {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    const days = ["Diumenge", "Dilluns", "Dimarts", "Dimecres", "Dijous", "Divendres", "Dissabte"];
+    const months = ["gener", "febrer", "març", "abril", "maig", "juny", "juliol", "agost", "setembre", "octubre", "novembre", "desembre"];
+    
+    const dayName = days[date.getDay()];
+    const day = date.getDate();
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    
+    return `${dayName}, ${day} de ${month} de ${year}`;
+  };
+
+  const formatRecurringTaller = (days: string[]) => {
+    const joined = joinWeekdays(days);
+    if (!joined) return "";
+    return `Cada ${joined.toLowerCase()}`;
+  };
+
+  // Construeix el text complet del camp `dies` per a tallers recurrents
+  const buildRecurrentDies = (weekdays: string[], start: string, end: string) => {
+    const weekdayText = formatRecurringTaller(weekdays);
+    if (!weekdayText) return weekdayText;
+    const rangeText = formatDateRange(start, end);
+    return rangeText ? `${weekdayText}. ${rangeText}` : weekdayText;
+  };
   const [descripcio, setDescripcio] = useState(initialData?.descripcio || "");
   const [durada, setDurada] = useState(initialData?.durada || "");
   const [alumnes, setAlumnes] = useState(initialData?.alumnes || "");
@@ -162,6 +583,8 @@ export default function ActivityForm({
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const [loading, setLoading] = useState(false);
+
+
 
   const handleFeaturedUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -255,7 +678,7 @@ export default function ActivityForm({
 
     const errors: Record<string, boolean> = {};
     if (!nom.trim()) errors.nom = true;
-    if (!barri.trim()) errors.barri = true;
+    if (!barri.trim() || (barri === NOVA_POBLACIO && !customPoblacio.trim())) errors.barri = true;
     if (!categoria.trim()) errors.categoria = true;
     if (!edat.trim()) errors.edat = true;
     if (!horari.trim()) errors.horari = true;
@@ -282,7 +705,7 @@ export default function ActivityForm({
     try {
       const formData = new FormData();
       formData.append("nom", nom);
-      formData.append("barri", barri);
+      formData.append("barri", barri === NOVA_POBLACIO ? customPoblacio.trim() : barri);
       formData.append("categoria", categoria);
       
       const subcategoria = predefinedSubs 
@@ -314,6 +737,11 @@ export default function ActivityForm({
       formData.append("qui_imparteix", qui_imparteix);
       formData.append("imatgeUrl", imatgeUrl);
       formData.append("galeria", JSON.stringify(galeria));
+      formData.append("tipus", tipus);
+      // Admin: afegir el centre seleccionat al FormData (no llegit del hidden input perquè construïm FormData manualment)
+      if (isAdmin && selectedCentreId) {
+        formData.append("centreId", selectedCentreId);
+      }
 
       const res = await submitAction(null, formData);
 
@@ -404,7 +832,105 @@ export default function ActivityForm({
         )}
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
-          
+
+          {/* Camp ocult per enviar el centreId sempre */}
+          <input type="hidden" name="centreId" value={selectedCentreId} />
+
+          {/* Selector de Centre (visible només per admin en mode creació) */}
+          {isAdmin && !initialData && allCentres && allCentres.length > 0 && (
+            <div style={{
+              background: "linear-gradient(135deg, rgba(217,87,56,0.06), rgba(217,87,56,0.02))",
+              border: "1.5px solid rgba(217,87,56,0.25)",
+              borderRadius: "14px",
+              padding: "22px 24px"
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
+                <span style={{
+                  background: "rgba(217,87,56,0.12)",
+                  color: "#d95738",
+                  borderRadius: "6px",
+                  padding: "4px 10px",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase"
+                }}>⚙ Admin</span>
+                <h3 style={{
+                  fontSize: "15px",
+                  fontWeight: 700,
+                  color: "var(--verd-fosc)",
+                  margin: 0
+                }}>Crea l&apos;activitat per a un centre</h3>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                <label style={{ fontSize: "13px", fontWeight: 700, color: "var(--verd-fosc)", textTransform: "uppercase" }}>
+                  Selecciona el Centre *
+                </label>
+                <input
+                  type="text"
+                  placeholder="Cerca per nom de centre..."
+                  value={centreSearch}
+                  onChange={e => setCentreSearch(e.target.value)}
+                  style={{
+                    padding: "10px 14px",
+                    border: "1px solid rgba(26,107,58,0.25)",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    outline: "none",
+                    background: "white"
+                  }}
+                />
+                <div style={{
+                  maxHeight: "220px",
+                  overflowY: "auto",
+                  border: "1px solid rgba(26,107,58,0.15)",
+                  borderRadius: "10px",
+                  background: "white"
+                }}>
+                  {allCentres
+                    .filter(c => !centreSearch || c.nom?.toLowerCase().includes(centreSearch.toLowerCase()))
+                    .sort((a, b) => (a.nom || "").localeCompare(b.nom || ""))
+                    .map(c => (
+                      <div
+                        key={c.id}
+                        onClick={() => {
+                          setSelectedCentreId(c.id || "");
+                          setCentreSearch(c.nom || "");
+                        }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "12px",
+                          padding: "10px 14px",
+                          cursor: "pointer",
+                          background: selectedCentreId === c.id ? "rgba(26,107,58,0.08)" : "transparent",
+                          borderBottom: "1px solid rgba(0,0,0,0.05)",
+                          transition: "background 0.15s"
+                        }}
+                      >
+                        {c.imatgeUrl && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={c.imatgeUrl} alt={c.nom || ""} style={{ width: "28px", height: "28px", objectFit: "contain", borderRadius: "4px", flexShrink: 0 }} />
+                        )}
+                        <span style={{ fontSize: "14px", fontWeight: selectedCentreId === c.id ? 700 : 400, color: "var(--verd-fosc)" }}>
+                          {c.nom}
+                        </span>
+                        {selectedCentreId === c.id && (
+                          <span style={{ marginLeft: "auto", color: "var(--verd)", fontSize: "16px" }}>✓</span>
+                        )}
+                      </div>
+                    ))
+                  }
+                </div>
+                {selectedCentreId && (
+                  <p style={{ margin: 0, fontSize: "13px", color: "var(--verd)", fontWeight: 600 }}>
+                    ✓ Centre seleccionat: {allCentres.find(c => c.id === selectedCentreId)?.nom}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Section 1: Informació Bàsica */}
           <div>
             <h3 style={{
@@ -486,6 +1012,33 @@ export default function ActivityForm({
                     * Selecciona una categoria obligatòria
                   </span>
                 )}
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <label style={{ fontSize: "13px", fontWeight: "700", color: "var(--verd-fosc)", textTransform: "uppercase" }}>
+                  Tipus d&apos;Activitat *
+                </label>
+                <select
+                  id="tipus"
+                  value={tipus}
+                  onChange={(e) => setTipus(e.target.value)}
+                  disabled={loading}
+                  style={{
+                    padding: "12px 14px",
+                    border: "1px solid rgba(26, 107, 58, 0.2)",
+                    borderRadius: "8px",
+                    fontSize: "15px",
+                    outline: "none",
+                    cursor: "pointer",
+                    color: "var(--fosc)",
+                    backgroundColor: "white",
+                    transition: "all 0.2s"
+                  }}
+                >
+                  <option value="Extraescolar">Extraescolar (Setmanal / Curs anual)</option>
+                  <option value="Casal">Casal (Estiu, Nadal, Setmana Santa)</option>
+                  <option value="Taller">Taller o Oci (Monogràfic, escape room, aniversari, puntual)</option>
+                </select>
               </div>
 
               {categoria && (categoria === "Esports" || categoria === "Idiomes") && (
@@ -597,7 +1150,33 @@ export default function ActivityForm({
                       ))}
                     </optgroup>
                   )}
+                  {isAdmin && (
+                    <option value={NOVA_POBLACIO} style={{ fontWeight: 600, color: "var(--verd-fosc)" }}>
+                      ＋ Afegir nova població...
+                    </option>
+                  )}
                 </select>
+                {/* Input per nova població (admin) */}
+                {isAdmin && barri === NOVA_POBLACIO && (
+                  <input
+                    type="text"
+                    placeholder="Escriu el nom de la nova població (ex: Salt, Sarrià de Ter...)"
+                    value={customPoblacio}
+                    onChange={(e) => setCustomPoblacio(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "12px 16px",
+                      border: validationErrors.barri ? "2px solid #b91c1c" : "1px solid rgba(26, 107, 58, 0.4)",
+                      borderRadius: "8px",
+                      fontSize: "15px",
+                      marginTop: "8px",
+                      outline: "none",
+                      backgroundColor: "#f0fdf4",
+                      color: "var(--fosc)",
+                    }}
+                    autoFocus
+                  />
+                )}
                 {validationErrors.barri && (
                   <span style={{ color: "#b91c1c", fontSize: "12px", fontWeight: "600", marginTop: "-2px" }}>
                     * Selecciona un barri obligatori
@@ -623,35 +1202,375 @@ export default function ActivityForm({
             </h3>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "20px" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", gridColumn: "1 / -1" }}>
                 <label style={{ fontSize: "13px", fontWeight: "700", color: "var(--verd-fosc)", textTransform: "uppercase" }}>
                   {TXT_DIES}
                 </label>
-                <input
-                  type="text"
-                  id="dies"
-                  value={dies}
-                  onChange={(e) => handleFieldChange("dies", e.target.value, setDies)}
-                  placeholder="Ex: Dilluns i Dimecres, Dissabtes matí..."
-                  disabled={loading}
-                  style={{
-                    padding: "12px 14px",
-                    border: validationErrors.dies 
-                      ? "2.5px solid #b91c1c" 
-                      : "1px solid rgba(26, 107, 58, 0.2)",
-                    borderRadius: "8px",
-                    fontSize: "15px",
-                    outline: "none",
-                    color: "var(--fosc)",
-                    backgroundColor: validationErrors.dies ? "#fef2f2" : "white",
-                    transition: "all 0.2s"
-                  }}
-                />
-                {validationErrors.dies && (
-                  <span style={{ color: "#b91c1c", fontSize: "12px", fontWeight: "600", marginTop: "-2px" }}>
-                    * Especificar els dies és obligatori
-                  </span>
+                
+                {/* 1. Selector per a Extraescolars (Setmana DL-DG) */}
+                {tipus === "Extraescolar" && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    <p style={{ fontSize: "13px", color: "var(--muted)", margin: 0 }}>
+                      Tria els dies de la setmana en què es fa l'activitat:
+                    </p>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+                      {["Dilluns", "Dimarts", "Dimecres", "Dijous", "Divendres", "Dissabte", "Diumenge"].map((day) => {
+                        const isSelected = selectedWeekdays.includes(day);
+                        return (
+                          <button
+                            key={day}
+                            type="button"
+                            onClick={() => {
+                              let newDays = [];
+                              if (isSelected) {
+                                newDays = selectedWeekdays.filter(d => d !== day);
+                              } else {
+                                newDays = [...selectedWeekdays, day];
+                              }
+                              setSelectedWeekdays(newDays);
+                              const joined = joinWeekdays(newDays);
+                              setDies(joined);
+                              if (joined.trim()) {
+                                setValidationErrors(prev => ({ ...prev, dies: false }));
+                              }
+                            }}
+                            style={{
+                              padding: "10px 18px",
+                              borderRadius: "30px",
+                              border: isSelected ? "1px solid var(--verd)" : "1px solid var(--crema-fosca)",
+                              backgroundColor: isSelected ? "var(--verd)" : "white",
+                              color: isSelected ? "white" : "var(--fosc)",
+                              fontFamily: "var(--font-sans)",
+                              fontSize: "13px",
+                              fontWeight: "700",
+                              cursor: "pointer",
+                              transition: "all 0.2s"
+                            }}
+                          >
+                            {day}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 )}
+
+                {/* 2. Selector per a Casals (Rang o Dies concrets) */}
+                {tipus === "Casal" && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                    {/* Sub-selector tipus de Casal */}
+                    <div style={{ display: "flex", gap: "12px" }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCasalDateMode("range");
+                          const formatted = formatDateRange(startDate, endDate);
+                          setDies(formatted);
+                        }}
+                        style={{
+                          padding: "8px 16px",
+                          borderRadius: "8px",
+                          border: casalDateMode === "range" ? "2px solid var(--verd)" : "1px solid var(--crema-fosca)",
+                          backgroundColor: casalDateMode === "range" ? "rgba(26, 107, 58, 0.05)" : "white",
+                          color: "var(--verd-fosc)",
+                          fontWeight: "700",
+                          fontSize: "13px",
+                          cursor: "pointer",
+                          transition: "all 0.2s"
+                        }}
+                      >
+                        📅 Dates seguides (Interval de dates)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCasalDateMode("individual");
+                          const formatted = formatMultipleDates(multipleDates);
+                          setDies(formatted);
+                        }}
+                        style={{
+                          padding: "8px 16px",
+                          borderRadius: "8px",
+                          border: casalDateMode === "individual" ? "2px solid var(--verd)" : "1px solid var(--crema-fosca)",
+                          backgroundColor: casalDateMode === "individual" ? "rgba(26, 107, 58, 0.05)" : "white",
+                          color: "var(--verd-fosc)",
+                          fontWeight: "700",
+                          fontSize: "13px",
+                          cursor: "pointer",
+                          transition: "all 0.2s"
+                        }}
+                      >
+                        📌 Dies concrets (Llistat de dies solts)
+                      </button>
+                    </div>
+
+                    {casalDateMode === "range" ? (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                        <p style={{ fontSize: "13px", color: "var(--muted)", margin: 0 }}>
+                          Especifica les dates de funcionament del Casal (inici i final):
+                        </p>
+                        <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "6px", flex: "1 1 200px" }}>
+                            <span style={{ fontSize: "11px", fontWeight: "700", color: "var(--muted)" }}>DATA D'INICI</span>
+                            <input
+                              type="date"
+                              value={startDate}
+                              onChange={(e) => {
+                                setStartDate(e.target.value);
+                                const formatted = formatDateRange(e.target.value, endDate);
+                                setDies(formatted);
+                                if (formatted.trim()) {
+                                  setValidationErrors(prev => ({ ...prev, dies: false }));
+                                }
+                              }}
+                              style={{
+                                padding: "10px 12px",
+                                border: "1px solid rgba(26, 107, 58, 0.2)",
+                                borderRadius: "8px",
+                                fontSize: "14px",
+                                color: "var(--fosc)",
+                                outline: "none"
+                              }}
+                            />
+                          </div>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "6px", flex: "1 1 200px" }}>
+                            <span style={{ fontSize: "11px", fontWeight: "700", color: "var(--muted)" }}>DATA DE FI (OPCIONAL)</span>
+                            <input
+                              type="date"
+                              value={endDate}
+                              onChange={(e) => {
+                                setEndDate(e.target.value);
+                                const formatted = formatDateRange(startDate, e.target.value);
+                                setDies(formatted);
+                                if (formatted.trim()) {
+                                  setValidationErrors(prev => ({ ...prev, dies: false }));
+                                }
+                              }}
+                              style={{
+                                padding: "10px 12px",
+                                border: "1px solid rgba(26, 107, 58, 0.2)",
+                                borderRadius: "8px",
+                                fontSize: "14px",
+                                color: "var(--fosc)",
+                                outline: "none"
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                        <p style={{ fontSize: "13px", color: "var(--muted)", margin: 0 }}>
+                          Selecciona al calendari els dies concrets del Casal:
+                        </p>
+                        <MultiDatePicker
+                          selectedDates={multipleDates.filter(Boolean)}
+                          onChange={(newDates) => {
+                            setMultipleDates(newDates.length > 0 ? newDates : [""]);
+                            const formatted = formatMultipleDates(newDates);
+                            setDies(formatted);
+                            if (formatted.trim()) {
+                              setValidationErrors(prev => ({ ...prev, dies: false }));
+                            }
+                          }}
+                          disabled={loading}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 3. Selector per a Tallers (Puntual o Recurrent) */}
+                {(tipus === "Taller" || tipus === "Taller / Oci") && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                    {/* Sub-selector tipus de Taller */}
+                    <div style={{ display: "flex", gap: "12px" }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTallerMode("puntual");
+                          const formatted = formatSingleDate(singleDate);
+                          setDies(formatted);
+                        }}
+                        style={{
+                          padding: "8px 16px",
+                          borderRadius: "8px",
+                          border: tallerMode === "puntual" ? "2px solid var(--verd)" : "1px solid var(--crema-fosca)",
+                          backgroundColor: tallerMode === "puntual" ? "rgba(26, 107, 58, 0.05)" : "white",
+                          color: "var(--verd-fosc)",
+                          fontWeight: "700",
+                          fontSize: "13px",
+                          cursor: "pointer",
+                          transition: "all 0.2s"
+                        }}
+                      >
+                        ⚡ Taller puntual (Dia únic)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTallerMode("recurrent");
+                          const formatted = buildRecurrentDies(selectedTallerWeekdays, recurrentStart, recurrentEnd);
+                          setDies(formatted);
+                        }}
+                        style={{
+                          padding: "8px 16px",
+                          borderRadius: "8px",
+                          border: tallerMode === "recurrent" ? "2px solid var(--verd)" : "1px solid var(--crema-fosca)",
+                          backgroundColor: tallerMode === "recurrent" ? "rgba(26, 107, 58, 0.05)" : "white",
+                          color: "var(--verd-fosc)",
+                          fontWeight: "700",
+                          fontSize: "13px",
+                          cursor: "pointer",
+                          transition: "all 0.2s"
+                        }}
+                      >
+                        🔄 Taller recurrent (Periòdic)
+                      </button>
+                    </div>
+
+                    {tallerMode === "puntual" ? (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                        <p style={{ fontSize: "13px", color: "var(--muted)", margin: 0 }}>
+                          Tria la data de celebració del taller o activitat puntual:
+                        </p>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxWidth: "300px" }}>
+                          <span style={{ fontSize: "11px", fontWeight: "700", color: "var(--muted)" }}>DATA DEL TALLER</span>
+                          <input
+                            type="date"
+                            value={singleDate}
+                            onChange={(e) => {
+                              setSingleDate(e.target.value);
+                              const formatted = formatSingleDate(e.target.value);
+                              setDies(formatted);
+                              if (formatted.trim()) {
+                                setValidationErrors(prev => ({ ...prev, dies: false }));
+                              }
+                            }}
+                            style={{
+                              padding: "10px 12px",
+                              border: "1px solid rgba(26, 107, 58, 0.2)",
+                              borderRadius: "8px",
+                              fontSize: "14px",
+                              color: "var(--fosc)",
+                              outline: "none"
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                        <p style={{ fontSize: "13px", color: "var(--muted)", margin: 0 }}>
+                          Tria els dies de la setmana en què es fa el taller de manera recurrent:
+                        </p>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+                          {["Dilluns", "Dimarts", "Dimecres", "Dijous", "Divendres", "Dissabte", "Diumenge"].map((day) => {
+                            const isSelected = selectedTallerWeekdays.includes(day);
+                            return (
+                              <button
+                                key={day}
+                                type="button"
+                                onClick={() => {
+                                  let newDays = [];
+                                  if (isSelected) {
+                                    newDays = selectedTallerWeekdays.filter(d => d !== day);
+                                  } else {
+                                    newDays = [...selectedTallerWeekdays, day];
+                                  }
+                                  setSelectedTallerWeekdays(newDays);
+                                  const formatted = buildRecurrentDies(newDays, recurrentStart, recurrentEnd);
+                                  setDies(formatted);
+                                  if (formatted.trim()) {
+                                    setValidationErrors(prev => ({ ...prev, dies: false }));
+                                  }
+                                }}
+                                style={{
+                                  padding: "10px 18px",
+                                  borderRadius: "30px",
+                                  border: isSelected ? "1px solid var(--verd)" : "1px solid var(--crema-fosca)",
+                                  backgroundColor: isSelected ? "var(--verd)" : "white",
+                                  color: isSelected ? "white" : "var(--fosc)",
+                                  fontFamily: "var(--font-sans)",
+                                  fontSize: "13px",
+                                  fontWeight: "700",
+                                  cursor: "pointer",
+                                  transition: "all 0.2s"
+                                }}
+                              >
+                                {day}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {/* Dates d'inici i fi opcionals per al taller recurrent */}
+                        <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>
+                            Dates del taller (opcional). Si les poses, el taller s'ordenarà per data d'inici i desapareixerà automàticament en acabar.
+                          </p>
+                          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                              <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--muted)' }}>DATA D'INICI (opcional)</span>
+                              <input
+                                type="date"
+                                value={recurrentStart}
+                                onChange={(e) => {
+                                  setRecurrentStart(e.target.value);
+                                  setDies(buildRecurrentDies(selectedTallerWeekdays, e.target.value, recurrentEnd));
+                                }}
+                                style={{ padding: '10px 12px', border: '1px solid rgba(26, 107, 58, 0.2)', borderRadius: '8px', fontSize: '14px', color: 'var(--fosc)', outline: 'none' }}
+                              />
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                              <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--muted)' }}>DATA DE FI (opcional)</span>
+                              <input
+                                type="date"
+                                value={recurrentEnd}
+                                onChange={(e) => {
+                                  setRecurrentEnd(e.target.value);
+                                  setDies(buildRecurrentDies(selectedTallerWeekdays, recurrentStart, e.target.value));
+                                }}
+                                style={{ padding: '10px 12px', border: '1px solid rgba(26, 107, 58, 0.2)', borderRadius: '8px', fontSize: '14px', color: 'var(--fosc)', outline: 'none' }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 4. Input Text de control manual pre-omplert (Visible per defecte o editable per afegir matisos) */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "4px" }}>
+                  <span style={{ fontSize: "11px", fontWeight: "700", color: "var(--muted)" }}>
+                    TEXT DELS DIES GENERAT (POTS EDITAR-LO MANUALMENT) *
+                  </span>
+                  <input
+                    type="text"
+                    id="dies"
+                    value={dies}
+                    onChange={(e) => handleFieldChange("dies", e.target.value, setDies)}
+                    placeholder="Ex: Dilluns i Dimecres, Del 1 al 31 de juliol..."
+                    disabled={loading}
+                    style={{
+                      padding: "12px 14px",
+                      border: validationErrors.dies 
+                        ? "2.5px solid #b91c1c" 
+                        : "1px solid rgba(26, 107, 58, 0.2)",
+                      borderRadius: "8px",
+                      fontSize: "15px",
+                      outline: "none",
+                      color: "var(--fosc)",
+                      backgroundColor: validationErrors.dies ? "#fef2f2" : "white",
+                      transition: "all 0.2s"
+                    }}
+                  />
+                  {validationErrors.dies && (
+                    <span style={{ color: "#b91c1c", fontSize: "12px", fontWeight: "600", marginTop: "-2px" }}>
+                      * El text descriptiu dels dies o dates és obligatori
+                    </span>
+                  )}
+                </div>
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
@@ -832,22 +1751,13 @@ export default function ActivityForm({
                 <label style={{ fontSize: "13px", fontWeight: "700", color: "var(--verd-fosc)", textTransform: "uppercase" }}>
                   {TXT_DESCRIPCIO}
                 </label>
-                <textarea
+                
+                <RichTextEditor
+                  id="descripcio"
                   value={descripcio}
-                  onChange={(e) => setDescripcio(e.target.value)}
+                  onChange={setDescripcio}
                   placeholder="Explica què faran els xics en aquesta activitat, quina metodologia es fa servir, beneficis, etc."
                   disabled={loading}
-                  rows={4}
-                  style={{
-                    padding: "12px 14px",
-                    border: "1px solid rgba(26, 107, 58, 0.2)",
-                    borderRadius: "8px",
-                    fontSize: "15px",
-                    outline: "none",
-                    fontFamily: "inherit",
-                    color: "var(--fosc)",
-                    resize: "vertical"
-                  }}
                 />
               </div>
 
@@ -1228,10 +2138,12 @@ export default function ActivityForm({
           <div style={{
             display: "flex",
             justifyContent: "flex-end",
+            alignItems: "center",
             gap: "16px",
             borderTop: "1px solid var(--crema-fosca)",
             paddingTop: "28px",
-            marginTop: "12px"
+            marginTop: "12px",
+            flexWrap: "wrap"
           }}>
             <Link
               href="/dashboard"
@@ -1251,6 +2163,31 @@ export default function ActivityForm({
             >
               {TXT_CANCELAR}
             </Link>
+
+            <button
+              type="button"
+              onClick={() => setShowPreview(true)}
+              disabled={loading}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                backgroundColor: "white",
+                color: "var(--verd-fosc)",
+                border: "1px solid var(--verd)",
+                borderRadius: "8px",
+                padding: "12px 24px",
+                fontSize: "15px",
+                fontWeight: "600",
+                cursor: loading ? "not-allowed" : "pointer",
+                transition: "all 0.2s ease"
+              }}
+              onMouseOver={(e) => !loading && (e.currentTarget.style.backgroundColor = "var(--crema-fosca)")}
+              onMouseOut={(e) => !loading && (e.currentTarget.style.backgroundColor = "white")}
+            >
+              <Eye size={16} />
+              Previsualitzar fitxa
+            </button>
 
             <button
               type="submit"
@@ -1290,6 +2227,271 @@ export default function ActivityForm({
           </div>
         </form>
       </div>
+
+      {/* MODAL SUPERPOSAT DE PREVISUALITZACIÓ ULTRA-FIDEL */}
+      {showPreview && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "#fdfcf9",
+          zIndex: 99999,
+          overflowY: "auto",
+          display: "flex",
+          flexDirection: "column"
+        }}>
+          {/* Capçalera adhesiva de previsualització */}
+          <div style={{
+            position: "sticky",
+            top: 0,
+            backgroundColor: "#d95738",
+            color: "white",
+            padding: "12px 24px",
+            zIndex: 100,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            boxShadow: "0 2px 10px rgba(0,0,0,0.15)",
+            fontFamily: "var(--font-sans)"
+          }}>
+            <span style={{ fontWeight: "700", display: "flex", alignItems: "center", gap: "8px", fontSize: "14px" }}>
+              <Eye size={18} />
+              Mode Previsualització · La fitxa es veurà així per a les famílies
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowPreview(false)}
+              style={{
+                backgroundColor: "white",
+                color: "#d95738",
+                border: "none",
+                borderRadius: "6px",
+                padding: "6px 16px",
+                fontWeight: "700",
+                cursor: "pointer",
+                fontSize: "13px",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                transition: "all 0.2s"
+              }}
+              onMouseOver={(e) => e.currentTarget.style.opacity = "0.9"}
+              onMouseOut={(e) => e.currentTarget.style.opacity = "1"}
+            >
+              <X size={14} />
+              Tancar Previsualització
+            </button>
+          </div>
+
+          {/* Contingut que clona exactament el disseny de la fitxa pública amb les classes de globals.css */}
+          <div style={{ paddingBottom: "80px" }}>
+            {/* HERO SECTION */}
+            <div className="modal-hero" style={{ position: "relative" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={imatgeUrl || "https://images.unsplash.com/photo-1516627145497-ae6968895b74?q=80&w=2000&auto=format&fit=crop"}
+                alt={nom}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover"
+                }}
+              />
+              <div className="modal-hero-gradient">
+                <h1 className="modal-hero-title">{nom || "Nom de l'activitat"}</h1>
+              </div>
+              <div className="modal-badge">
+                {subSelectValue || customSubValue ? `${categoria} · ${subSelectValue === "Altres" ? customSubValue : (subSelectValue || customSubValue)}` : (categoria || "Categoria")}
+              </div>
+            </div>
+
+            {/* CONTINGUT DETALLAT */}
+            <div style={{
+              maxWidth: "1200px",
+              margin: "0 auto",
+              padding: "40px 20px 0",
+              fontFamily: "var(--font-sans)"
+            }}>
+              {/* Breadcrumbs */}
+              <div style={{ fontSize: "14px", marginBottom: "24px", opacity: 0.6 }}>
+                Inici / <span style={{ marginLeft: "4px" }}>{categoria || "Categoria"}</span> / <span style={{ marginLeft: "4px", fontWeight: "700" }}>{nom || "Nom"}</span>
+              </div>
+
+              {/* Metadades sub-títol */}
+              <div style={{ fontSize: "20px", color: "var(--muted)", marginBottom: "40px" }}>
+                {centre?.nom || initialData?.centre || "El teu Centre"} · {barri || "Barri"} · {edat || "Edats"}
+              </div>
+
+              {/* Graella de dues columnes exactament com la fitxa pública */}
+              <div className="grid-12 detail-grid" style={{ marginBottom: "60px" }}>
+                {/* Columna Esquerra: Descripció i Observacions */}
+                <div className="detail-col-left" style={{ gridColumn: "span 6", paddingRight: "40px" }}>
+                  <div style={{ fontSize: "18px", lineHeight: 1.6, color: "var(--fosc)" }}>
+                    {descripcio ? parseMarkdownToReact(descripcio) : (
+                      <p style={{ fontStyle: "italic", color: "var(--muted)" }}>Aquesta activitat no té cap descripció detallada encara.</p>
+                    )}
+                  </div>
+
+                  {material && (
+                    <div style={{ 
+                      marginTop: "32px", 
+                      padding: "24px", 
+                      backgroundColor: "var(--crema-fosca)", 
+                      borderLeft: "4px solid var(--verd)", 
+                      fontSize: "16px", 
+                      lineHeight: 1.5, 
+                      color: "var(--fosc)",
+                      borderRadius: "0 4px 4px 0",
+                      whiteSpace: "pre-line"
+                    }}>
+                      <strong style={{ display: "block", color: "var(--verd-fosc)", marginBottom: "8px", textTransform: "uppercase", fontSize: "12px", letterSpacing: "0.05em" }}>
+                        Observacions
+                      </strong>
+                      {material}
+                    </div>
+                  )}
+
+                  {/* Galeria de Fotos */}
+                  {galeria.length > 0 && (
+                    <div style={{ marginTop: "40px" }}>
+                      <h3 style={{
+                        fontFamily: "var(--font-serif)",
+                        fontStyle: "italic",
+                        fontSize: "22px",
+                        color: "var(--verd-fosc)",
+                        marginBottom: "16px"
+                      }}>
+                        Galeria de Fotos
+                      </h3>
+                      <div style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
+                        gap: "12px"
+                      }}>
+                        {galeria.map((img, idx) => (
+                          <div key={idx} style={{
+                            height: "100px",
+                            borderRadius: "8px",
+                            overflow: "hidden",
+                            backgroundColor: "#e5e7eb",
+                            border: "1px solid var(--crema-fosca)"
+                          }}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={img} alt="Galeria" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Columna Dreta: Targeta adhesiva informativa */}
+                <div className="detail-col-right" style={{ gridColumn: "span 6" }}>
+                  <div style={{
+                    backgroundColor: "white",
+                    padding: "32px",
+                    borderRadius: "12px",
+                    border: "1px solid var(--crema-fosca)",
+                    boxShadow: "0 4px 20px rgba(26,107,58,0.03)",
+                    position: "sticky",
+                    top: "80px"
+                  }}>
+                    {/* Preu */}
+                    <div style={{ fontSize: "32px", fontWeight: 700, color: "var(--verd-fosc)", marginBottom: "24px" }}>
+                      <strong style={{ display: "block", fontSize: "12px", textTransform: "uppercase", opacity: 0.5, marginBottom: "6px", letterSpacing: "0.05em", fontWeight: 700, color: "var(--muted)" }}>PREU:</strong>
+                      {(() => {
+                        let preuText = "Gratuït";
+                        if (priceUnit === "/mes" && priceVal) preuText = `${priceVal} €/mes`;
+                        else if (priceUnit === "/trimestre" && priceVal) preuText = `${priceVal} €/trimestre`;
+                        else if (priceUnit === "/any" && priceVal) preuText = `${priceVal} €/any`;
+                        else if (priceUnit === "gratuit") preuText = "Gratuït";
+                        else if (priceUnit === "personalitzat") preuText = customPrice || "Consultar";
+
+                        if (preuText.includes('/')) {
+                          const [priceV, priceU] = preuText.split('/');
+                          return (
+                            <>{priceV} <span style={{ fontSize: "16px", fontWeight: 400, opacity: 0.6 }}>/{priceU}</span></>
+                          );
+                        }
+                        return <>{preuText}</>;
+                      })()}
+                    </div>
+
+                    {/* Metadades informatives */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "32px", fontSize: "14px" }}>
+                      {qui_imparteix && <div><strong style={{ display: "block", fontSize: "11px", textTransform: "uppercase", opacity: 0.5, color: "var(--muted)" }}>Impartit per:</strong>{qui_imparteix}</div>}
+                      <div><strong style={{ display: "block", fontSize: "11px", textTransform: "uppercase", opacity: 0.5, color: "var(--muted)" }}>Horari:</strong>{horari || "Pendent"}</div>
+                      <div><strong style={{ display: "block", fontSize: "11px", textTransform: "uppercase", opacity: 0.5, color: "var(--muted)" }}>Dies:</strong>{dies || "Pendent"}</div>
+                      {durada && durada.trim() !== "" && <div><strong style={{ display: "block", fontSize: "11px", textTransform: "uppercase", opacity: 0.5, color: "var(--muted)" }}>Durada:</strong>{durada}</div>}
+                      {idioma && idioma.trim() !== "" && <div><strong style={{ display: "block", fontSize: "11px", textTransform: "uppercase", opacity: 0.5, color: "var(--muted)" }}>Idioma:</strong>{idioma}</div>}
+                    </div>
+
+                    {/* Targeta del centre patrocinador */}
+                    <div style={{
+                      paddingTop: "24px",
+                      borderTop: "1px solid var(--crema-fosca)",
+                      marginBottom: "24px",
+                      display: "flex",
+                      gap: "20px",
+                      alignItems: "center"
+                    }}>
+                      {(initialData?.centreImatgeUrl || centre?.imatgeUrl) && (
+                        <div style={{
+                          position: "relative",
+                          width: "80px",
+                          height: "80px",
+                          borderRadius: "8px",
+                          overflow: "hidden",
+                          border: "1px solid var(--crema-fosca)",
+                          flexShrink: 0,
+                          backgroundColor: "#fcfcfc",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center"
+                        }}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={initialData?.centreImatgeUrl || centrePreview?.imatgeUrl} alt="Logo" style={{ width: "90%", height: "90%", objectFit: "contain" }} />
+                        </div>
+                      )}
+                      <div style={{ flexGrow: 1 }}>
+                        <h4 style={{ margin: "0 0 8px 0", fontSize: "18px", fontWeight: "700" }}>{centrePreview?.nom || initialData?.centre || "Nom del Centre"}</h4>
+                        {centrePreview ? (
+                          <div style={{ fontSize: "14px", color: "var(--muted)", display: "flex", flexDirection: "column", gap: "4px" }}>
+                            {centrePreview.adreca && <div>{centrePreview.adreca}</div>}
+                            {centrePreview.telefon && <div>{centrePreview.telefon}</div>}
+                            {centrePreview.email && <div>{centrePreview.email}</div>}
+                          </div>
+                        ) : (
+                          <div style={{ fontSize: "14px", color: "var(--muted)" }}>Sense dades de contacte.</div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Botons de crida a l'acció (CTA) exactes de la versió pública */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                      {centrePreview?.telefon && (
+                        <div style={{ display: 'block', backgroundColor: 'var(--verd-fosc)', color: 'white', padding: '16px', textAlign: 'center', borderRadius: '4px', textDecoration: 'none', fontWeight: 700 }}>
+                          📞 {centrePreview.telefon}
+                        </div>
+                      )}
+                      {centrePreview?.email && (
+                        <div style={{ display: 'block', backgroundColor: 'var(--verd-fosc)', color: 'white', padding: '16px', textAlign: 'center', borderRadius: '4px', textDecoration: 'none', fontWeight: 700 }}>
+                          ✉ Envia un correu
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

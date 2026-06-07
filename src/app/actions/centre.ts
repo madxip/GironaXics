@@ -5,9 +5,19 @@ import { authOptions } from "@/lib/auth";
 import { updateCentre, getCentres } from "@/lib/airtable";
 import { revalidatePath } from "next/cache";
 
-async function getAuthenticatedCentreId() {
+async function getAuthenticatedCentreId(formData: FormData): Promise<string> {
   const session = await getServerSession(authOptions);
-  if (!session || !session.user || !session.user.centreId) {
+  if (!session || !session.user) {
+    throw new Error("Sessió no autoritzada.");
+  }
+  // Admin can edit any centre — use the centreId sent from the form
+  if (session.user.isAdmin) {
+    const centreId = formData.get("centreId") as string;
+    if (!centreId) throw new Error("Sessió no autoritzada.");
+    return centreId;
+  }
+  // Regular centre user
+  if (!session.user.centreId) {
     throw new Error("Sessió no autoritzada.");
   }
   return session.user.centreId;
@@ -15,8 +25,8 @@ async function getAuthenticatedCentreId() {
 
 export async function updateCentreAction(prevState: unknown, formData: FormData) {
   try {
-    const centreId = await getAuthenticatedCentreId();
-    
+    const centreId = await getAuthenticatedCentreId(formData);
+
     const nom = formData.get("nom") as string;
     const adreca = formData.get("adreca") as string;
     const telefon = formData.get("telefon") as string;

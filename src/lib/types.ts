@@ -25,7 +25,19 @@ export interface Activitat {
   galeria?: string[];
   centreImatgeUrl?: string;
   subcategoria?: string;
-  tipus?: string;
+  tipus?: string; // Extraescolar, Casal, Taller / Oci
+}
+
+export interface Sponsor {
+  id: string;
+  nom: string;
+  categoriaSlug: string;
+  imatgeUrl: string;
+  enllac: string;
+  actiu: boolean;
+  descripcio?: string;
+  imatgeFonsUrl?: string;
+  titol?: string;
 }
 
 export interface Centre {
@@ -41,4 +53,16 @@ export interface Centre {
   imatgeUrl?: string;
   interessat?: boolean; // Centre ha confirmat participació (casella Airtable)
 }
+
+export interface CasalsBanner {
+  id: string;
+  nom: string;
+  actiu: boolean;
+  kicker?: string;
+  titol?: string;
+  subtitol?: string;
+  dates?: string;
+  dataLimit?: string;
+}
+
 

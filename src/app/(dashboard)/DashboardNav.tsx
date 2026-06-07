@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Plus, Activity, Globe, Building } from "lucide-react";
+import { Plus, Activity, Globe, Building, BarChart2 } from "lucide-react";
 
 export default function DashboardNav() {
   const pathname = usePathname();
@@ -24,6 +24,11 @@ export default function DashboardNav() {
       href: "/dashboard/activitats/nova",
       label: "Afegir Activitat",
       icon: Plus
+    },
+    {
+      href: "/dashboard/analytics",
+      label: "Analítica",
+      icon: BarChart2
     },
     {
       href: "/",

@@ -1,4 +1,4 @@
-import { Activitat, Centre } from './types';
+import { Activitat, Centre, Sponsor, CasalsBanner } from './types';
 import activitatsSeed from '../../seed/activitats-inicials.json';
 import { normalizeSlug } from './utils';
 
@@ -7,16 +7,28 @@ const BASE_ID = process.env.AIRTABLE_BASE_ID;
 
 // Cache en memòria compatible amb entorns serverless (Vercel, etc.)
 // El sistema de cache basat en fitxers (fs) no funciona en serverless perquè el FS és read-only.
-const CACHE_TTL = 5 * 60 * 1000; // 5 minuts de validesa de la cache
+const CACHE_TTL = 60 * 1000; // 60 segons — alineat amb revalidate=60 de les pàgines
 
 interface CacheStructure {
   activitats?: {
     timestamp: number;
     data: Activitat[];
   };
+  allActivitats?: {
+    timestamp: number;
+    data: Activitat[];
+  };
   centres?: {
     timestamp: number;
     data: Centre[];
+  };
+  sponsors?: {
+    timestamp: number;
+    data: Sponsor[];
+  };
+  casalsBanner?: {
+    timestamp: number;
+    data: CasalsBanner | null;
   };
 }
 
@@ -31,9 +43,27 @@ function writeCache(data: CacheStructure) {
   if (data.activitats !== undefined) {
     memoryCache.activitats = data.activitats;
   }
+  if (data.allActivitats !== undefined) {
+    memoryCache.allActivitats = data.allActivitats;
+  }
   if (data.centres !== undefined) {
     memoryCache.centres = data.centres;
   }
+  if (data.sponsors !== undefined) {
+    memoryCache.sponsors = data.sponsors;
+  }
+  if (data.casalsBanner !== undefined) {
+    memoryCache.casalsBanner = data.casalsBanner;
+  }
+}
+
+/** Neteja tota la memòria cau (activitats + centres + sponsors + casalsBanner). Cridat des de l'acció admin. */
+export function clearAllCache(): void {
+  delete memoryCache.activitats;
+  delete memoryCache.allActivitats;
+  delete memoryCache.centres;
+  delete memoryCache.sponsors;
+  delete memoryCache.casalsBanner;
 }
 
 // Fallback per desenvolupament si no hi ha Airtable configurat
@@ -308,6 +338,66 @@ export async function getActivitats(): Promise<Activitat[]> {
   }
 }
 
+/**
+ * Retorna TOTES les activitats sense filtre de publicació.
+ * Únicament per al panell d'administrador, per poder veure i gestionar
+ * activitats no publicades (esborranys) sense haver d'anar a Airtable.
+ */
+export async function getAllActivitats(): Promise<Activitat[]> {
+  if (!API_KEY || !BASE_ID) {
+    return getFallbackActivitats().map(a => ({ ...a }));
+  }
+
+  const cache = readCache();
+  const now = Date.now();
+  if (cache.allActivitats && (now - cache.allActivitats.timestamp < CACHE_TTL)) {
+    return cache.allActivitats.data;
+  }
+
+  try {
+    // Sense filtre de publicada
+    const records = await fetchAllRecords('Activitats');
+
+    let centresRecords: { id: string; fields: Record<string, unknown> }[] = [];
+    try {
+      centresRecords = await fetchAllRecords('Centres');
+    } catch { /* Ignore */ }
+
+    const centreMap = new Map<string, string>();
+    const centreImatgeMap = new Map<string, string>();
+    const centreInteressatMap = new Map<string, boolean>();
+
+    centresRecords.forEach((c) => {
+      if (c.fields?.nom) centreMap.set(c.id, c.fields.nom as string);
+      if (c.fields) {
+        const attachmentField = c.fields.Imatge || c.fields.imatge || c.fields.Logo || c.fields.logo || c.fields.Logotip || c.fields.logotip;
+        if (Array.isArray(attachmentField) && attachmentField.length > 0) {
+          const url = (attachmentField[0] as { url: string }).url;
+          centreImatgeMap.set(c.id, url);
+          if (c.fields.nom) centreImatgeMap.set(c.fields.nom as string, url);
+        }
+        const interessat = !!(c.fields.interessat || c.fields.Interessat || c.fields['col·laborador'] || c.fields['Col·laborador'] || c.fields.partner || c.fields.Partner);
+        centreInteressatMap.set(c.id, interessat);
+        if (c.fields.nom) centreInteressatMap.set(c.fields.nom as string, interessat);
+      }
+    });
+
+    const formattedActivitats = records.map((r) =>
+      mapActivitatRecord(r, centreMap, centreImatgeMap, centreInteressatMap)
+    );
+
+    const updatedCache = readCache();
+    updatedCache.allActivitats = { timestamp: Date.now(), data: formattedActivitats };
+    writeCache(updatedCache);
+
+    return formattedActivitats;
+  } catch (error) {
+    console.error('[Airtable API] Error en getAllActivitats:', error);
+    if (cache.allActivitats) return cache.allActivitats.data;
+    return [];
+  }
+}
+
 export async function getActivitatBySlug(slug: string): Promise<Activitat | null> {
   const all = await getActivitats();
   const normalizedSearchSlug = normalizeSlug(decodeURIComponent(slug));
@@ -353,7 +443,17 @@ export async function getCentres(): Promise<Centre[]> {
 
   try {
     const records = await fetchAllRecords('Centres');
-    const formattedCentres = records.map((r: { id: string; fields: Record<string, unknown> }) => {
+    // Filtre per camp "actiu" (casella de selecció a Airtable):
+    // - Si ALGUN centre té actiu=true → mostrem només els actius
+    // - Si CAP centre té actiu=true (camp no existeix o no hi ha cap marcat) → mostrem tots
+    // Això permet compatibilitat retroactiva: si l'usuari no ha afegit el camp "actiu"
+    // a Airtable, el comportament és idèntic a l'anterior (tots els centres visibles).
+    const anyActiu = records.some(r => r.fields.actiu === true || r.fields.Actiu === true);
+    const recordsToShow = anyActiu
+      ? records.filter(r => r.fields.actiu === true || r.fields.Actiu === true)
+      : records;
+
+    const formattedCentres = recordsToShow.map((r: { id: string; fields: Record<string, unknown> }) => {
       const f = { ...r.fields } as unknown as Centre;
       f.id = r.id;
       f.adreca = (r.fields.adreça || r.fields.adreca || "") as string;
@@ -400,7 +500,7 @@ export async function getCentreBySlug(slug: string): Promise<Centre | null> {
   return all.find(c => normalizeSlug(c.slug) === normalizedSearchSlug || (c.nom && normalizeSlug(c.nom) === normalizedSearchSlug)) || null;
 }
 
-export async function getUserByEmail(email: string): Promise<{ id: string; nom: string; email: string; passwordHash: string; centreId: string | null; aprovat: boolean } | null> {
+export async function getUserByEmail(email: string): Promise<{ id: string; nom: string; email: string; passwordHash: string; centreId: string | null; aprovat: boolean; isAdmin: boolean } | null> {
   if (!API_KEY || !BASE_ID) return null;
   try {
     const filter = `LOWER({Email})="${email.toLowerCase().trim()}"`;
@@ -414,6 +514,7 @@ export async function getUserByEmail(email: string): Promise<{ id: string; nom: 
       passwordHash: r.fields.PasswordHash as string,
       centreId: Array.isArray(r.fields.Centre) && r.fields.Centre.length > 0 ? (r.fields.Centre[0] as string) : null,
       aprovat: !!r.fields.Aprovat,
+      isAdmin: !!r.fields.isAdmin || !!r.fields.Admin || !!r.fields.admin,
     };
   } catch (error) {
     console.error("[Airtable API] Error en getUserByEmail:", error);
@@ -512,6 +613,37 @@ export async function createCentre(nom: string): Promise<{ id: string; nom: stri
 }
 
 
+/**
+ * Fetch a single Activitat record directly from Airtable by its record ID,
+ * with NO publicada filter. Used for ownership/existence checks in server
+ * actions so that non-published activities can still be deleted or toggled.
+ */
+export async function getActivitatRawById(
+  id: string
+): Promise<{ id: string; centreId?: string } | null> {
+  if (!API_KEY || !BASE_ID) return null;
+  try {
+    const url = `https://api.airtable.com/v0/${BASE_ID}/Activitats/${id}`;
+    const res = await fetchWithRetry(url, {
+      headers: { Authorization: `Bearer ${API_KEY}` },
+    });
+    if (res.status === 404) return null;
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Error fetching record ${id}: ${res.status} ${text}`);
+    }
+    const data = await res.json();
+    const centreField = data.fields?.centre;
+    const centreId = Array.isArray(centreField) && centreField.length > 0
+      ? (centreField[0] as string)
+      : undefined;
+    return { id: data.id as string, centreId };
+  } catch (error) {
+    console.error('[Airtable API] Error en getActivitatRawById:', error);
+    return null;
+  }
+}
+
 export async function getActivitatsByCentreId(centreId: string): Promise<Activitat[]> {
   if (!API_KEY || !BASE_ID) {
     return getFallbackActivitats().filter(a => a.centreId === centreId);
@@ -526,8 +658,9 @@ export async function getActivitatsByCentreId(centreId: string): Promise<Activit
       return [];
     }
 
-    // 2. Filtrar a nivell de base de dades d'Airtable pel nom del centre per evitar descarregar-ho tot
-    const filter = `{centre}="${targetCentre.nom.replace(/"/g, '\\"')}"`;
+    // Escapament complet: primer backslashes, després cometes dobles
+    const safeName = targetCentre.nom.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+    const filter = `{centre}="${safeName}"`;
     const records = await fetchAllRecords('Activitats', filter);
 
     // 3. Mapejar els centres per poder resoldre els logos i noms de forma eficient
@@ -586,7 +719,8 @@ export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'cen
       idioma: data.idioma || "",
       "Qui imparteix": data.qui_imparteix || "",
       publicada: true,
-      destacada: false
+      destacada: false,
+      tipus: data.tipus || "Extraescolar"
     };
 
     if (subcatId) {
@@ -626,6 +760,7 @@ export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'cen
     if (resData.records && resData.records.length > 0) {
       const r = resData.records[0];
       delete memoryCache.activitats;
+      delete memoryCache.allActivitats;
       
       return {
         id: r.id,
@@ -649,6 +784,7 @@ export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'cen
         qui_imparteix: (r.fields['Qui imparteix'] || r.fields.qui_imparteix) as string,
         publicada: !!r.fields.publicada,
         destacada: !!r.fields.destacada,
+        tipus: (r.fields.tipus || r.fields.Tipus) as string || "Extraescolar",
         imatgeUrl: Array.isArray(r.fields.Imatge) && r.fields.Imatge.length > 0 ? (r.fields.Imatge[0] as { url: string }).url : undefined,
         galeria: Array.isArray(r.fields.Galeria) ? (r.fields.Galeria as { url: string }[]).map((img) => img.url) : []
       };
@@ -681,14 +817,16 @@ export async function updateActivitat(id: string, data: Partial<Omit<Activitat, 
     if (data.preu !== undefined) fields.preu = data.preu != null && data.preu !== '' ? String(data.preu) : null;
     if (data.horari) fields.horari = data.horari;
     if (data.dies) fields.dies = data.dies;
-    if (data.descripcio !== undefined) fields.descripcio = data.descripcio;
-    if (data.material !== undefined) fields["descripció"] = data.material;
-    if (data.durada !== undefined) fields.durada = data.durada;
-    if (data.alumnes !== undefined) fields.alumnes = data.alumnes;
-    if (data.inici !== undefined) fields.inici = data.inici;
-    if (data.idioma !== undefined) fields.idioma = data.idioma;
-    if (data.qui_imparteix !== undefined) fields["Qui imparteix"] = data.qui_imparteix;
+    // Camps opcionals: enviar null per netejar, no cadena buida (Airtable rebutja "" en camps de Nombre o Data)
+    if (data.descripcio !== undefined) fields.descripcio = data.descripcio || null;
+    if (data.material !== undefined) fields["descripció"] = data.material || null;
+    if (data.durada !== undefined) fields.durada = data.durada || null;
+    if (data.alumnes !== undefined) fields.alumnes = data.alumnes || null;
+    if (data.inici !== undefined) fields.inici = data.inici || null;
+    if (data.idioma !== undefined) fields.idioma = data.idioma || null;
+    if (data.qui_imparteix !== undefined) fields["Qui imparteix"] = data.qui_imparteix || null;
     if (data.publicada !== undefined) fields.publicada = data.publicada;
+    if (data.tipus !== undefined) fields.tipus = data.tipus || null;
 
     if (data.imatgeUrl !== undefined) {
       fields.Imatge = data.imatgeUrl ? [{ url: data.imatgeUrl }] : [];
@@ -717,10 +855,18 @@ export async function updateActivitat(id: string, data: Partial<Omit<Activitat, 
 
     if (!res.ok) {
       const text = await res.text();
-      throw new Error(`Failed to update activity: ${res.status} ${text}`);
+      // Intentar extreure el missatge d'error específic de l'Airtable
+      try {
+        const errData = JSON.parse(text);
+        const errMsg = errData?.error?.message || errData?.error?.type || text;
+        throw new Error(`Airtable 422: ${errMsg}`);
+      } catch {
+        throw new Error(`Failed to update activity: ${res.status} ${text}`);
+      }
     }
 
     delete memoryCache.activitats;
+    delete memoryCache.allActivitats;
 
     return true;
   } catch (error) {
@@ -747,6 +893,7 @@ export async function deleteActivitat(id: string): Promise<boolean> {
     }
 
     delete memoryCache.activitats;
+    delete memoryCache.allActivitats;
 
     return true;
   } catch (error) {
@@ -811,3 +958,148 @@ export async function updateCentre(id: string, data: Partial<Omit<Centre, 'id' |
     return false;
   }
 }
+
+export async function getSponsors(): Promise<Sponsor[]> {
+  if (!API_KEY || !BASE_ID) return [];
+
+  // Cache en memòria per reduir crides a Airtable
+  const cache = readCache();
+  const now = Date.now();
+  if (cache.sponsors && (now - cache.sponsors.timestamp < CACHE_TTL)) {
+    return cache.sponsors.data;
+  }
+
+  try {
+    const records = await fetchAllRecords('Sponsors', '{actiu}=TRUE()');
+    const formattedSponsors = records.map((r: { id: string; fields: Record<string, unknown> }) => {
+      const f = r.fields;
+
+      // Logo del patrocinador (camp "imatge")
+      let imatgeUrl = '';
+      const logoField = f.imatge || f.Imatge;
+      if (Array.isArray(logoField) && logoField.length > 0) {
+        imatgeUrl = (logoField[0] as { url: string }).url;
+      }
+
+      // Imatge de fons de la targeta (camp "background")
+      let imatgeFonsUrl = '';
+      const bgField = f.background || f.Background || f.imatge_fons || f.Imatge_fons;
+      if (Array.isArray(bgField) && bgField.length > 0) {
+        imatgeFonsUrl = (bgField[0] as { url: string }).url;
+      } else if (typeof bgField === 'string' && bgField) {
+        imatgeFonsUrl = bgField;
+      }
+
+      // IMPORTANT: "categoria (from Activitat enllaçada)" retorna IDs de registre, NO noms.
+      // El nom de la categoria és a "Nom (from categoria (from Activitat enllaçada))" → ["Esports"]
+      let categoriaSlug = '';
+      const nomCatKey = Object.keys(f).find(k => k.toLowerCase().startsWith('nom (from categor'));
+      if (nomCatKey) {
+        const catVal = f[nomCatKey];
+        if (Array.isArray(catVal) && catVal.length > 0 && typeof catVal[0] === 'string') {
+          const catName = catVal[0];
+          categoriaSlug = catName.toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-|-$/g, '');
+        }
+      }
+      // Fallback: camp text directe si existeix
+      if (!categoriaSlug) {
+        categoriaSlug = (f.categoria_slug || f.Categoria_slug || '') as string;
+      }
+
+      return {
+        id: r.id,
+        nom: (f.nom || f.Nom || '') as string,
+        categoriaSlug,
+        imatgeUrl,
+        imatgeFonsUrl,
+        // "slogan" és el títol de la targeta a Airtable
+        titol: (f.slogan || f.Slogan || f.titol || f.Titol || '') as string,
+        descripcio: (f.descripcio || f.Descripcio || '') as string,
+        enllac: (f.enllac || f.Enllac || '') as string,
+        // Tots els registres han passat el filtre {actiu}=TRUE() d'Airtable
+        actiu: true,
+      };
+    });
+
+    // Desar a cache
+    writeCache({ sponsors: { timestamp: Date.now(), data: formattedSponsors } });
+    return formattedSponsors;
+  } catch (error) {
+    console.error("[Airtable API] Error en getSponsors:", error);
+    if (cache.sponsors) return cache.sponsors.data;
+    return [];
+  }
+}
+
+
+
+export async function getCasalsBanner(): Promise<CasalsBanner | null> {
+  // Cache en memòria per reduir crides a Airtable
+  const cache = readCache();
+  const now = Date.now();
+  if (cache.casalsBanner !== undefined && (now - cache.casalsBanner.timestamp < CACHE_TTL)) {
+    return cache.casalsBanner.data;
+  }
+
+  try {
+    const records = await fetchAllRecords('Casals', '{actiu}=TRUE()');
+    if (!records || records.length === 0) {
+      writeCache({ casalsBanner: { timestamp: Date.now(), data: null } });
+      return null;
+    }
+
+    // Get today's local date in YYYY-MM-DD format
+    const todayStr = new Date().toLocaleDateString('sv-SE');
+
+    for (const r of records) {
+      const f = r.fields;
+      
+      // Look for a deadline/limit date column dynamically
+      const limitKey = Object.keys(f).find(k => 
+        k.toLowerCase().includes('limit') || 
+        k.toLowerCase().includes('límit') || 
+        k.toLowerCase().includes('deadline')
+      );
+      
+      const rawLimit = limitKey ? f[limitKey] : undefined;
+      
+      if (rawLimit && typeof rawLimit === 'string') {
+        const limitStr = rawLimit.split('T')[0];
+        if (limitStr && todayStr > limitStr) {
+          // Exceeded deadline, hide it automatically
+          continue;
+        }
+      }
+      
+      // Map banner details dynamically with robust fallbacks
+      const kicker = (f.kicker || f.Kicker || '') as string;
+      const titol = (f.titol || f.Titol || f.Headline || '') as string;
+      const subtitol = (f.subtitol || f.Subtitol || f.descripcio || f.Descripcio || '') as string;
+      const dates = (f.dates || f.Dates || '') as string;
+      const dataLimit = typeof rawLimit === 'string' ? rawLimit : '';
+
+      const banner: CasalsBanner = {
+        id: r.id,
+        nom: (f.nom || f.Nom || '') as string,
+        actiu: true,
+        kicker,
+        titol,
+        subtitol,
+        dates,
+        dataLimit
+      };
+      writeCache({ casalsBanner: { timestamp: Date.now(), data: banner } });
+      return banner;
+    }
+  } catch (error) {
+    console.error("[Airtable API] Error en getCasalsBanner:", error);
+    if (cache.casalsBanner !== undefined) return cache.casalsBanner.data;
+  }
+  writeCache({ casalsBanner: { timestamp: Date.now(), data: null } });
+  return null;
+}
+

@@ -1,5 +1,4 @@
-import React from "react";
-import { getActivitats } from "@/lib/airtable";
+import { getAllActivitats, getCentres } from "@/lib/airtable";
 import { updateActivitatAction } from "@/app/actions/activitats";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
@@ -10,7 +9,6 @@ import { BARRIS_GIRONA, BARRIS_GIRONA_SET } from "@/lib/barris";
 export const dynamic = "force-dynamic";
 
 const DEFAULT_CATEGORIES = [
-  "Arts plàstiques",
   "Creativitat i Expressió",
   "Cuina",
   "Dansa",
@@ -40,7 +38,7 @@ export default async function EditarActivitatPage({ params }: EditarActivitatPag
   }
 
   const { id } = params;
-  const allActivitats = await getActivitats();
+  const allActivitats = await getAllActivitats();
   const activitat = allActivitats.find(a => a.id === id);
 
   // Security check: Verify that the activity exists and belongs to the connected center
@@ -76,6 +74,9 @@ export default async function EditarActivitatPage({ params }: EditarActivitatPag
     );
   }
 
+  const allCentres = await getCentres();
+  const centre = allCentres.find(c => c.id === session.user.centreId || c.nom === activitat.centre);
+
   // Build options
   const categories = Array.from(new Set([
     ...allActivitats.map(a => a.categoria?.trim()).filter(Boolean),
@@ -98,6 +99,7 @@ export default async function EditarActivitatPage({ params }: EditarActivitatPag
       barris={barris}
       submitAction={boundUpdateAction}
       title={`Editar Activitat: ${activitat.nom}`}
+      centre={centre}
     />
   );
 }

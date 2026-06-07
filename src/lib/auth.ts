@@ -38,7 +38,7 @@ export const authOptions: NextAuthOptions = {
           name: user.nom,
           email: user.email,
           centreId: user.centreId || "",
-          isAdmin: false,
+          isAdmin: user.isAdmin || false,
         };
       }
     })

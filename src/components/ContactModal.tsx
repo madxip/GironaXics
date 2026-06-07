@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { sendContactEmail } from '@/app/actions/sendEmail';
+import { trackEvent } from '@/lib/trackEvent';
 
 interface Props {
   centreEmail: string;
@@ -105,7 +106,10 @@ export default function ContactModal({ centreEmail, centreNom, activitatNom }: P
     <>
       {/* Botó principal */}
       <button
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          setOpen(true);
+          trackEvent('contact_email', activitatNom, centreEmail);
+        }}
         className="hoverable"
         style={{
           display: 'block', width: '100%',
@@ -129,7 +133,7 @@ export default function ContactModal({ centreEmail, centreNom, activitatNom }: P
             padding: '20px',
             animation: 'fadeIn 0.2s ease',
           }}
-          role="dialog" aria-modal="true" aria-label={`Contactar amb ${centreNom}`}
+          role="dialog" aria-modal="true" aria-labelledby="contact-dialog-title"
         >
           <div ref={modalRef} style={{
             background: 'var(--crema)', borderRadius: '8px', padding: '40px',
@@ -147,7 +151,7 @@ export default function ContactModal({ centreEmail, centreNom, activitatNom }: P
               }}
             >✕</button>
 
-            <h2 style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: '26px', color: 'var(--verd-fosc)', marginBottom: '4px' }}>
+            <h2 id="contact-dialog-title" style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: '26px', color: 'var(--verd-fosc)', marginBottom: '4px' }}>
               Contacta el centre
             </h2>
             <p style={{ fontSize: '14px', color: 'var(--muted)', marginBottom: '28px' }}>

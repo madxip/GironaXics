@@ -4,17 +4,35 @@ import { useState, useEffect } from 'react';
 import { Activitat } from '@/lib/types';
 import ActivitatCard from './ActivitatCard';
 
-export default function AccordionCategoria({ categoria, activitats, defaultOpen = false }: { categoria: string, activitats: Activitat[], defaultOpen?: boolean }) {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
+export default function AccordionCategoria({ 
+  categoria, 
+  activitats, 
+  forceOpen = false,
+  hasSponsor = false
+}: { 
+  categoria: string, 
+  activitats: Activitat[], 
+  forceOpen?: boolean,
+  hasSponsor?: boolean
+}) {
+  // Per defecte sempre tancat. forceOpen s'usa quan hi ha una única categoria
+  // filtrada (el cas "categoria seleccionada") i obre directament sense consultar
+  // la sessionStorage.
+  const [isOpen, setIsOpen] = useState(forceOpen);
 
   useEffect(() => {
+    if (forceOpen) {
+      // Categoria única filtrada → sempre obre
+      setIsOpen(true);
+      return;
+    }
+    // Vista multi-categoria: llegim el darrer estat manual de l'usuari
     if (typeof window !== 'undefined') {
       const stored = sessionStorage.getItem(`accordion-open-${categoria}`);
-      if (stored !== null) {
-        setIsOpen(stored === 'true');
-      }
+      // Si no hi ha res emmagatzemat: per defecte tancat
+      setIsOpen(stored === 'true');
     }
-  }, [categoria]);
+  }, [categoria, forceOpen]);
 
   const handleToggle = () => {
     const nextState = !isOpen;
@@ -61,20 +79,29 @@ export default function AccordionCategoria({ categoria, activitats, defaultOpen 
         </span>
       </button>
       
-      <div 
-        id={`accordion-content-${categoria.replace(/\s+/g, '-')}`} 
-        className="accordion-content" 
-        style={{ 
-          padding: isOpen ? '16px 0' : '0', 
-          display: isOpen ? 'flex' : 'none', 
-          flexDirection: 'column', 
-          gap: '16px' 
-        }}
-      >
-        {activitats.map(a => (
-          <ActivitatCard key={a.slug} activitat={a} />
-        ))}
-      </div>
+      {(() => {
+        const isGridGroup = activitats.some(a => 
+          a.tipus?.toLowerCase().includes('casal') || 
+          a.tipus?.toLowerCase().includes('taller') || 
+          a.tipus?.toLowerCase().includes('oci')
+        );
+        return (
+          <div 
+            id={`accordion-content-${categoria.replace(/\s+/g, '-')}`} 
+            className={isGridGroup ? `casals-responsive-grid ${hasSponsor ? 'single-column' : 'two-columns'}` : 'accordion-content'} 
+            style={{ 
+              padding: isOpen ? '16px 0' : '0', 
+              display: isOpen ? (isGridGroup ? 'grid' : 'flex') : 'none', 
+              flexDirection: isGridGroup ? undefined : 'column', 
+              gap: isGridGroup ? undefined : '16px' 
+            }}
+          >
+            {activitats.map(a => (
+              <ActivitatCard key={a.slug} activitat={a} />
+            ))}
+          </div>
+        );
+      })()}
     </div>
   );
 }
