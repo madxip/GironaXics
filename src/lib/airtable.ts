@@ -523,6 +523,37 @@ export async function createCentre(nom: string): Promise<{ id: string; nom: stri
 }
 
 
+/**
+ * Fetch a single Activitat record directly from Airtable by its record ID,
+ * with NO publicada filter. Used for ownership/existence checks in server
+ * actions so that non-published activities can still be deleted or toggled.
+ */
+export async function getActivitatRawById(
+  id: string
+): Promise<{ id: string; centreId?: string } | null> {
+  if (!API_KEY || !BASE_ID) return null;
+  try {
+    const url = `https://api.airtable.com/v0/${BASE_ID}/Activitats/${id}`;
+    const res = await fetchWithRetry(url, {
+      headers: { Authorization: `Bearer ${API_KEY}` },
+    });
+    if (res.status === 404) return null;
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Error fetching record ${id}: ${res.status} ${text}`);
+    }
+    const data = await res.json();
+    const centreField = data.fields?.centre;
+    const centreId = Array.isArray(centreField) && centreField.length > 0
+      ? (centreField[0] as string)
+      : undefined;
+    return { id: data.id as string, centreId };
+  } catch (error) {
+    console.error('[Airtable API] Error en getActivitatRawById:', error);
+    return null;
+  }
+}
+
 export async function getActivitatsByCentreId(centreId: string): Promise<Activitat[]> {
   if (!API_KEY || !BASE_ID) {
     return getFallbackActivitats().filter(a => a.centreId === centreId);
