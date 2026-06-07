@@ -8,6 +8,12 @@ const BASE_ID = process.env.AIRTABLE_BASE_ID;
 const TABLE   = 'Analytics';
 
 // ─── POST: Desar un event ────────────────────────────────────────────────────
+const ALLOWED_EVENT_TYPES = new Set([
+  'activity_view', 'contact_phone', 'contact_email',
+  'filter_categoria', 'filter_barri', 'filter_edat', 'filter_tipus',
+  'sponsor_click', 'casals_banner_click',
+]);
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -15,6 +21,11 @@ export async function POST(req: NextRequest) {
 
     if (!event_type) {
       return NextResponse.json({ error: 'event_type is required' }, { status: 400 });
+    }
+
+    // Whitelist d'event_type per prevenir abús (omplir Airtable de dades espúries)
+    if (!ALLOWED_EVENT_TYPES.has(event_type)) {
+      return NextResponse.json({ error: 'Invalid event_type' }, { status: 400 });
     }
 
     const record: Record<string, string> = { event_type };

@@ -22,6 +22,14 @@ interface CacheStructure {
     timestamp: number;
     data: Centre[];
   };
+  sponsors?: {
+    timestamp: number;
+    data: Sponsor[];
+  };
+  casalsBanner?: {
+    timestamp: number;
+    data: CasalsBanner | null;
+  };
 }
 
 // Cache global en memòria (es reinicia amb cada cold start del servidor)
@@ -41,13 +49,21 @@ function writeCache(data: CacheStructure) {
   if (data.centres !== undefined) {
     memoryCache.centres = data.centres;
   }
+  if (data.sponsors !== undefined) {
+    memoryCache.sponsors = data.sponsors;
+  }
+  if (data.casalsBanner !== undefined) {
+    memoryCache.casalsBanner = data.casalsBanner;
+  }
 }
 
-/** Neteja tota la memòria cau (activitats + centres). Cridat des de l'acció admin. */
+/** Neteja tota la memòria cau (activitats + centres + sponsors + casalsBanner). Cridat des de l'acció admin. */
 export function clearAllCache(): void {
   delete memoryCache.activitats;
   delete memoryCache.allActivitats;
   delete memoryCache.centres;
+  delete memoryCache.sponsors;
+  delete memoryCache.casalsBanner;
 }
 
 // Fallback per desenvolupament si no hi ha Airtable configurat
@@ -642,8 +658,9 @@ export async function getActivitatsByCentreId(centreId: string): Promise<Activit
       return [];
     }
 
-    // 2. Filtrar a nivell de base de dades d'Airtable pel nom del centre per evitar descarregar-ho tot
-    const filter = `{centre}="${targetCentre.nom.replace(/"/g, '\\"')}"`;
+    // Escapament complet: primer backslashes, després cometes dobles
+    const safeName = targetCentre.nom.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+    const filter = `{centre}="${safeName}"`;
     const records = await fetchAllRecords('Activitats', filter);
 
     // 3. Mapejar els centres per poder resoldre els logos i noms de forma eficient
@@ -945,9 +962,16 @@ export async function updateCentre(id: string, data: Partial<Omit<Centre, 'id' |
 export async function getSponsors(): Promise<Sponsor[]> {
   if (!API_KEY || !BASE_ID) return [];
 
+  // Cache en memòria per reduir crides a Airtable
+  const cache = readCache();
+  const now = Date.now();
+  if (cache.sponsors && (now - cache.sponsors.timestamp < CACHE_TTL)) {
+    return cache.sponsors.data;
+  }
+
   try {
     const records = await fetchAllRecords('Sponsors', '{actiu}=TRUE()');
-    return records.map((r: { id: string; fields: Record<string, unknown> }) => {
+    const formattedSponsors = records.map((r: { id: string; fields: Record<string, unknown> }) => {
       const f = r.fields;
 
       // Logo del patrocinador (camp "imatge")
@@ -1000,8 +1024,13 @@ export async function getSponsors(): Promise<Sponsor[]> {
         actiu: true,
       };
     });
+
+    // Desar a cache
+    writeCache({ sponsors: { timestamp: Date.now(), data: formattedSponsors } });
+    return formattedSponsors;
   } catch (error) {
     console.error("[Airtable API] Error en getSponsors:", error);
+    if (cache.sponsors) return cache.sponsors.data;
     return [];
   }
 }
@@ -1009,9 +1038,19 @@ export async function getSponsors(): Promise<Sponsor[]> {
 
 
 export async function getCasalsBanner(): Promise<CasalsBanner | null> {
+  // Cache en memòria per reduir crides a Airtable
+  const cache = readCache();
+  const now = Date.now();
+  if (cache.casalsBanner !== undefined && (now - cache.casalsBanner.timestamp < CACHE_TTL)) {
+    return cache.casalsBanner.data;
+  }
+
   try {
     const records = await fetchAllRecords('Casals', '{actiu}=TRUE()');
-    if (!records || records.length === 0) return null;
+    if (!records || records.length === 0) {
+      writeCache({ casalsBanner: { timestamp: Date.now(), data: null } });
+      return null;
+    }
 
     // Get today's local date in YYYY-MM-DD format
     const todayStr = new Date().toLocaleDateString('sv-SE');
@@ -1043,7 +1082,7 @@ export async function getCasalsBanner(): Promise<CasalsBanner | null> {
       const dates = (f.dates || f.Dates || '') as string;
       const dataLimit = typeof rawLimit === 'string' ? rawLimit : '';
 
-      return {
+      const banner: CasalsBanner = {
         id: r.id,
         nom: (f.nom || f.Nom || '') as string,
         actiu: true,
@@ -1053,9 +1092,14 @@ export async function getCasalsBanner(): Promise<CasalsBanner | null> {
         dates,
         dataLimit
       };
+      writeCache({ casalsBanner: { timestamp: Date.now(), data: banner } });
+      return banner;
     }
   } catch (error) {
     console.error("[Airtable API] Error en getCasalsBanner:", error);
+    if (cache.casalsBanner !== undefined) return cache.casalsBanner.data;
   }
+  writeCache({ casalsBanner: { timestamp: Date.now(), data: null } });
   return null;
 }
+

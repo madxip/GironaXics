@@ -9,18 +9,24 @@ import Categories from '@/components/Categories';
 import ComFunciona from '@/components/ComFunciona';
 import BannerCentres from '@/components/BannerCentres';
 import Footer from '@/components/Footer';
-import { getActivitats, getActivitatsDestacades, getCentres, getSponsors, getCasalsBanner } from '@/lib/airtable';
+import { getActivitats, getCentres, getSponsors, getCasalsBanner } from '@/lib/airtable';
 import type { Activitat } from '@/lib/types';
 import { Suspense } from 'react';
 
 export default async function Home() {
-  const [activitats, destacades, centres, sponsors, casalsBanner] = await Promise.all([
+  const [activitats, centres, sponsors, casalsBanner] = await Promise.all([
     getActivitats(),
-    getActivitatsDestacades(),
     getCentres(),
     getSponsors(),
     getCasalsBanner()
   ]);
+
+  // Derivem les destacades de les activitats ja carregades per evitar una crida duplicada a Airtable
+  const destacades = activitats
+    .filter((a: Activitat) => a.destacada || a.destacada_gran)
+    .sort((a: Activitat, b: Activitat) => (b.destacada_gran ? 1 : 0) - (a.destacada_gran ? 1 : 0));
+
+
 
   const uniqueCategories = new Set(activitats.map((a: Activitat) => a.categoria?.trim()).filter(Boolean));
   const numCategories = uniqueCategories.size;

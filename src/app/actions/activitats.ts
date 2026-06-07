@@ -26,7 +26,7 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
     const centreId = isAdmin
       ? (formData.get("centreId") as string || sessionCentreId)
       : sessionCentreId;
-    
+
     const nom = formData.get("nom") as string;
     const barri = formData.get("barri") as string;
     const categoria = formData.get("categoria") as string;
