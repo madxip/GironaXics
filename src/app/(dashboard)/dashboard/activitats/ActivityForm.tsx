@@ -889,7 +889,8 @@ export default function ActivityForm({
                         }}
                       >
                         {c.imatgeUrl && (
-                          <img src={c.imatgeUrl} alt={c.nom} style={{ width: "28px", height: "28px", objectFit: "contain", borderRadius: "4px", flexShrink: 0 }} />
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={c.imatgeUrl} alt={c.nom || ""} style={{ width: "28px", height: "28px", objectFit: "contain", borderRadius: "4px", flexShrink: 0 }} />
                         )}
                         <span style={{ fontSize: "14px", fontWeight: selectedCentreId === c.id ? 700 : 400, color: "var(--verd-fosc)" }}>
                           {c.nom}

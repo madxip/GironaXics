@@ -1,7 +1,7 @@
 import React from "react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { getActivitatsByCentreId, getActivitats, getAllActivitats, getCentres } from "@/lib/airtable";
+import { getActivitatsByCentreId, getAllActivitats, getCentres } from "@/lib/airtable";
 import Link from "next/link";
 import { Plus, Activity, ShieldCheck, Info } from "lucide-react";
 import ActivitatsTable from "./ActivitatsTable";
