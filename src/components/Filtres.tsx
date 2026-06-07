@@ -307,7 +307,11 @@ export default function Filtres({
       const matchCat = selectedCategoria === 'Totes' || a.categoria === selectedCategoria;
       const matchSubcat = selectedCategoria === 'Totes' || selectedSubcategoria === 'Totes' || a.subcategoria === selectedSubcategoria;
       const matchEdat = matchEdatGroup(a.edat, selectedEdat);
-      const matchBarri = selectedBarri === 'Totes' || a.barri === selectedBarri;
+      const matchBarri = selectedBarri === 'Totes'
+        ? true
+        : selectedBarri === 'Girona'
+          ? BARRIS_GIRONA_SET.has(a.barri?.trim() || '')
+          : a.barri === selectedBarri;
       return matchTipus && matchCat && matchSubcat && matchEdat && matchBarri;
     });
     const filtered = result.filter(a => {
@@ -643,7 +647,8 @@ export default function Filtres({
                         onChange={e => updateFilter('barri', e.target.value)}
                         style={{ width: '100%', padding: '12px 16px', borderRadius: '0', border: '1px solid var(--verd)', backgroundColor: 'transparent', color: 'var(--fosc)', fontFamily: 'var(--font-sans)', fontSize: '16px', outline: 'none', cursor: 'pointer' }}
                     >
-                        <option value="Totes">Totes</option>
+                        <option value="Totes">Totes les poblacions</option>
+                        <option value="Girona" style={{ fontWeight: 700 }}>📍 Girona (tots els barris)</option>
                         <optgroup label="Barris de Girona">
                           {barris.girona.map(b => <option key={b} value={b}>{b}</option>)}
                         </optgroup>
