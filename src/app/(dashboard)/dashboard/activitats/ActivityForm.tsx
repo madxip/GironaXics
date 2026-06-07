@@ -728,6 +728,10 @@ export default function ActivityForm({
       formData.append("imatgeUrl", imatgeUrl);
       formData.append("galeria", JSON.stringify(galeria));
       formData.append("tipus", tipus);
+      // Admin: afegir el centre seleccionat al FormData (no llegit del hidden input perquè construïm FormData manualment)
+      if (isAdmin && selectedCentreId) {
+        formData.append("centreId", selectedCentreId);
+      }
 
       const res = await submitAction(null, formData);
 
