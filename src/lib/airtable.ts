@@ -793,15 +793,16 @@ export async function updateActivitat(id: string, data: Partial<Omit<Activitat, 
     if (data.preu !== undefined) fields.preu = data.preu != null && data.preu !== '' ? String(data.preu) : null;
     if (data.horari) fields.horari = data.horari;
     if (data.dies) fields.dies = data.dies;
-    if (data.descripcio !== undefined) fields.descripcio = data.descripcio;
-    if (data.material !== undefined) fields["descripció"] = data.material;
-    if (data.durada !== undefined) fields.durada = data.durada;
-    if (data.alumnes !== undefined) fields.alumnes = data.alumnes;
-    if (data.inici !== undefined) fields.inici = data.inici;
-    if (data.idioma !== undefined) fields.idioma = data.idioma;
-    if (data.qui_imparteix !== undefined) fields["Qui imparteix"] = data.qui_imparteix;
+    // Camps opcionals: enviar null per netejar, no cadena buida (Airtable rebutja "" en camps de Nombre o Data)
+    if (data.descripcio !== undefined) fields.descripcio = data.descripcio || null;
+    if (data.material !== undefined) fields["descripció"] = data.material || null;
+    if (data.durada !== undefined) fields.durada = data.durada || null;
+    if (data.alumnes !== undefined) fields.alumnes = data.alumnes || null;
+    if (data.inici !== undefined) fields.inici = data.inici || null;
+    if (data.idioma !== undefined) fields.idioma = data.idioma || null;
+    if (data.qui_imparteix !== undefined) fields["Qui imparteix"] = data.qui_imparteix || null;
     if (data.publicada !== undefined) fields.publicada = data.publicada;
-    if (data.tipus !== undefined) fields.tipus = data.tipus;
+    if (data.tipus !== undefined) fields.tipus = data.tipus || null;
 
     if (data.imatgeUrl !== undefined) {
       fields.Imatge = data.imatgeUrl ? [{ url: data.imatgeUrl }] : [];
@@ -830,7 +831,14 @@ export async function updateActivitat(id: string, data: Partial<Omit<Activitat, 
 
     if (!res.ok) {
       const text = await res.text();
-      throw new Error(`Failed to update activity: ${res.status} ${text}`);
+      // Intentar extreure el missatge d'error específic de l'Airtable
+      try {
+        const errData = JSON.parse(text);
+        const errMsg = errData?.error?.message || errData?.error?.type || text;
+        throw new Error(`Airtable 422: ${errMsg}`);
+      } catch (parseErr) {
+        throw new Error(`Failed to update activity: ${res.status} ${text}`);
+      }
     }
 
     delete memoryCache.activitats;
