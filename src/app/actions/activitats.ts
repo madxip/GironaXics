@@ -2,7 +2,7 @@
 
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { createActivitat, updateActivitat, deleteActivitat, getActivitats, getActivitatRawById } from "@/lib/airtable";
+import { createActivitat, updateActivitat, deleteActivitat, getActivitatRawById } from "@/lib/airtable";
 import { revalidatePath } from "next/cache";
 import { normalizeSlug } from "@/lib/utils";
 
@@ -133,9 +133,11 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
   try {
     const { centreId, isAdmin } = await getAuthInfo();
 
-    // Ownership check (IDOR/BOLA prevention) — admin ho salta
-    const activitats = await getActivitats();
-    const activitat = activitats.find(a => a.id === id);
+    // Ownership check (IDOR/BOLA prevention) — admin ho salta.
+    // Usem getActivitatRawById per obtenir el registre directament d'Airtable
+    // sense cap filtre de publicació (getActivitats() filtra {publicada}=TRUE()
+    // i no trobaria activitats no publicades).
+    const activitat = await getActivitatRawById(id);
     if (!activitat) {
       return { success: false, error: "L'activitat no existeix." };
     }
