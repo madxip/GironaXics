@@ -136,7 +136,7 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            padding: 120px 5vw 40px;
+            padding: 120px 15vw 40px;
             position: relative;
         }
 
@@ -160,13 +160,11 @@
         .hero-title .line-2 {
             color: var(--fosc);
             font-style: normal;
-            text-indent: 10vw;
         }
 
         .hero-title .line-3 {
             color: var(--verd);
             font-style: italic;
-            text-indent: 20vw;
         }
 
         .hero-subtitle {
@@ -180,7 +178,7 @@
         }
 
         .hero-search {
-            margin-left: 20vw;
+            margin-left: 0;
             max-width: 750px;
             border-bottom: 1px solid var(--fosc);
             display: flex;
@@ -216,7 +214,7 @@
 
         .hero-buttons {
             margin-top: 24px;
-            margin-left: 20vw;
+            margin-left: 0;
             display: flex;
             gap: 16px;
             align-items: center;
