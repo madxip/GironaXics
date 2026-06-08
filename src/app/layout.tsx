@@ -3,6 +3,7 @@ import { DM_Sans, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
 import CookieBanner from "@/components/CookieBanner";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 import { Analytics } from "@vercel/analytics/next";
 
 const dmSans = DM_Sans({
@@ -67,6 +68,7 @@ export default function RootLayout({
         <AnalyticsTracker />
         <Analytics />
         <CookieBanner />
+        <GoogleAnalytics />
       </body>
     </html>
   );
