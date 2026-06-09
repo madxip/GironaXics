@@ -677,7 +677,7 @@ export default function Filtres({
               {selectedTipus === 'Casals' 
                 ? `Casals de Temporada (${filtered.length})` 
                 : selectedTipus === 'Tallers' || selectedTipus === 'Tallers i Oci'
-                  ? `Tallers (${filtered.length})`
+                  ? `Activitats i Tallers (${filtered.length})`
                   : `Extraescolars Setmanals (${filtered.length})`}
             </h2>
             <div id="results-container">
