@@ -5,6 +5,9 @@ import { headers } from 'next/headers';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = 'GironaXics <hola@gironaxics.cat>';
+// Els correus de consulta s'envien des de no-reply@ per evitar que els centres
+// rebin còpies de les respostes a hola@ quan fan "Respondre a tots".
+const FROM_NOREPLY = 'GironaXics <no-reply@gironaxics.cat>';
 
 // Simple distributed rate limiting by IP (supports Vercel serverless environment)
 // It uses Vercel KV / Upstash Redis REST API if configured, falling back to local memory limit
@@ -154,7 +157,7 @@ export async function sendContactEmail(data: {
   }
   // 1. Correu al centre
   await resend.emails.send({
-    from: FROM,
+    from: FROM_NOREPLY,
     to: data.centreEmail,
     replyTo: data.emailRemitent,
     subject: `[GironaXics] Consulta sobre ${data.activitatNom}`,
@@ -182,7 +185,7 @@ export async function sendContactEmail(data: {
 
   // 2. Còpia de confirmació a la família
   await resend.emails.send({
-    from: FROM,
+    from: FROM_NOREPLY,
     to: data.emailRemitent,
     subject: `El teu missatge a ${data.centreNom} s'ha enviat correctament`,
     html: `
