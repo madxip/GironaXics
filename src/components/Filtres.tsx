@@ -589,7 +589,7 @@ export default function Filtres({
               onClick={() => updateFilter('tipus', 'Tallers i Oci')}
               className={`filter-tab-button ${selectedTipus === 'Tallers i Oci' ? 'active' : ''}`}
             >
-              Tallers
+              Activitats i Tallers
             </button>
           </div>
         </div>
