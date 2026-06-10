@@ -804,8 +804,8 @@ export async function updateActivitat(id: string, data: Partial<Omit<Activitat, 
     const fields: Record<string, unknown> = {};
     if (data.nom) {
       fields.nom = data.nom;
-      const baseSlug = normalizeSlug(data.nom);
-      fields.slug = baseSlug.endsWith('-girona') ? baseSlug : `${baseSlug}-girona`;
+      // El slug (URL) NO es regenera en editar per preservar el posicionament SEO.
+      // Si cal canviar la URL, s'ha de fer manualment al camp "slug" d'Airtable.
     }
     if (data.barri) fields.barri = data.barri;
     if (data.categoria) fields.categoria = data.categoria;
