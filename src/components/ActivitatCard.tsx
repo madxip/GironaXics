@@ -1,7 +1,14 @@
+'use client';
 import Link from 'next/link';
 import Image from './SafeImage';
 import { Activitat } from '@/lib/types';
 import { normalizeSlug, formatPreu } from '@/lib/utils';
+
+const saveScroll = () => {
+  if (typeof window !== 'undefined') {
+    sessionStorage.setItem('gironaxics-scroll', String(window.scrollY));
+  }
+};
 
 interface ParsedDate {
   day: string;
@@ -125,7 +132,7 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
     const priceInfo = parseCasalPrice(activitat.preu);
 
     return (
-      <Link href={href} className="casal-card-wrapper">
+      <Link href={href} className="casal-card-wrapper" onClick={saveScroll}>
         {/* Top Row: Logo & Badge */}
         <div className="casal-card-top-row">
           {logoUrl ? (
@@ -196,7 +203,7 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
     const formattedPrice = formatTallerPrice(activitat.preu);
 
     return (
-      <Link href={href} className="taller-card-wrapper">
+      <Link href={href} className="taller-card-wrapper" onClick={saveScroll}>
         {/* Top Row: Calendars and Tag */}
         <div className="taller-card-top-row">
           <div className="taller-card-calendars-container">
@@ -251,6 +258,7 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
     <Link
       href={href}
       className={`activitat-card hoverable ${isInteressat ? 'premium-card' : 'normal-card'}`}
+      onClick={saveScroll}
     >
       {/* Badge premium per a centres confirmats */}
       {isInteressat && (

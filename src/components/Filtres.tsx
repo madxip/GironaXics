@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Activitat, Sponsor, CasalsBanner } from '@/lib/types';
 import AccordionCategoria from './AccordionCategoria';
@@ -187,6 +187,15 @@ export default function Filtres({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // Restaura la posició de scroll quan es torna d'una fitxa d'activitat
+  useEffect(() => {
+    const saved = sessionStorage.getItem('gironaxics-scroll');
+    if (saved) {
+      sessionStorage.removeItem('gironaxics-scroll');
+      window.scrollTo({ top: parseInt(saved, 10), behavior: 'instant' });
+    }
+  }, []);
 
   const selectedTipus = searchParams.get('tipus') || 'Extraescolars';
   const selectedCategoria = searchParams.get('categoria') || 'Totes';
