@@ -131,13 +131,24 @@ function matchEdatGroup(edatStr: string | undefined, group: string): boolean {
   let min: number | null = null;
   let max: number | null = null;
 
+  // Detecta expressions d'edat obertes (sense límit superior):
+  // "a partir de X", "des de X", "X anys o més", "X anys en endavant", "majors de X", "+X"
+  const isOpenEnded =
+    s.includes('partir') ||
+    s.includes('des de') ||
+    s.includes('o més') ||
+    s.includes('en endavant') ||
+    s.includes('majors') ||
+    /\+\s*\d/.test(s);
+
   // Només extraiem números si hi ha la paraula "any" o "anys" per evitar
   // confondre el curs "6è" amb "6 anys".
   if (s.includes('any')) {
     const numbers = s.match(/\d+/g)?.map(Number) || [];
     if (numbers.length > 0) {
       min = Math.min(...numbers);
-      max = Math.max(...numbers);
+      // Si és una expressió oberta, no hi ha màxim (infinit)
+      max = isOpenEnded ? Infinity : Math.max(...numbers);
     }
   }
 
@@ -157,6 +168,7 @@ function matchEdatGroup(edatStr: string | undefined, group: string): boolean {
 
   if (group === 'De 12 a 18 anys') {
     if (s.includes('eso') || s.includes('batxillerat') || s.includes('jove') || s.includes('joves')) return true;
+    // max >= 12 ara funciona correctament per a "A partir de X" perquè max = Infinity
     if (max !== null && max >= 12) return true;
     return false;
   }
