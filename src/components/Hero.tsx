@@ -78,7 +78,6 @@ export default function Hero() {
           </span>
         </div>
       </h1>
-      <div className="hero-subtitle">De Girona. Per a Girona.<br />En català.</div>
       <div className="scroll-indicator">Fes scroll per descobrir</div>
     </section>
   );
