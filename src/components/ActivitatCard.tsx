@@ -56,7 +56,7 @@ const parseTallerDates = (text: string): ParsedDate[] => {
   }
 
   if (foundNumbers.length > 0 && foundMonths.length === 0) {
-    return foundNumbers.map(n => ({ day: n.val, month: "TALL" }));
+    return []; // Cap mes reconegut → mostra OCI per defecte
   }
 
   const result: ParsedDate[] = [];
