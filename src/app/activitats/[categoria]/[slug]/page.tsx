@@ -100,7 +100,8 @@ function parseTorns(torns: string) {
   const byMonth = new Map<string, { monthIdx: number; items: { num: number; inici: string; fi: string }[] }>();
   let tornNum = 1;
   lines.forEach(line => {
-    const m = line.match(/(\d{1,2})[/.-](\d{1,2})[/.-](\d{2,4})\s*[-–]\s*(\d{1,2})[/.-](\d{1,2})[/.-](\d{2,4})/);
+    // Accepta formats: "22/6/26-26/6/26", "22/6/26 - 26/6/26", "TORN X: DEL 22/6/26 AL 26/6/26"
+    const m = line.match(/(\d{1,2})[/.-](\d{1,2})[/.-](\d{2,4})\s*(?:[-–]|AL|al)\s*(\d{1,2})[/.-](\d{1,2})[/.-](\d{2,4})/i);
     if (!m) return;
     const [, d1, mo1, y1, d2, mo2, y2] = m;
     const monthIdx = parseInt(mo1, 10) - 1;
