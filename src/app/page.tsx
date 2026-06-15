@@ -1,4 +1,4 @@
-export const revalidate = 60; // revalida cada minut en segon pla
+export const revalidate = 86400; // revalida cada 24h (les Server Actions fan revalidatePath quan hi ha canvis)
 
 import Nav from '@/components/Nav';
 import Hero from '@/components/Hero';

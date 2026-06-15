@@ -211,7 +211,7 @@ export default function DashboardLayoutClient({
           </div>
 
           {/* Enllaços de navegació del Dashboard */}
-          <DashboardNav />
+          <DashboardNav isAdmin={isAdmin} />
         </div>
 
         {/* Perfil d'usuari i Botó de Sortir al final de la barra lateral */}

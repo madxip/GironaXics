@@ -1,4 +1,4 @@
-export const revalidate = 3600;
+export const revalidate = 86400; // revalida cada 24h
 
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';

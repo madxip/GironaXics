@@ -3,9 +3,9 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Plus, Activity, Globe, Building, BarChart2 } from "lucide-react";
+import { Plus, Activity, Globe, Building, BarChart2, Users } from "lucide-react";
 
-export default function DashboardNav() {
+export default function DashboardNav({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname();
 
   const links = [
@@ -15,6 +15,13 @@ export default function DashboardNav() {
       icon: Activity,
       exact: true
     },
+    ...(isAdmin ? [
+      {
+        href: "/dashboard/crm",
+        label: "Gestió de Centres (CRM)",
+        icon: Users
+      }
+    ] : []),
     {
       href: "/dashboard/centre",
       label: "Dades del Centre",
