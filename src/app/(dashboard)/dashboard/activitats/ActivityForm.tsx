@@ -570,6 +570,7 @@ export default function ActivityForm({
   const [alumnes, setAlumnes] = useState(initialData?.alumnes || "");
   const [material, setMaterial] = useState(initialData?.material || "");
   const [inici, setInici] = useState(initialData?.inici || "");
+  const [torns, setTorns] = useState(initialData?.torns || "");
   const [idioma, setIdioma] = useState(initialData?.idioma || "");
   const [qui_imparteix, setQuiImparteix] = useState(initialData?.qui_imparteix || "");
   
@@ -738,6 +739,7 @@ export default function ActivityForm({
       formData.append("imatgeUrl", imatgeUrl);
       formData.append("galeria", JSON.stringify(galeria));
       formData.append("tipus", tipus);
+      formData.append("torns", torns);
       // Admin: afegir el centre seleccionat al FormData (no llegit del hidden input perquè construïm FormData manualment)
       if (isAdmin && selectedCentreId) {
         formData.append("centreId", selectedCentreId);
@@ -1377,6 +1379,37 @@ export default function ActivityForm({
                         />
                       </div>
                     )}
+                  </div>
+                )}
+
+                {/* Torns del Casal */}
+                {tipus === "Casal" && (
+                  <div style={{ marginTop: "8px" }}>
+                    <label style={{ display: "block", fontWeight: 600, fontSize: "13px", marginBottom: "8px", color: "var(--gris-text)" }}>
+                      Torns <span style={{ fontWeight: 400, opacity: 0.6 }}>(opcional — una línia per torn: 22/6/26-26/6/26)</span>
+                    </label>
+                    <textarea
+                      value={torns}
+                      onChange={e => setTorns(e.target.value)}
+                      rows={6}
+                      placeholder={"22/6/26-26/6/26\n29/6/26-3/7/26\n6/7/26-10/7/26"}
+                      disabled={loading}
+                      style={{
+                        width: "100%",
+                        padding: "10px 14px",
+                        border: "1px solid var(--crema-fosca)",
+                        borderRadius: "8px",
+                        fontFamily: "monospace",
+                        fontSize: "14px",
+                        lineHeight: "1.6",
+                        resize: "vertical",
+                        backgroundColor: "white",
+                        boxSizing: "border-box"
+                      }}
+                    />
+                    <p style={{ fontSize: "12px", opacity: 0.5, marginTop: "6px" }}>
+                      Format: DD/M/AA-DD/M/AA · Es mostrarà agrupat per mesos a la fitxa del casal
+                    </p>
                   </div>
                 )}
 

@@ -17,6 +17,7 @@ const DEFAULT_CATEGORIES = [
   "Esports",
   "Idiomes",
   "Ioga",
+  "Lleure",
   "Música",
   "Naturalesa",
   "Programació i robòtica",

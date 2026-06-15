@@ -183,6 +183,7 @@ function mapActivitatRecord(
   
   f.qui_imparteix = (r.fields.qui_imparteix as string) || (r.fields['Qui imparteix'] as string) || (r.fields['qui imparteix'] as string);
   f.tipus = (r.fields.tipus as string) || (r.fields.Tipus as string) || "Extraescolar";
+  f.torns = (r.fields.torns as string) || (r.fields.Torns as string) || undefined;
 
   // Auto-generate a beautiful SEO-friendly slug: "nom-activitat-nom-centre-nom-barri-girona"
   const customSlug = (r.fields.slug as string) || (r.fields.Slug as string);
@@ -720,7 +721,8 @@ export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'cen
       "Qui imparteix": data.qui_imparteix || "",
       publicada: true,
       destacada: false,
-      tipus: data.tipus || "Extraescolar"
+      tipus: data.tipus || "Extraescolar",
+      torns: data.torns || null
     };
 
     if (subcatId) {
@@ -827,6 +829,7 @@ export async function updateActivitat(id: string, data: Partial<Omit<Activitat, 
     if (data.qui_imparteix !== undefined) fields["Qui imparteix"] = data.qui_imparteix || null;
     if (data.publicada !== undefined) fields.publicada = data.publicada;
     if (data.tipus !== undefined) fields.tipus = data.tipus || null;
+    if (data.torns !== undefined) fields.torns = data.torns || null;
 
     if (data.imatgeUrl !== undefined) {
       fields.Imatge = data.imatgeUrl ? [{ url: data.imatgeUrl }] : [];

@@ -26,6 +26,7 @@ export interface Activitat {
   centreImatgeUrl?: string;
   subcategoria?: string;
   tipus?: string; // Extraescolar, Casal, Taller / Oci
+  torns?: string; // Torns del casal (una línia per torn: "DD/M/AA-DD/M/AA")
 }
 
 export interface Sponsor {

@@ -44,6 +44,7 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
     const subcategoria = formData.get("subcategoria") as string;
     const imatgeUrl = formData.get("imatgeUrl") as string;
     const tipus = formData.get("tipus") as string;
+    const torns = formData.get("torns") as string;
 
     // Parse galeria robustly
     const galeriaRaw = formData.get("galeria");
@@ -91,7 +92,8 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
       centreId,
       imatgeUrl: imatgeUrl || undefined,
       galeria: galeria.length > 0 ? galeria : undefined,
-      tipus: tipus || "Extraescolar"
+      tipus: tipus || "Extraescolar",
+      torns: torns || undefined
     });
 
     if (!result) {
@@ -168,6 +170,7 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
     const subcategoria = formData.get("subcategoria") as string;
     const imatgeUrl = formData.get("imatgeUrl") as string;
     const tipus = formData.get("tipus") as string;
+    const torns = formData.get("torns") as string;
 
     const galeriaRaw = formData.get("galeria");
     let galeria: string[] | undefined = undefined;
@@ -205,7 +208,8 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
       qui_imparteix: qui_imparteix || "",
       imatgeUrl: imatgeUrl !== null ? imatgeUrl : undefined,
       galeria: galeria !== undefined ? galeria : undefined,
-      tipus: tipus || "Extraescolar"
+      tipus: tipus || "Extraescolar",
+      torns: torns !== null ? torns : undefined
     });
 
     if (!success) {

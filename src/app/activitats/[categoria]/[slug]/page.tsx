@@ -92,6 +92,26 @@ const TXT_MES_ACTIVITATS_A = 'Més activitats a ';
 const TXT_MES_TALLERS_A = 'Més tallers a ';
 const TXT_ALTRES_ACTIVITATS_A = 'Altres activitats a ';
 
+// Mesos en català
+const MESOS_CAT = ['Gener','Febrer','Març','Abril','Maig','Juny','Juliol','Agost','Setembre','Octubre','Novembre','Desembre'];
+
+function parseTorns(torns: string) {
+  const lines = torns.split('\n').map(l => l.trim()).filter(Boolean);
+  const byMonth = new Map<string, { monthIdx: number; items: { num: number; inici: string; fi: string }[] }>();
+  let tornNum = 1;
+  lines.forEach(line => {
+    const m = line.match(/(\d{1,2})[/.-](\d{1,2})[/.-](\d{2,4})\s*[-–]\s*(\d{1,2})[/.-](\d{1,2})[/.-](\d{2,4})/);
+    if (!m) return;
+    const [, d1, mo1, y1, d2, mo2, y2] = m;
+    const monthIdx = parseInt(mo1, 10) - 1;
+    const monthName = MESOS_CAT[monthIdx] || `Mes ${mo1}`;
+    if (!byMonth.has(monthName)) byMonth.set(monthName, { monthIdx, items: [] });
+    byMonth.get(monthName)!.items.push({ num: tornNum++, inici: `${d1}/${mo1}/${y1}`, fi: `${d2}/${mo2}/${y2}` });
+  });
+  return Array.from(byMonth.entries()).sort((a, b) => a[1].monthIdx - b[1].monthIdx);
+}
+
+
 function parseMarkdownToReact(text: string) {
   if (!text) return null;
   
@@ -303,6 +323,25 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
                   <div><strong style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', opacity: 0.5 }}>{TXT_DIES}</strong>{activitat.dies}</div>
                   {activitat.durada && activitat.durada.trim() !== "" && <div><strong style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', opacity: 0.5 }}>{TXT_DURADA}</strong>{activitat.durada}</div>}
                   {activitat.idioma && activitat.idioma.trim() !== "" && <div><strong style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', opacity: 0.5 }}>{TXT_IDIOMA}</strong>{activitat.idioma}</div>}
+                  {activitat.torns && activitat.torns.trim() && (
+                    <div>
+                      <strong style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', opacity: 0.5, marginBottom: '12px' }}>Torns i Dates</strong>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
+                        {parseTorns(activitat.torns).map(([month, { items }]) => (
+                          <div key={month}>
+                            <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--verd)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{month}</div>
+                            <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                              {items.map((t: { num: number; inici: string; fi: string }) => (
+                                <li key={t.num} style={{ fontSize: '14px' }}>
+                                  <span style={{ fontWeight: 600 }}>Torn {t.num}:</span> del {t.inici} al {t.fi}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div style={{ paddingTop: '24px', borderTop: '1px solid var(--crema-fosca)', marginBottom: '24px', display: 'flex', gap: '20px', alignItems: 'center' }}>
