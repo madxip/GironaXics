@@ -1,13 +1,15 @@
 import { Activitat, Centre, Sponsor, CasalsBanner } from './types';
 import activitatsSeed from '../../seed/activitats-inicials.json';
 import { normalizeSlug } from './utils';
+import { unstable_cache } from 'next/cache';
 
 const API_KEY = process.env.AIRTABLE_API_KEY;
 const BASE_ID = process.env.AIRTABLE_BASE_ID;
 
 // Cache en memòria compatible amb entorns serverless (Vercel, etc.)
 // El sistema de cache basat en fitxers (fs) no funciona en serverless perquè el FS és read-only.
-const CACHE_TTL = 60 * 1000; // 60 segons — alineat amb revalidate=60 de les pàgines
+// Actua com a primera capa (per instància). La segona capa és unstable_cache de Next.js (cross-instància).
+const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hores — s'alinea amb unstable_cache revalidate
 
 interface CacheStructure {
   activitats?: {
@@ -57,13 +59,18 @@ function writeCache(data: CacheStructure) {
   }
 }
 
-/** Neteja tota la memòria cau (activitats + centres + sponsors + casalsBanner). Cridat des de l'acció admin. */
-export function clearAllCache(): void {
+/** Neteja tota la memòria cau (activitats + centres + sponsors + casalsBanner).
+ *  @param revalidateTagFn Passa `revalidateTag` des del server action per invalidar també la Next.js Data Cache. */
+export function clearAllCache(revalidateTagFn?: (tag: string) => void): void {
   delete memoryCache.activitats;
   delete memoryCache.allActivitats;
   delete memoryCache.centres;
   delete memoryCache.sponsors;
   delete memoryCache.casalsBanner;
+  if (revalidateTagFn) {
+    try { revalidateTagFn('activitats'); } catch { /* ignore fora de request context */ }
+    try { revalidateTagFn('centres'); } catch { /* ignore */ }
+  }
 }
 
 // Fallback per desenvolupament si no hi ha Airtable configurat
@@ -248,6 +255,47 @@ function mapActivitatRecord(
   return f;
 }
 
+// ─── Caché Cross-Instància via Next.js unstable_cache ────────────────────────
+// Totes les instàncies serverless de Vercel comparteixen aquesta caché.
+// Quan un centre edita una activitat, revalidateTag('activitats') la invalida.
+
+async function _doFetchActivitatsPublicades(): Promise<Activitat[]> {
+  const records = await fetchAllRecords('Activitats', '{publicada}=TRUE()');
+
+  let centresRecords: { id: string; fields: Record<string, unknown> }[] = [];
+  try {
+    centresRecords = await fetchAllRecords('Centres');
+  } catch { /* ignore */ }
+
+  const centreMap = new Map<string, string>();
+  const centreImatgeMap = new Map<string, string>();
+  const centreInteressatMap = new Map<string, boolean>();
+
+  centresRecords.forEach((c) => {
+    if (c.fields?.nom) centreMap.set(c.id, c.fields.nom as string);
+    if (c.fields) {
+      const attachmentField = c.fields.Imatge || c.fields.imatge || c.fields.Logo || c.fields.logo || c.fields.Logotip || c.fields.logotip;
+      if (Array.isArray(attachmentField) && attachmentField.length > 0) {
+        const url = (attachmentField[0] as { url: string }).url;
+        centreImatgeMap.set(c.id, url);
+        if (c.fields.nom) centreImatgeMap.set(c.fields.nom as string, url);
+      }
+      const interessat = !!(c.fields.interessat || c.fields.Interessat || c.fields['col·laborador'] || c.fields['Col·laborador'] || c.fields.partner || c.fields.Partner);
+      centreInteressatMap.set(c.id, interessat);
+      if (c.fields.nom) centreInteressatMap.set(c.fields.nom as string, interessat);
+    }
+  });
+
+  return records.map((r) => mapActivitatRecord(r, centreMap, centreImatgeMap, centreInteressatMap));
+}
+
+// Versió cacheada per Next.js — compartida entre totes les instàncies (6h TTL de seguretat)
+const _getCachedActivitats = unstable_cache(
+  _doFetchActivitatsPublicades,
+  ['gironaxics-activitats-publicades'],
+  { tags: ['activitats'], revalidate: 21600 }
+);
+
 export async function getActivitats(): Promise<Activitat[]> {
   if (!API_KEY || !BASE_ID) {
     console.warn("Manca AIRTABLE_API_KEY o AIRTABLE_BASE_ID. Utilitzant dades de prova.");
@@ -256,7 +304,6 @@ export async function getActivitats(): Promise<Activitat[]> {
       if (!slug.endsWith('-girona')) {
         slug = slug ? `${slug}-girona` : 'girona';
       }
-      // Let's add mock centre images for beautiful fallback design!
       let centreImatgeUrl = '';
       if (a.centre === 'Piscina Municipal') centreImatgeUrl = 'https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?q=80&w=150&auto=format&fit=crop';
       else if (a.centre?.includes('Música')) centreImatgeUrl = 'https://images.unsplash.com/photo-1507838153414-b4b713384a76?q=80&w=150&auto=format&fit=crop';
@@ -267,12 +314,11 @@ export async function getActivitats(): Promise<Activitat[]> {
       else if (a.centre?.includes('Art')) centreImatgeUrl = 'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?q=80&w=150&auto=format&fit=crop';
       else if (a.centre?.includes('Club')) centreImatgeUrl = 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=150&auto=format&fit=crop';
       else if (a.centre?.includes('Cuina')) centreImatgeUrl = 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?q=80&w=150&auto=format&fit=crop';
-      
       return { ...a, slug, centreImatgeUrl };
     });
   }
 
-  // 1. Intentar llegir la memòria cau local (cache) per reduir consum de crides a Airtable
+  // 1. Memòria cau local (per instància, molt ràpid)
   const cache = readCache();
   const now = Date.now();
   if (cache.activitats && (now - cache.activitats.timestamp < CACHE_TTL)) {
@@ -280,59 +326,16 @@ export async function getActivitats(): Promise<Activitat[]> {
   }
 
   try {
-    const records = await fetchAllRecords('Activitats', '{publicada}=TRUE()');
-
-    let centresRecords: { id: string; fields: Record<string, unknown> }[] = [];
-    try {
-      centresRecords = await fetchAllRecords('Centres');
-    } catch {
-      // Ignore
-    }
-
-    const centreMap = new Map<string, string>();
-    const centreImatgeMap = new Map<string, string>();
-    const centreInteressatMap = new Map<string, boolean>();
-
-    centresRecords.forEach((c) => {
-      if (c.fields && c.fields.nom) {
-        centreMap.set(c.id, c.fields.nom as string);
-      }
-      if (c.fields) {
-        const attachmentField = c.fields.Imatge || c.fields.imatge || c.fields.Logo || c.fields.logo || c.fields.Logotip || c.fields.logotip;
-        if (Array.isArray(attachmentField) && attachmentField.length > 0) {
-          const url = (attachmentField[0] as { url: string }).url;
-          centreImatgeMap.set(c.id, url);
-          if (c.fields.nom) {
-            centreImatgeMap.set(c.fields.nom as string, url);
-          }
-        }
-        // Mapear si el centre ha confirmat participació
-        const interessat = !!(c.fields.interessat || c.fields.Interessat || c.fields['col·laborador'] || c.fields['Col·laborador'] || c.fields.partner || c.fields.Partner);
-        centreInteressatMap.set(c.id, interessat);
-        if (c.fields.nom) {
-          centreInteressatMap.set(c.fields.nom as string, interessat);
-        }
-      }
-    });
-
-    const formattedActivitats = records.map((r: { id: string; fields: Record<string, unknown> }) => {
-      return mapActivitatRecord(r, centreMap, centreImatgeMap, centreInteressatMap);
-    });
-
-    // 2. Desar les dades formatades a la memòria cau local
-    const updatedCache = readCache();
-    updatedCache.activitats = {
-      timestamp: Date.now(),
-      data: formattedActivitats
-    };
-    writeCache(updatedCache);
-
-    return formattedActivitats;
+    // 2. Caché Next.js (cross-instància, persistent entre cold starts)
+    const data = await _getCachedActivitats();
+    // Poblar la memòria local per a crides posteriors en la mateixa instància
+    writeCache({ activitats: { timestamp: now, data } });
+    return data;
   } catch (error) {
-    console.error("[Airtable API] Error en getActivitats:", error);
-    // 3. Fallback d'emergència: si Airtable falla o excedeix quota, fer servir la darrera cache existent si està disponible
+    console.error('[Airtable API] Error en getActivitats:', error);
+    // 3. Fallback d'emergència: retornar cache anterior si existeix
     if (cache.activitats) {
-      console.warn("[Airtable Cache] Fallback activat. Retornant cache anterior per evitar errors visualitzadors.");
+      console.warn('[Airtable Cache] Fallback activat. Retornant cache anterior per evitar errors.');
       return cache.activitats.data;
     }
     return [];

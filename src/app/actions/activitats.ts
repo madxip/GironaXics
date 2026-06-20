@@ -3,7 +3,7 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { createActivitat, updateActivitat, deleteActivitat, getActivitatRawById } from "@/lib/airtable";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { normalizeSlug } from "@/lib/utils";
 
 // Helper: retorna centreId i si Ã©s admin
@@ -102,6 +102,7 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
 
     // On-demand revalidation
     try {
+      revalidateTag('activitats'); // Invalida la caché cross-instància de Next.js
       revalidatePath("/");
     } catch (e) {
       console.error("[Revalidate] Error revalidating '/':", e);
@@ -218,6 +219,7 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
 
     // On-demand revalidation
     try {
+      revalidateTag('activitats'); // Invalida la caché cross-instància de Next.js
       revalidatePath("/");
     } catch (e) {
       console.error("[Revalidate] Error revalidating '/':", e);
@@ -276,6 +278,7 @@ export async function deleteActivitatAction(id: string) {
 
     // On-demand revalidation
     try {
+      revalidateTag('activitats'); // Invalida la caché cross-instància de Next.js
       revalidatePath("/");
     } catch (e) {
       console.error("[Revalidate] Error revalidating '/':", e);
