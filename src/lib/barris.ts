@@ -14,17 +14,19 @@ export const BARRIS_GIRONA: string[] = [
   "Eixample",
   "Fontajau",
   "Germans Sàbat",
+  "Germans Sàbat - Taialà",
   "Mas Xirgu",
   "Montilivi",
+  "Montilivi - Palau",
   "Palau",
   "Pedret",
   "Pont Major",
   "Sant Daniel",
   "Sant Narcís",
   "Santa Eugènia",
+  "Taialà",
   "Vila-roja i Font de la Pólvora",
   "Vista Alegre - Carme",
-  "Domeny - Fomntajau"
 ];
 
 /** Set per a consultes O(1) — qualsevol barri absent d'aquí és "Altres poblacions" */
