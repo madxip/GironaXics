@@ -432,13 +432,37 @@ export async function getActivitatsDestacades(): Promise<Activitat[]> {
   });
 }
 
-export async function getCentres(): Promise<Centre[]> {
-  if (!API_KEY || !BASE_ID) {
-    // Return empty or mock
-    return [];
-  }
+async function _doFetchCentres(): Promise<Centre[]> {
+  const records = await fetchAllRecords('Centres');
+  const anyActiu = records.some(r => r.fields.actiu === true || r.fields.Actiu === true);
+  const recordsToShow = anyActiu
+    ? records.filter(r => r.fields.actiu === true || r.fields.Actiu === true)
+    : records;
 
-  // 1. Intentar llegir la memòria cau local (cache) per reduir consum de crides a Airtable
+  return recordsToShow.map((r: { id: string; fields: Record<string, unknown> }) => {
+    const f = { ...r.fields } as unknown as Centre;
+    f.id = r.id;
+    f.adreca = (r.fields.adreça || r.fields.adreca || "") as string;
+    const attachmentField = r.fields.Imatge || r.fields.imatge || r.fields.Logo || r.fields.logo || r.fields.Logotip || r.fields.logotip;
+    if (Array.isArray(attachmentField) && attachmentField.length > 0) {
+      f.imatgeUrl = (attachmentField[0] as { url: string }).url;
+    }
+    const customSlug = (r.fields.slug as string) || (r.fields.Slug as string);
+    f.slug = customSlug ? normalizeSlug(customSlug) : (r.fields.nom ? normalizeSlug(r.fields.nom as string) : r.id);
+    f.interessat = !!(r.fields.interessat || r.fields.Interessat || r.fields['col·laborador'] || r.fields['Col·laborador'] || r.fields.partner || r.fields.Partner);
+    return f;
+  });
+}
+
+const _getCachedCentres = unstable_cache(
+  _doFetchCentres,
+  ['gironaxics-centres'],
+  { tags: ['centres'], revalidate: 21600 }
+);
+
+export async function getCentres(): Promise<Centre[]> {
+  if (!API_KEY || !BASE_ID) return [];
+
   const cache = readCache();
   const now = Date.now();
   if (cache.centres && (now - cache.centres.timestamp < CACHE_TTL)) {
@@ -446,50 +470,11 @@ export async function getCentres(): Promise<Centre[]> {
   }
 
   try {
-    const records = await fetchAllRecords('Centres');
-    // Filtre per camp "actiu" (casella de selecció a Airtable):
-    // - Si ALGUN centre té actiu=true → mostrem només els actius
-    // - Si CAP centre té actiu=true (camp no existeix o no hi ha cap marcat) → mostrem tots
-    // Això permet compatibilitat retroactiva: si l'usuari no ha afegit el camp "actiu"
-    // a Airtable, el comportament és idèntic a l'anterior (tots els centres visibles).
-    const anyActiu = records.some(r => r.fields.actiu === true || r.fields.Actiu === true);
-    const recordsToShow = anyActiu
-      ? records.filter(r => r.fields.actiu === true || r.fields.Actiu === true)
-      : records;
-
-    const formattedCentres = recordsToShow.map((r: { id: string; fields: Record<string, unknown> }) => {
-      const f = { ...r.fields } as unknown as Centre;
-      f.id = r.id;
-      f.adreca = (r.fields.adreça || r.fields.adreca || "") as string;
-
-      // Robust logo/image mapping from Airtable for Centre
-      const attachmentField = r.fields.Imatge || r.fields.imatge || r.fields.Logo || r.fields.logo || r.fields.Logotip || r.fields.logotip;
-      if (Array.isArray(attachmentField) && attachmentField.length > 0) {
-        f.imatgeUrl = (attachmentField[0] as { url: string }).url;
-      }
-
-      // Robust slug fallback: use slug field (lowercase or uppercase) or generate from name or fallback to record ID
-      const customSlug = (r.fields.slug as string) || (r.fields.Slug as string);
-      f.slug = customSlug ? normalizeSlug(customSlug) : (r.fields.nom ? normalizeSlug(r.fields.nom as string) : r.id);
-
-      // Mapear si el centre ha confirmat participació (casella Airtable)
-      f.interessat = !!(r.fields.interessat || r.fields.Interessat || r.fields['col·laborador'] || r.fields['Col·laborador'] || r.fields.partner || r.fields.Partner);
-
-      return f;
-    });
-
-    // 2. Desar les dades formatades a la memòria cau local
-    const updatedCache = readCache();
-    updatedCache.centres = {
-      timestamp: Date.now(),
-      data: formattedCentres
-    };
-    writeCache(updatedCache);
-
-    return formattedCentres;
+    const data = await _getCachedCentres();
+    writeCache({ centres: { timestamp: now, data } });
+    return data;
   } catch (error) {
     console.error("[Airtable API] Error en getCentres:", error);
-    // 3. Fallback d'emergència: si Airtable falla, fer servir la darrera cache de centres existent
     if (cache.centres) {
       console.warn("[Airtable Cache] Fallback activat. Retornant cache de centres anterior.");
       return cache.centres.data;
