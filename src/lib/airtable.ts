@@ -7,9 +7,8 @@ const API_KEY = process.env.AIRTABLE_API_KEY;
 const BASE_ID = process.env.AIRTABLE_BASE_ID;
 
 // Cache en memòria compatible amb entorns serverless (Vercel, etc.)
-// El sistema de cache basat en fitxers (fs) no funciona en serverless perquè el FS és read-only.
-// Actua com a primera capa (per instància). La segona capa és unstable_cache de Next.js (cross-instància).
-const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hores — s'alinea amb unstable_cache revalidate
+// Limitat a 90 min per evitar que les URLs d'imatges d'Airtable (expirades a ~2h) quedin obsoletes a la caché.
+const CACHE_TTL = 90 * 60 * 1000; // 90 minuts
 
 interface CacheStructure {
   activitats?: {
@@ -289,11 +288,11 @@ async function _doFetchActivitatsPublicades(): Promise<Activitat[]> {
   return records.map((r) => mapActivitatRecord(r, centreMap, centreImatgeMap, centreInteressatMap));
 }
 
-// Versió cacheada per Next.js — compartida entre totes les instàncies (6h TTL de seguretat)
+// Versió cacheada per Next.js — compartida entre totes les instàncies (90 min TTL per URLs d'imatges Airtable)
 const _getCachedActivitats = unstable_cache(
   _doFetchActivitatsPublicades,
   ['gironaxics-activitats-publicades'],
-  { tags: ['activitats'], revalidate: 21600 }
+  { tags: ['activitats'], revalidate: 5400 } // 90 minuts
 );
 
 export async function getActivitats(): Promise<Activitat[]> {
@@ -457,7 +456,7 @@ async function _doFetchCentres(): Promise<Centre[]> {
 const _getCachedCentres = unstable_cache(
   _doFetchCentres,
   ['gironaxics-centres'],
-  { tags: ['centres'], revalidate: 21600 }
+  { tags: ['centres'], revalidate: 5400 } // 90 minuts
 );
 
 export async function getCentres(): Promise<Centre[]> {
