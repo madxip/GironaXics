@@ -573,7 +573,7 @@ export async function createUser(data: { nom: string; email: string; passwordHas
   }
 }
 
-export async function createCentre(nom: string): Promise<{ id: string; nom: string } | null> {
+export async function createCentre(nom: string): Promise<{ id: string; nom: string } | { error: string } | null> {
   if (!API_KEY || !BASE_ID) return null;
   try {
     const url = `https://api.airtable.com/v0/${BASE_ID}/Centres`;
@@ -599,6 +599,10 @@ export async function createCentre(nom: string): Promise<{ id: string; nom: stri
     });
     if (!res.ok) {
       const text = await res.text();
+      console.error(`[Airtable API] createCentre error: ${res.status} ${text}`);
+      if (res.status === 429) {
+        return { error: 'quota' };
+      }
       throw new Error(`Failed to create centre: ${res.status} ${text}`);
     }
     const resData = await res.json();

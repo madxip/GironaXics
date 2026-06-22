@@ -35,7 +35,13 @@ export async function registerCentreAction(prevState: unknown, formData: FormDat
     if (centreId === "nou-centre") {
       const newCentre = await createCentre(nouCentreNom);
       if (!newCentre) {
-        return { success: false, error: "No s'ha pogut crear el nou centre a Airtable. Torna-ho a provar." };
+        return { success: false, error: "No s'ha pogut crear el nou centre. Torna-ho a provar." };
+      }
+      if ('error' in newCentre) {
+        if (newCentre.error === 'quota') {
+          return { success: false, error: "El servei de registre no està disponible temporalment per límit de capacitat. Si us plau, torna a intentar-ho l'1 de juliol o contacta amb hola@gironaxics.cat perquè et registrem manualment." };
+        }
+        return { success: false, error: "No s'ha pogut crear el nou centre. Torna-ho a provar." };
       }
       centreId = newCentre.id;
       
