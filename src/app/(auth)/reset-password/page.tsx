@@ -167,7 +167,6 @@ function ResetPasswordForm() {
             type="password"
             placeholder="••••••••"
             autoComplete="new-password"
-            disabled={isPending}
             required
             style={{
               padding: "14px",
@@ -197,7 +196,6 @@ function ResetPasswordForm() {
             type="password"
             placeholder="••••••••"
             autoComplete="new-password"
-            disabled={isPending}
             required
             style={{
               padding: "14px",
