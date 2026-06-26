@@ -378,3 +378,45 @@ export async function sendApprovalEmail(data: {
   });
 }
 
+export async function sendPasswordResetEmail(data: {
+  email: string;
+  nom: string;
+  resetUrl: string;
+}) {
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error("El servei d'enviament de correus no està configurat.");
+  }
+  await resend.emails.send({
+    from: FROM,
+    to: data.email,
+    subject: 'Restabliment de contrasenya — GironaXics',
+    html: `
+      <div style="font-family:sans-serif;max-width:600px;margin:0 auto;color:#1A1A18">
+        <div style="background:#1A6B3A;padding:20px 32px">
+          <span style="color:white;font-size:20px;font-weight:700">Girona<span style="color:#F5A623">Xics</span></span>
+        </div>
+        <div style="padding:32px">
+          <h2 style="margin:0 0 16px;color:#1A6B3A">Restabliment de contrasenya</h2>
+          <p style="color:#525250;margin:0 0 24px;line-height:1.6;font-size:15px">
+            Hola <strong>${esc(data.nom)}</strong>,<br/><br/>
+            Hem rebut una sol·licitud per restablir la contrasenya del teu compte a GironaXics.
+            Fes clic al botó de sota per crear una nova contrasenya. L'enllaç és vàlid durant <strong>1 hora</strong>.
+          </p>
+          <div style="text-align:center;margin:36px 0">
+            <a href="${data.resetUrl}" style="display:inline-block;background:#1A6B3A;color:white;padding:14px 28px;border-radius:6px;text-decoration:none;font-weight:700;font-size:16px;box-shadow:0 4px 12px rgba(26,107,58,0.15)">Restablir la contrasenya</a>
+          </div>
+          <p style="color:#7C7C7A;font-size:13px;line-height:1.5">
+            Si no has sol·licitat aquest canvi, pots ignorar aquest correu. La teva contrasenya actual seguirà sent la mateixa.
+          </p>
+          <p style="color:#7C7C7A;font-size:12px;margin-top:16px;word-break:break-all">
+            O copia aquest enllaç al navegador:<br/>
+            <a href="${data.resetUrl}" style="color:#1A6B3A">${data.resetUrl}</a>
+          </p>
+        </div>
+        <div style="padding:16px 32px;border-top:1px solid #EDE8DF;font-size:12px;color:#7C7C7A;background:#F9F8F6">
+          <a href="https://gironaxics.cat" style="color:#1A6B3A;text-decoration:none;font-weight:600">gironaxics.cat</a> · El directori d'extraescolars de Girona
+        </div>
+      </div>
+    `,
+  });
+}

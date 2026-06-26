@@ -896,6 +896,25 @@ export async function deleteActivitat(id: string): Promise<boolean> {
   }
 }
 
+export async function updateUserPassword(userId: string, newPasswordHash: string): Promise<boolean> {
+  if (!API_KEY || !BASE_ID) return false;
+  try {
+    const url = `https://api.airtable.com/v0/${BASE_ID}/Usuaris_Centres/${userId}`;
+    const res = await fetchWithRetry(url, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ fields: { PasswordHash: newPasswordHash } }),
+    });
+    return res.ok;
+  } catch (error) {
+    console.error('[Airtable API] Error en updateUserPassword:', error);
+    return false;
+  }
+}
+
 export async function updateCentre(id: string, data: Partial<Omit<Centre, 'id' | 'slug'>>): Promise<boolean> {
   if (!API_KEY || !BASE_ID) return false;
   try {

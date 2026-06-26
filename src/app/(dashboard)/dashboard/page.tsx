@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { getActivitatsByCentreId, getAllActivitats, getCentres } from "@/lib/airtable";
 import Link from "next/link";
-import { Plus, Activity, ShieldCheck, Info } from "lucide-react";
+import { Plus, Activity, ShieldCheck, Info, Lock } from "lucide-react";
 import ActivitatsTable from "./ActivitatsTable";
 import RefreshCacheButton from "./RefreshCacheButton";
 
@@ -53,6 +53,13 @@ export default async function DashboardPage() {
 
         <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
           {isAdmin && <RefreshCacheButton />}
+          <Link
+            href="/dashboard/compte"
+            style={{ display: "inline-flex", alignItems: "center", gap: "8px", backgroundColor: "white", color: "var(--verd-fosc)", padding: "10px 18px", borderRadius: "8px", textDecoration: "none", fontWeight: 600, fontSize: "14px", border: "1px solid var(--crema-fosca)", transition: "all 0.2s" }}
+          >
+            <Lock size={15} />
+            El meu compte
+          </Link>
           <Link
             href="/dashboard/activitats/nova"
             style={{ display: "inline-flex", alignItems: "center", gap: "8px", backgroundColor: "var(--verd)", color: "white", padding: "12px 24px", borderRadius: "8px", textDecoration: "none", fontWeight: 600, fontSize: "15px", fontFamily: "var(--font-serif)", fontStyle: "italic", boxShadow: "0 4px 12px rgba(26,107,58,0.15)", transition: "all 0.2s" }}
