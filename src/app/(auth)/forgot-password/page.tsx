@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useActionState, Suspense } from "react";
+import React, { Suspense } from "react";
+import { useFormState, useFormStatus } from "react-dom";
 import Link from "next/link";
 import { forgotPasswordAction } from "@/app/actions/password";
 
@@ -10,11 +11,35 @@ type ForgotPasswordState = {
   error?: string;
 } | null;
 
-function ForgotPasswordForm() {
-  const [state, formAction, isPending] = useActionState<ForgotPasswordState, FormData>(
-    forgotPasswordAction,
-    null
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      style={{
+        marginTop: "12px",
+        backgroundColor: "var(--verd)",
+        color: "white",
+        border: "none",
+        borderRadius: "8px",
+        padding: "16px",
+        fontFamily: "var(--font-serif)",
+        fontStyle: "italic",
+        fontSize: "18px",
+        cursor: pending ? "not-allowed" : "pointer",
+        transition: "background-color 0.2s",
+        opacity: pending ? 0.8 : 1,
+        width: "100%"
+      }}
+    >
+      {pending ? "Enviant..." : "Envia l'enllaç de restabliment"}
+    </button>
   );
+}
+
+function ForgotPasswordForm() {
+  const [state, formAction] = useFormState(forgotPasswordAction, null);
 
   return (
     <div>
@@ -86,7 +111,6 @@ function ForgotPasswordForm() {
             type="email"
             placeholder="el-teu-email@centre.com"
             autoComplete="email"
-            disabled={isPending}
             required
             style={{
               padding: "14px",
@@ -99,29 +123,7 @@ function ForgotPasswordForm() {
             }}
           />
         </div>
-
-        <button
-          type="submit"
-          disabled={isPending}
-          style={{
-            marginTop: "12px",
-            backgroundColor: "var(--verd)",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
-            padding: "16px",
-            fontFamily: "var(--font-serif)",
-            fontStyle: "italic",
-            fontSize: "18px",
-            cursor: isPending ? "not-allowed" : "pointer",
-            transition: "background-color 0.2s",
-            opacity: isPending ? 0.8 : 1
-          }}
-          onMouseOver={(e) => !isPending && (e.currentTarget.style.backgroundColor = "var(--verd-fosc)")}
-          onMouseOut={(e) => !isPending && (e.currentTarget.style.backgroundColor = "var(--verd)")}
-        >
-          {isPending ? "Enviant..." : "Envia l'enllaç de restabliment"}
-        </button>
+        <SubmitButton />
       </form>
 
       <div style={{

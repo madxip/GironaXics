@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useActionState, Suspense } from "react";
+import React, { Suspense } from "react";
+import { useFormState, useFormStatus } from "react-dom";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { resetPasswordAction } from "@/app/actions/password";
@@ -11,14 +12,37 @@ type ResetPasswordState = {
   error?: string;
 } | null;
 
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      style={{
+        marginTop: "12px",
+        backgroundColor: "var(--verd)",
+        color: "white",
+        border: "none",
+        borderRadius: "8px",
+        padding: "16px",
+        fontFamily: "var(--font-serif)",
+        fontStyle: "italic",
+        fontSize: "18px",
+        cursor: pending ? "not-allowed" : "pointer",
+        transition: "background-color 0.2s",
+        opacity: pending ? 0.8 : 1,
+        width: "100%"
+      }}
+    >
+      {pending ? "Establint contrasenya..." : "Establir nova contrasenya"}
+    </button>
+  );
+}
+
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
-
-  const [state, formAction, isPending] = useActionState<ResetPasswordState, FormData>(
-    resetPasswordAction,
-    null
-  );
+  const [state, formAction] = useFormState(resetPasswordAction, null);
 
   // No token: show error
   if (!token) {
@@ -193,28 +217,7 @@ function ResetPasswordForm() {
           />
         </div>
 
-        <button
-          type="submit"
-          disabled={isPending}
-          style={{
-            marginTop: "12px",
-            backgroundColor: "var(--verd)",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
-            padding: "16px",
-            fontFamily: "var(--font-serif)",
-            fontStyle: "italic",
-            fontSize: "18px",
-            cursor: isPending ? "not-allowed" : "pointer",
-            transition: "background-color 0.2s",
-            opacity: isPending ? 0.8 : 1
-          }}
-          onMouseOver={(e) => !isPending && (e.currentTarget.style.backgroundColor = "var(--verd-fosc)")}
-          onMouseOut={(e) => !isPending && (e.currentTarget.style.backgroundColor = "var(--verd)")}
-        >
-          {isPending ? "Establint contrasenya..." : "Establir nova contrasenya"}
-        </button>
+        <SubmitButton />
       </form>
 
       <div style={{

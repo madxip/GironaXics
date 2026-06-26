@@ -1,6 +1,7 @@
-﻿"use client";
+"use client";
 
-import React, { useActionState, useState } from "react";
+import React, { useState } from "react";
+import { useFormState, useFormStatus } from "react-dom";
 import { changePasswordAction } from "@/app/actions/password";
 import Link from "next/link";
 import { Lock, Eye, EyeOff } from "lucide-react";
@@ -27,7 +28,8 @@ const labelStyle: React.CSSProperties = {
   marginBottom: "6px",
 };
 
-function PasswordField({ id, name, label, disabled }: { id: string; name: string; label: string; disabled: boolean }) {
+function PasswordField({ id, name, label }: { id: string; name: string; label: string }) {
+  const { pending } = useFormStatus();
   const [show, setShow] = useState(false);
   return (
     <div style={{ display: "flex", flexDirection: "column", marginBottom: "20px" }}>
@@ -38,7 +40,7 @@ function PasswordField({ id, name, label, disabled }: { id: string; name: string
           name={name}
           type={show ? "text" : "password"}
           autoComplete="off"
-          disabled={disabled}
+          disabled={pending}
           style={{ ...inputStyle, paddingRight: "44px" }}
         />
         <button
@@ -54,8 +56,21 @@ function PasswordField({ id, name, label, disabled }: { id: string; name: string
   );
 }
 
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      style={{ width: "100%", backgroundColor: "var(--verd)", color: "white", border: "none", borderRadius: "8px", padding: "14px", fontFamily: "var(--font-serif)", fontStyle: "italic", fontSize: "17px", cursor: pending ? "not-allowed" : "pointer", opacity: pending ? 0.8 : 1, transition: "background-color 0.2s" }}
+    >
+      {pending ? "Actualitzant..." : "Canviar contrasenya"}
+    </button>
+  );
+}
+
 export default function CompteClient() {
-  const [state, formAction, isPending] = useActionState(changePasswordAction, null);
+  const [state, formAction] = useFormState(changePasswordAction, null);
 
   return (
     <div style={{ maxWidth: "520px" }}>
@@ -88,21 +103,13 @@ export default function CompteClient() {
 
       {!state?.success && (
         <form action={formAction} style={{ backgroundColor: "white", borderRadius: "12px", border: "1px solid var(--crema-fosca)", padding: "28px" }}>
-          <PasswordField id="compte-current" name="currentPassword" label="Contrasenya actual" disabled={isPending} />
-          <PasswordField id="compte-new" name="newPassword" label="Nova contrasenya" disabled={isPending} />
-          <PasswordField id="compte-confirm" name="confirmPassword" label="Confirmar nova contrasenya" disabled={isPending} />
-
+          <PasswordField id="compte-current" name="currentPassword" label="Contrasenya actual" />
+          <PasswordField id="compte-new" name="newPassword" label="Nova contrasenya" />
+          <PasswordField id="compte-confirm" name="confirmPassword" label="Confirmar nova contrasenya" />
           <p style={{ fontSize: "12px", color: "var(--muted)", marginBottom: "20px" }}>
             Mínim 8 caràcters.
           </p>
-
-          <button
-            type="submit"
-            disabled={isPending}
-            style={{ width: "100%", backgroundColor: "var(--verd)", color: "white", border: "none", borderRadius: "8px", padding: "14px", fontFamily: "var(--font-serif)", fontStyle: "italic", fontSize: "17px", cursor: isPending ? "not-allowed" : "pointer", opacity: isPending ? 0.8 : 1, transition: "background-color 0.2s" }}
-          >
-            {isPending ? "Actualitzant..." : "Canviar contrasenya"}
-          </button>
+          <SubmitButton />
         </form>
       )}
 
