@@ -6,12 +6,6 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { resetPasswordAction } from "@/app/actions/password";
 
-type ResetPasswordState = {
-  success?: boolean;
-  message?: string;
-  error?: string;
-} | null;
-
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (

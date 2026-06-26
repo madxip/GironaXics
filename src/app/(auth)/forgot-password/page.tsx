@@ -5,12 +5,6 @@ import { useFormState, useFormStatus } from "react-dom";
 import Link from "next/link";
 import { forgotPasswordAction } from "@/app/actions/password";
 
-type ForgotPasswordState = {
-  success?: boolean;
-  message?: string;
-  error?: string;
-} | null;
-
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
