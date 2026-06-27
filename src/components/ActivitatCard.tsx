@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from './SafeImage';
 import { Activitat } from '@/lib/types';
 import { normalizeSlug, formatPreu } from '@/lib/utils';
+import { parseVacances, isInVacances, getNextValidTallerDate, MONTH_ABBR_CAT } from '@/lib/tallerDates';
 
 const saveScroll = () => {
   if (typeof window !== 'undefined') {
@@ -222,12 +223,46 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
     const parsedDates = parseTallerDates(activitat.dies || '');
     const formattedPrice = formatTallerPrice(activitat.preu);
 
+    // ── Vacances logic ──────────────────────────────────────────
+    const vacRanges = parseVacances(activitat.centreVacances || '');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const inVacation = vacRanges.length > 0 && isInVacances(today, vacRanges);
+
+    // Badge a mostrar durant vacances
+    let vacBadge: { day: string; month: string } | null = null;
+    if (inVacation) {
+      const nextDate = getNextValidTallerDate(activitat.dies || '', vacRanges);
+      if (nextDate) {
+        vacBadge = {
+          day: String(nextDate.getDate()),
+          month: MONTH_ABBR_CAT[nextDate.getMonth()] || '',
+        };
+      }
+    }
+    // ────────────────────────────────────────────────────────────
+
     return (
       <Link href={href} className="taller-card-wrapper" onClick={saveScroll}>
         {/* Top Row: Calendars and Tag */}
         <div className="taller-card-top-row">
           <div className="taller-card-calendars-container">
-            {parsedDates.length > 0 ? (
+            {inVacation ? (
+              // Durant vacances: mostra la data de represa
+              <div className="taller-card-calendar taller-card-calendar--vacances" title="Reprèn activitat">
+                {vacBadge ? (
+                  <>
+                    <span className="taller-card-calendar-day">{vacBadge.day}</span>
+                    <span className="taller-card-calendar-month">{vacBadge.month}</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="taller-card-calendar-day" style={{ fontSize: '9px', lineHeight: 1.1 }}>Rep.</span>
+                    <span className="taller-card-calendar-month">SET</span>
+                  </>
+                )}
+              </div>
+            ) : parsedDates.length > 0 ? (
               parsedDates.slice(0, 3).map((d, index) => (
                 <div key={index} className="taller-card-calendar">
                   <span className="taller-card-calendar-day">{d.day}</span>
@@ -240,24 +275,31 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
                 <span className="taller-card-calendar-month">OCI</span>
               </div>
             )}
-            {parsedDates.length > 3 && (
+            {!inVacation && parsedDates.length > 3 && (
               <span className="taller-card-more-dates-badge">
                 +{parsedDates.length - 3}
               </span>
             )}
           </div>
-          {activitat.subcategoria && (
-            <span className="taller-card-tag">
-              {activitat.subcategoria}
-            </span>
-          )}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+            {inVacation && (
+              <span style={{ fontSize: '10px', fontWeight: 700, color: '#e67e22', background: '#fef3e2', padding: '2px 6px', borderRadius: '4px', letterSpacing: '0.05em' }}>
+                VACANCES
+              </span>
+            )}
+            {activitat.subcategoria && (
+              <span className="taller-card-tag">
+                {activitat.subcategoria}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Info Block */}
         <div className="taller-card-info-block">
           <h4 className="taller-card-title">{activitat.nom}</h4>
           <div className="taller-card-subtitle">
-            {activitat.centre} · {activitat.edat}
+            {activitat.centre} &middot; {activitat.edat}
           </div>
         </div>
 

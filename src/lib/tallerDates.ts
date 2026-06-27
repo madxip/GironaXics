@@ -188,3 +188,134 @@ export function isTallerExpiredOrEnded(dies: string): boolean {
   }
   return isTallerExpired(dies);
 }
+
+// ─── VACANCES ─────────────────────────────────────────────────────────────────
+
+/** Rang de dates de vacances */
+export interface VacanceRange {
+  start: Date;
+  end: Date;
+}
+
+/**
+ * Parseja el camp `vacances` d'un centre (una línia per rang: "DD/MM/AA-DD/MM/AA")
+ * Accepta formats: "01/08/26-31/08/26" o "01/08/2026-31/08/2026"
+ */
+export function parseVacances(vacances: string): VacanceRange[] {
+  if (!vacances) return [];
+  const lines = vacances.split('\n').map(l => l.trim()).filter(Boolean);
+  const result: VacanceRange[] = [];
+  for (const line of lines) {
+    const m = line.match(/(\d{1,2})[/.-](\d{1,2})[/.-](\d{2,4})\s*[-–]\s*(\d{1,2})[/.-](\d{1,2})[/.-](\d{2,4})/);
+    if (!m) continue;
+    const [, d1, mo1, y1, d2, mo2, y2] = m;
+    const year1 = parseInt(y1) < 100 ? 2000 + parseInt(y1) : parseInt(y1);
+    const year2 = parseInt(y2) < 100 ? 2000 + parseInt(y2) : parseInt(y2);
+    const start = new Date(year1, parseInt(mo1) - 1, parseInt(d1));
+    const end   = new Date(year2, parseInt(mo2) - 1, parseInt(d2));
+    if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+      result.push({ start, end });
+    }
+  }
+  return result;
+}
+
+/** Retorna true si la data cau dins algun rang de vacances */
+export function isInVacances(date: Date, ranges: VacanceRange[]): boolean {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return ranges.some(v => d >= v.start && d <= v.end);
+}
+
+/**
+ * Avança la data fins sortir de tots els rangs de vacances consecutius.
+ * Si la data ja no és en vacances, la retorna intacta.
+ */
+export function skipVacances(date: Date, ranges: VacanceRange[]): Date {
+  let d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  let maxIter = 400; // Evita bucles infinits
+  while (maxIter-- > 0) {
+    const inVac = ranges.find(v => d >= v.start && d <= v.end);
+    if (!inVac) break;
+    // Avança al dia següent de la fi d'aquest rang
+    d = new Date(inVac.end);
+    d.setDate(d.getDate() + 1);
+  }
+  return d;
+}
+
+/**
+ * Retorna la propera ocurrència d'un dia de la setmana (0=Diumenge...6=Dissabte)
+ * a partir de `fromDate` (inclòs si coincideix).
+ */
+export function getNextWeekdayAfterDate(fromDate: Date, weekdayIndex: number): Date {
+  const d = new Date(fromDate);
+  d.setHours(0, 0, 0, 0);
+  const current = d.getDay();
+  const daysUntil = (weekdayIndex - current + 7) % 7;
+  d.setDate(d.getDate() + daysUntil);
+  return d;
+}
+
+/** Mapa de noms catalans → índex JS (0=Diumenge) */
+export const WEEKDAY_NAME_TO_INDEX: Record<string, number> = {
+  diumenge: 0,
+  dilluns: 1,
+  dimarts: 2,
+  dimecres: 3,
+  dijous: 4,
+  divendres: 5,
+  dissabte: 6,
+};
+
+export const MONTH_ABBR_CAT = [
+  'GEN', 'FEB', 'MAR', 'ABR', 'MAIG', 'JUNY',
+  'JUL', 'AGO', 'SET', 'OCT', 'NOV', 'DES',
+];
+
+/**
+ * Donats el camp `dies` i les vacances del centre, retorna la propera data
+ * vàlida (fora de vacances) per mostrar a la card.
+ * Retorna null si no hi ha cap data propera determinable.
+ */
+export function getNextValidTallerDate(dies: string, vacances: VacanceRange[]): Date | null {
+  if (!dies) return null;
+  const lower = dies.toLowerCase();
+
+  // --- Taller recurrent (Cada dimarts, Cada dimecres...) ---
+  if (lower.startsWith('cada')) {
+    // Determina el dia de la setmana
+    let weekdayIdx = -1;
+    for (const [name, idx] of Object.entries(WEEKDAY_NAME_TO_INDEX)) {
+      if (lower.includes(name)) { weekdayIdx = idx; break; }
+    }
+    if (weekdayIdx === -1) return null;
+
+    // Data d'inici del rang recurrent (si n'hi ha)
+    const { start: recStart } = parseTallerRecurrentRange(dies);
+    let candidate = new Date();
+    candidate.setHours(0, 0, 0, 0);
+    if (recStart && recStart > candidate) {
+      candidate = new Date(recStart);
+    }
+
+    // Troba la propera ocurrència del dia de la setmana des de candidate
+    candidate = getNextWeekdayAfterDate(candidate, weekdayIdx);
+    // Si és en vacances, salta fins sortir-ne i torna a trobar el dia
+    let maxIter = 60;
+    while (maxIter-- > 0 && isInVacances(candidate, vacances)) {
+      candidate = skipVacances(candidate, vacances);
+      candidate = getNextWeekdayAfterDate(candidate, weekdayIdx);
+    }
+    return isInVacances(candidate, vacances) ? null : candidate;
+  }
+
+  // --- Taller puntual (dates fixes) ---
+  const dates = parseTallerDates(dies);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const upcoming = dates.filter(d => d >= today).sort((a, b) => a.getTime() - b.getTime());
+  const valid = upcoming.find(d => !isInVacances(d, vacances));
+  return valid || null;
+}

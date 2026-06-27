@@ -151,7 +151,8 @@ function mapActivitatRecord(
   r: { id: string; fields: Record<string, unknown> },
   centreMap: Map<string, string>,
   centreImatgeMap: Map<string, string>,
-  centreInteressatMap: Map<string, boolean>
+  centreInteressatMap: Map<string, boolean>,
+  centreVacancesMap: Map<string, string> = new Map()
 ): Activitat {
   const f = { ...r.fields } as unknown as Activitat;
   f.id = r.id;
@@ -163,6 +164,7 @@ function mapActivitatRecord(
     f.centre = centreMap.get(centreId) || centreId;
     f.centreImatgeUrl = centreImatgeMap.get(centreId);
     f.centreInteressat = centreInteressatMap.get(centreId) || false;
+    f.centreVacances = centreVacancesMap.get(centreId);
   }
   if (!f.centreImatgeUrl && f.centre) {
     f.centreImatgeUrl = centreImatgeMap.get(f.centre);
@@ -269,6 +271,7 @@ async function _doFetchActivitatsPublicades(): Promise<Activitat[]> {
   const centreMap = new Map<string, string>();
   const centreImatgeMap = new Map<string, string>();
   const centreInteressatMap = new Map<string, boolean>();
+  const centreVacancesMap = new Map<string, string>();
 
   centresRecords.forEach((c) => {
     if (c.fields?.nom) centreMap.set(c.id, c.fields.nom as string);
@@ -282,10 +285,13 @@ async function _doFetchActivitatsPublicades(): Promise<Activitat[]> {
       const interessat = !!(c.fields.interessat || c.fields.Interessat || c.fields['col·laborador'] || c.fields['Col·laborador'] || c.fields.partner || c.fields.Partner);
       centreInteressatMap.set(c.id, interessat);
       if (c.fields.nom) centreInteressatMap.set(c.fields.nom as string, interessat);
+      // Vacances
+      const vac = (c.fields.vacances || c.fields.Vacances) as string | undefined;
+      if (vac) centreVacancesMap.set(c.id, vac);
     }
   });
 
-  return records.map((r) => mapActivitatRecord(r, centreMap, centreImatgeMap, centreInteressatMap));
+  return records.map((r) => mapActivitatRecord(r, centreMap, centreImatgeMap, centreInteressatMap, centreVacancesMap));
 }
 
 // Versió cacheada per Next.js — compartida entre totes les instàncies (90 min TTL per URLs d'imatges Airtable)
@@ -369,6 +375,7 @@ export async function getAllActivitats(): Promise<Activitat[]> {
     const centreMap = new Map<string, string>();
     const centreImatgeMap = new Map<string, string>();
     const centreInteressatMap = new Map<string, boolean>();
+    const centreVacancesMap = new Map<string, string>();
 
     centresRecords.forEach((c) => {
       if (c.fields?.nom) centreMap.set(c.id, c.fields.nom as string);
@@ -382,11 +389,13 @@ export async function getAllActivitats(): Promise<Activitat[]> {
         const interessat = !!(c.fields.interessat || c.fields.Interessat || c.fields['col·laborador'] || c.fields['Col·laborador'] || c.fields.partner || c.fields.Partner);
         centreInteressatMap.set(c.id, interessat);
         if (c.fields.nom) centreInteressatMap.set(c.fields.nom as string, interessat);
+        const vac = (c.fields.vacances || c.fields.Vacances) as string | undefined;
+        if (vac) centreVacancesMap.set(c.id, vac);
       }
     });
 
     const formattedActivitats = records.map((r) =>
-      mapActivitatRecord(r, centreMap, centreImatgeMap, centreInteressatMap)
+      mapActivitatRecord(r, centreMap, centreImatgeMap, centreInteressatMap, centreVacancesMap)
     );
 
     const updatedCache = readCache();
@@ -449,6 +458,7 @@ async function _doFetchCentres(): Promise<Centre[]> {
     const customSlug = (r.fields.slug as string) || (r.fields.Slug as string);
     f.slug = customSlug ? normalizeSlug(customSlug) : (r.fields.nom ? normalizeSlug(r.fields.nom as string) : r.id);
     f.interessat = !!(r.fields.interessat || r.fields.Interessat || r.fields['col·laborador'] || r.fields['Col·laborador'] || r.fields.partner || r.fields.Partner);
+    f.vacances = (r.fields.vacances || r.fields.Vacances) as string | undefined;
     return f;
   });
 }
@@ -659,6 +669,7 @@ export async function getActivitatsByCentreId(centreId: string): Promise<Activit
     const centreMap = new Map<string, string>();
     const centreImatgeMap = new Map<string, string>();
     const centreInteressatMap = new Map<string, boolean>();
+    const centreVacancesMap = new Map<string, string>();
 
     centres.forEach((c) => {
       if (c.id) {
@@ -672,11 +683,12 @@ export async function getActivitatsByCentreId(centreId: string): Promise<Activit
         }
         centreInteressatMap.set(c.id, c.interessat || false);
         if (c.nom) centreInteressatMap.set(c.nom, c.interessat || false);
+        if (c.vacances && c.id) centreVacancesMap.set(c.id, c.vacances);
       }
     });
 
     // 4. Mapejar cada activitat utilitzant la nostra funció unificada DRY mapActivitatRecord
-    return records.map((r) => mapActivitatRecord(r, centreMap, centreImatgeMap, centreInteressatMap));
+    return records.map((r) => mapActivitatRecord(r, centreMap, centreImatgeMap, centreInteressatMap, centreVacancesMap));
   } catch (error) {
     console.error("[Airtable API] Error en getActivitatsByCentreId:", error);
     return [];
@@ -936,6 +948,9 @@ export async function updateCentre(id: string, data: Partial<Omit<Centre, 'id' |
 
     if (data.imatgeUrl !== undefined) {
       fields.Logo = data.imatgeUrl ? [{ url: data.imatgeUrl }] : [];
+    }
+    if (data.vacances !== undefined) {
+      fields.vacances = data.vacances || null;
     }
 
     const body = {

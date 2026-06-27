@@ -41,6 +41,7 @@ export async function updateCentreAction(prevState: unknown, formData: FormData)
     const barri = formData.get("barri") as string;
     const descripcio = formData.get("descripcio") as string;
     const imatgeUrl = formData.get("imatgeUrl") as string;
+    const vacances = formData.get("vacances") as string;
 
     if (!nom || !barri) {
       return { success: false, error: "Si us plau, omple els camps obligatoris (Nom del Centre i Barri de Girona)." };
@@ -54,7 +55,8 @@ export async function updateCentreAction(prevState: unknown, formData: FormData)
       web: web || "",
       barri: barri || "",
       descripcio: descripcio || "",
-      imatgeUrl: imatgeUrl || ""
+      imatgeUrl: imatgeUrl || "",
+      vacances: vacances || ""
     });
 
     if (!success) {

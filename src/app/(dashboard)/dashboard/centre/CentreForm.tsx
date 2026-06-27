@@ -3,7 +3,7 @@
 import React, { useState, useRef } from "react";
 import { Centre } from "@/lib/types";
 import { updateCentreAction } from "@/app/actions/centre";
-import { Building, MapPin, Phone, Mail, Globe, Info, Loader2, Upload, Trash2 } from "lucide-react";
+import { Building, MapPin, Phone, Mail, Globe, Info, Loader2, Upload, Trash2, CalendarOff } from "lucide-react";
 import { mapAirtableError } from "@/lib/utils";
 import Toast from "@/components/Toast";
 
@@ -21,6 +21,7 @@ export default function CentreForm({ initialData, barris }: CentreFormProps) {
   const [web, setWeb] = useState(initialData.web || "");
   const [descripcio, setDescripcio] = useState(initialData.descripcio || "");
   const [imatgeUrl, setImatgeUrl] = useState(initialData.imatgeUrl || "");
+  const [vacances, setVacances] = useState(initialData.vacances || "");
 
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -118,6 +119,7 @@ export default function CentreForm({ initialData, barris }: CentreFormProps) {
     formData.append("web", formattedWeb);
     formData.append("descripcio", descripcio);
     formData.append("imatgeUrl", imatgeUrl);
+    formData.append("vacances", vacances);
 
     try {
       const res = await updateCentreAction(null, formData);
@@ -561,6 +563,51 @@ export default function CentreForm({ initialData, barris }: CentreFormProps) {
                 boxSizing: "border-box",
                 outline: "none",
                 resize: "vertical"
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Períodes de Vacances */}
+        <div style={{ backgroundColor: "white", borderRadius: "12px", border: "1px solid var(--crema-fosca, #eae2d1)", padding: "28px", marginTop: "24px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
+            <div style={{ width: "36px", height: "36px", borderRadius: "8px", backgroundColor: "rgba(230,126,34,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <CalendarOff size={18} style={{ color: "#e67e22" }} />
+            </div>
+            <div>
+              <h3 style={{ fontFamily: "var(--font-serif, serif)", fontStyle: "italic", fontSize: "18px", color: "var(--verd-fosc)", margin: 0 }}>Períodes de vacances</h3>
+              <p style={{ fontSize: "13px", color: "var(--muted)", margin: "2px 0 0" }}>Les activitats tipus Taller / Oci mostraran la data de represa durant les vacances</p>
+            </div>
+          </div>
+
+          <div style={{ backgroundColor: "#fef3e2", border: "1px solid #f5c842", borderRadius: "8px", padding: "12px 16px", marginBottom: "20px", fontSize: "13px", color: "#7d4e0f", lineHeight: "1.5" }}>
+            <strong>Format:</strong> Una línia per cada període, amb el format <code style={{ background: "rgba(0,0,0,0.07)", padding: "1px 5px", borderRadius: "3px" }}>DD/MM/AA-DD/MM/AA</code><br />
+            Exemple:<br />
+            <code style={{ background: "rgba(0,0,0,0.07)", padding: "2px 6px", borderRadius: "3px", display: "inline-block", marginTop: "4px" }}>01/08/26-31/08/26<br />20/12/26-06/01/27</code>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            <label htmlFor="vacances" style={{ fontSize: "13px", fontWeight: 700, color: "var(--verd-fosc)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              Períodes (una línia per rang)
+            </label>
+            <textarea
+              id="vacances"
+              value={vacances}
+              onChange={e => setVacances(e.target.value)}
+              placeholder={"01/08/26-31/08/26\n20/12/26-06/01/27"}
+              rows={4}
+              style={{
+                padding: "12px 14px",
+                border: "1px solid rgba(26, 107, 58, 0.2)",
+                borderRadius: "8px",
+                fontSize: "14px",
+                fontFamily: "monospace",
+                lineHeight: "1.6",
+                outline: "none",
+                resize: "vertical",
+                boxSizing: "border-box",
+                width: "100%",
+                color: "var(--fosc)"
               }}
             />
           </div>

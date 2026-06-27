@@ -27,6 +27,7 @@ export interface Activitat {
   subcategoria?: string;
   tipus?: string; // Extraescolar, Casal, Taller / Oci
   torns?: string; // Torns del casal (una línia per torn: "DD/M/AA-DD/M/AA")
+  centreVacances?: string; // Vacances del centre (una línia per rang: "DD/MM/AA-DD/MM/AA")
 }
 
 export interface Sponsor {
@@ -53,6 +54,7 @@ export interface Centre {
   descripcio: string;
   imatgeUrl?: string;
   interessat?: boolean; // Centre ha confirmat participació (casella Airtable)
+  vacances?: string; // Rangs de vacances (una línia per rang: "DD/MM/AA-DD/MM/AA")
 }
 
 export interface CasalsBanner {
