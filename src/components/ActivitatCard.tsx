@@ -15,6 +15,16 @@ interface ParsedDate {
   month: string;
 }
 
+const WEEKDAYS = [
+  { names: ["dilluns"], abbr: "Dl" },
+  { names: ["dimarts"], abbr: "Dm" },
+  { names: ["dimecres"], abbr: "Dc" },
+  { names: ["dijous"], abbr: "Dj" },
+  { names: ["divendres"], abbr: "Dv" },
+  { names: ["dissabte"], abbr: "Ds" },
+  { names: ["diumenge"], abbr: "Du" },
+];
+
 const parseTallerDates = (text: string): ParsedDate[] => {
   if (!text) return [];
   const normalized = text.toLowerCase();
@@ -57,6 +67,16 @@ const parseTallerDates = (text: string): ParsedDate[] => {
 
   if (foundNumbers.length > 0 && foundMonths.length === 0) {
     return []; // Cap mes reconegut → mostra OCI per defecte
+  }
+
+  if (foundNumbers.length === 0 && foundMonths.length === 0) {
+    // Comprova si hi ha un dia de la setmana → mostra l'abreviatura
+    for (const wd of WEEKDAYS) {
+      if (wd.names.some(n => normalized.includes(n))) {
+        return [{ day: wd.abbr, month: "setm." }];
+      }
+    }
+    return [];
   }
 
   const result: ParsedDate[] = [];
