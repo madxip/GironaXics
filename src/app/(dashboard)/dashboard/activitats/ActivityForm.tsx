@@ -813,7 +813,7 @@ export default function ActivityForm({
               padding: "16px 24px",
             }}>
               <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                PREVISUALITZACI\u00d3 (esborrany)
+                {"PREVISUALITZACI\u00d3 (esborrany)"}
               </span>
               <button onClick={() => setShowPreview(false)} style={{
                 display: "inline-flex", alignItems: "center", gap: "6px",
@@ -822,7 +822,7 @@ export default function ActivityForm({
                 cursor: "pointer", fontSize: "13px", fontWeight: 600,
                 color: "var(--fosc)", fontFamily: "inherit",
               }}>
-                <X size={16} /> Tancar previsualitzaci\u00f3
+                <X size={16} /> {"Tancar previsualitzaci\u00f3"}
               </button>
             </div>
             <div style={{ position: "relative", height: "340px", background: "var(--verd-fosc)", overflow: "hidden" }}>
@@ -842,7 +842,7 @@ export default function ActivityForm({
               <div>
                 {descripcio && (
                   <div style={{ background: "white", borderRadius: "12px", padding: "28px", marginBottom: "24px", border: "1px solid var(--crema-fosca)" }}>
-                    <h3 style={{ marginTop: 0, fontFamily: "var(--font-serif)", fontStyle: "italic", color: "var(--verd-fosc)" }}>Descripci\u00f3</h3>
+                    <h3 style={{ marginTop: 0, fontFamily: "var(--font-serif)", fontStyle: "italic", color: "var(--verd-fosc)" }}>{"Descripci\u00f3"}</h3>
                     <div style={{ fontSize: "15px", lineHeight: 1.7, color: "var(--fosc)" }}>{parseMarkdownToReact(descripcio)}</div>
                   </div>
                 )}
@@ -870,11 +870,11 @@ export default function ActivityForm({
                 <div style={{ fontSize: "32px", fontWeight: 700, color: "var(--verd-fosc)", marginBottom: "24px" }}>
                   <strong style={{ display: "block", fontSize: "12px", textTransform: "uppercase", opacity: 0.5, marginBottom: "6px", letterSpacing: "0.05em", fontWeight: 700 }}>PREU:</strong>
                   {(() => {
-                    let preuText = "Grat\u00efit";
+                    let preuText = "Gratu\u00eft";
                     if (priceUnit === "/mes" && priceVal) preuText = `${priceVal} \u20ac/mes`;
                     else if (priceUnit === "/trimestre" && priceVal) preuText = `${priceVal} \u20ac/trimestre`;
                     else if (priceUnit === "/any" && priceVal) preuText = `${priceVal} \u20ac/any`;
-                    else if (priceUnit === "gratuit") preuText = "Grat\u00efit";
+                    else if (priceUnit === "gratuit") preuText = "Gratu\u00eft";
                     else if (priceUnit === "personalitzat") preuText = customPrice || "Consultar";
                     if (preuText.includes("/")) {
                       const [priceV, priceU] = preuText.split("/");
@@ -1022,7 +1022,7 @@ export default function ActivityForm({
                     disabled={loading} style={{ ...fieldStyle(), cursor: "pointer" }}>
                     <option value="Extraescolar">Extraescolar (Setmanal / Curs anual)</option>
                     <option value="Casal">Casal (Estiu, Nadal, Setmana Santa)</option>
-                    <option value="Taller">Taller o Oci (Monogr\u00e0fic, puntual)</option>
+                    <option value="Taller">{"Taller o Oci (Monogr\u00e0fic, puntual)"}</option>
                   </select>
                 </div>
 
@@ -1040,7 +1040,7 @@ export default function ActivityForm({
                         {barris.altres.map(b => <option key={b} value={b}>{b}</option>)}
                       </optgroup>
                     )}
-                    {isAdmin && <option value="__nova_poblacio__" style={{ fontWeight: 600 }}>+ Afegir nova poblaci\u00f3...</option>}
+                    {isAdmin && <option value="__nova_poblacio__" style={{ fontWeight: 600 }}>{"+ Afegir nova poblaci\u00f3..."}</option>}
                   </select>
                   {isAdmin && barri === "__nova_poblacio__" && (
                     <input type="text" placeholder={"Escriu el nom de la nova poblaci\u00f3..."}
@@ -1078,7 +1078,7 @@ export default function ActivityForm({
                 </div>
               )}
 
-              <p className="af-helper">Aquesta informaci\u00f3 identifica l&apos;activitat dins la guia p\u00fablica.</p>
+              <p className="af-helper">{"Aquesta informaci\u00f3 identifica l'activitat dins la guia p\u00fablica."}</p>
             </div>
 
             {/* ══ TAB 1: HORARI I PREU ══════════════════════════════════ */}
@@ -1091,7 +1091,7 @@ export default function ActivityForm({
                 {/* Extraescolar: selector de dies setmanals */}
                 {tipus === "Extraescolar" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                    <p className="af-hint">Tria els dies de la setmana en qu\u00e8 es fa l&apos;activitat.</p>
+                    <p className="af-hint">{"Tria els dies de la setmana en qu\u00e8 es fa l'activitat."}</p>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
                       {["Dilluns","Dimarts","Dimecres","Dijous","Divendres","Dissabte","Diumenge"].map(day => {
                         const sel = selectedWeekdays.includes(day);
@@ -1237,7 +1237,7 @@ export default function ActivityForm({
 
               {/* PREU I FACTURACI\u00d3 */}
               <div style={fieldGroupStyle}>
-                <label style={labelStyle}>Preu i facturaci\u00f3</label>
+                <label style={labelStyle}>{"Preu i facturaci\u00f3"}</label>
                 <div className="af-preu-row">
                   <select value={priceUnit} onChange={e => setPriceUnit(e.target.value)} disabled={loading}
                     style={{ ...fieldStyle(), cursor: "pointer", flex: "0 0 220px" }}>
@@ -1276,18 +1276,18 @@ export default function ActivityForm({
             <div role="tabpanel" style={{ display: activeTab === 2 ? 'flex' : 'none', flexDirection: 'column', gap: '24px', padding: '32px' }}>
 
               <div style={fieldGroupStyle}>
-                <label style={labelStyle}>Descripci\u00f3 detallada</label>
+                <label style={labelStyle}>{"Descripci\u00f3 detallada"}</label>
                 <RichTextEditor value={descripcio} onChange={setDescripcio} disabled={loading} />
               </div>
 
               <div className="af-row-3">
                 <div style={fieldGroupStyle}>
-                  <label style={labelStyle}>Durada de la sessi\u00f3</label>
+                  <label style={labelStyle}>{"Durada de la sessi\u00f3"}</label>
                   <input type="text" value={durada} onChange={e => setDurada(e.target.value)}
                     placeholder="Ex: 1 h, 90 min..." disabled={loading} style={fieldStyle()} />
                 </div>
                 <div style={fieldGroupStyle}>
-                  <label style={labelStyle}>R\u00e0tio d&apos;alumnes</label>
+                  <label style={labelStyle}>{"R\u00e0tio d'alumnes"}</label>
                   <input type="text" value={alumnes} onChange={e => setAlumnes(e.target.value)}
                     placeholder={"Ex: M\u00e0xim 12 xics per grup"} disabled={loading} style={fieldStyle()} />
                 </div>
@@ -1324,13 +1324,13 @@ export default function ActivityForm({
               {tipus === "Casal" && (
                 <div style={fieldGroupStyle}>
                   <label style={labelStyle}>
-                    Torns <span style={{ fontWeight: 400, textTransform: "none", fontSize: "12px", color: "var(--muted)" }}>(opcional \u2014 una l\u00ednia per torn: 22/6/26-26/6/26)</span>
+                    Torns <span style={{ fontWeight: 400, textTransform: "none", fontSize: "12px", color: "var(--muted)" }}>{"(opcional \u2014 una l\u00ednia per torn: 22/6/26-26/6/26)"}</span>
                   </label>
                   <textarea value={torns} onChange={e => setTorns(e.target.value)} rows={5}
                     placeholder={"22/6/26-26/6/26\n29/6/26-3/7/26\n6/7/26-10/7/26"}
                     disabled={loading}
                     style={{ ...fieldStyle(), resize: "vertical", fontFamily: "monospace", lineHeight: 1.6 }} />
-                  <p style={{ fontSize: "12px", color: "var(--muted)", margin: 0 }}>Format: DD/M/AA-DD/M/AA \u00b7 Es mostrar\u00e0 agrupat per mesos a la fitxa del casal</p>
+                  <p style={{ fontSize: "12px", color: "var(--muted)", margin: 0 }}>{"Format: DD/M/AA-DD/M/AA \u00b7 Es mostrar\u00e0 agrupat per mesos a la fitxa del casal"}</p>
                 </div>
               )}
             </div>
@@ -1341,7 +1341,7 @@ export default function ActivityForm({
               {/* Imatge destacada */}
               <div style={fieldGroupStyle}>
                 <label style={labelStyle}>Imatge destacada (principal)</label>
-                <p className="af-hint">Es mostrar\u00e0 com a cap\u00e7alera a la fitxa detallada de l&apos;activitat.</p>
+                <p className="af-hint">{"Es mostrar\u00e0 com a cap\u00e7alera a la fitxa detallada de l'activitat."}</p>
                 <div style={{ display: "flex", gap: "24px", alignItems: "center", flexWrap: "wrap" }}>
                   <div className="af-img-preview">
                     {imatgeUrl ? (
@@ -1374,7 +1374,7 @@ export default function ActivityForm({
                         </button>
                       )}
                     </div>
-                    <p style={{ fontSize: "12px", color: "var(--muted)", margin: 0 }}>Format horitzontal \u00b7 1200\u00d7800 \u00b7 m\u00e0x 4 MB</p>
+                    <p style={{ fontSize: "12px", color: "var(--muted)", margin: 0 }}>{"Format horitzontal \u00b7 1200\u00d7800 \u00b7 m\u00e0x 4 MB"}</p>
                   </div>
                 </div>
               </div>
@@ -1382,7 +1382,7 @@ export default function ActivityForm({
               {/* Galeria */}
               <div style={fieldGroupStyle}>
                 <label style={labelStyle}>Galeria de fotos</label>
-                <p className="af-hint">Afegeix diverses imatges per mostrar la vida di\u00e0ria de l&apos;activitat en un carrusel.</p>
+                <p className="af-hint">{"Afegeix diverses imatges per mostrar la vida di\u00e0ria de l'activitat en un carrusel."}</p>
                 {galeria.length > 0 && (
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: "12px" }}>
                     {galeria.map((url, idx) => (
