@@ -312,7 +312,7 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
     );
   }
 
-  const imageUrl = activitat.centreImatgeUrl || activitat.imatgeUrl;
+  const imageUrl = activitat.centreImatgeUrl || activitat.imatgeThumbnailUrl || activitat.imatgeUrl;
   const isLogo = !!activitat.centreImatgeUrl;
   const isInteressat = !!activitat.centreInteressat;
 

@@ -171,7 +171,9 @@ function mapActivitatRecord(
   }
 
   if (Array.isArray(r.fields.Imatge) && r.fields.Imatge.length > 0) {
-    f.imatgeUrl = (r.fields.Imatge[0] as { url: string }).url;
+    const imgObj = r.fields.Imatge[0] as { url: string; thumbnails?: { large?: { url: string } } };
+    f.imatgeUrl = imgObj.url;
+    f.imatgeThumbnailUrl = imgObj.thumbnails?.large?.url || imgObj.url;
   }
   
   if (Array.isArray(r.fields.Galeria)) {
@@ -453,7 +455,8 @@ async function _doFetchCentres(): Promise<Centre[]> {
     f.adreca = (r.fields.adreça || r.fields.adreca || "") as string;
     const attachmentField = r.fields.Imatge || r.fields.imatge || r.fields.Logo || r.fields.logo || r.fields.Logotip || r.fields.logotip;
     if (Array.isArray(attachmentField) && attachmentField.length > 0) {
-      f.imatgeUrl = (attachmentField[0] as { url: string }).url;
+      const att = attachmentField[0] as { url: string; thumbnails?: { large?: { url: string } } };
+      f.imatgeUrl = att.thumbnails?.large?.url || att.url;
     }
     const customSlug = (r.fields.slug as string) || (r.fields.Slug as string);
     f.slug = customSlug ? normalizeSlug(customSlug) : (r.fields.nom ? normalizeSlug(r.fields.nom as string) : r.id);
@@ -518,7 +521,8 @@ export async function getCentreByIdDirect(id: string): Promise<Centre | null> {
     f.adreca = (r.fields.adre\u00e7a || r.fields.adreca || '') as string;
     const attachmentField = r.fields.Imatge || r.fields.imatge || r.fields.Logo || r.fields.logo || r.fields.Logotip || r.fields.logotip;
     if (Array.isArray(attachmentField) && attachmentField.length > 0) {
-      f.imatgeUrl = (attachmentField[0] as { url: string }).url;
+      const att = attachmentField[0] as { url: string; thumbnails?: { large?: { url: string } } };
+      f.imatgeUrl = att.thumbnails?.large?.url || att.url;
     }
     const customSlug = (r.fields.slug as string) || (r.fields.Slug as string);
     f.slug = customSlug ? normalizeSlug(customSlug) : (r.fields.nom ? normalizeSlug(r.fields.nom as string) : r.id);
@@ -825,6 +829,7 @@ export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'cen
         destacada: !!r.fields.destacada,
         tipus: (r.fields.tipus || r.fields.Tipus) as string || "Extraescolar",
         imatgeUrl: Array.isArray(r.fields.Imatge) && r.fields.Imatge.length > 0 ? (r.fields.Imatge[0] as { url: string }).url : undefined,
+        imatgeThumbnailUrl: Array.isArray(r.fields.Imatge) && r.fields.Imatge.length > 0 ? ((r.fields.Imatge[0] as { url: string; thumbnails?: { large?: { url: string } } }).thumbnails?.large?.url || (r.fields.Imatge[0] as { url: string }).url) : undefined,
         galeria: Array.isArray(r.fields.Galeria) ? (r.fields.Galeria as { url: string }[]).map((img) => img.url) : []
       };
     }

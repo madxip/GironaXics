@@ -22,6 +22,7 @@ export interface Activitat {
   qui_imparteix?: string;
   publicada: boolean;
   imatgeUrl?: string;
+  imatgeThumbnailUrl?: string;
   galeria?: string[];
   centreImatgeUrl?: string;
   subcategoria?: string;

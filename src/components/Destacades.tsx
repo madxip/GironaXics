@@ -171,7 +171,7 @@ export default function Destacades({ destacades, all }: Props) {
           style={{ textDecoration: 'none' }}
         >
           <Image
-            src={gran.imatgeUrl || getMockImg(mockColors[0])}
+            src={gran.imatgeThumbnailUrl || gran.imatgeUrl || getMockImg(mockColors[0])}
             alt={gran.nom || 'Imatge destacada'}
             fill
             style={{ objectFit: 'cover' }}
@@ -192,7 +192,7 @@ export default function Destacades({ destacades, all }: Props) {
           >
             <div className="card-normal-img" style={{ position: 'relative', width: '100%', height: '140px' }}>
               <Image
-                src={a.imatgeUrl || getMockImg(mockColors[(i + 1) % mockColors.length])}
+                src={a.imatgeThumbnailUrl || a.imatgeUrl || getMockImg(mockColors[(i + 1) % mockColors.length])}
                 alt={a.nom || `Imatge destacada ${i + 2}`}
                 fill
                 style={{ objectFit: 'cover' }}
@@ -218,7 +218,7 @@ export default function Destacades({ destacades, all }: Props) {
           >
             <div className="card-normal-img" style={{ position: 'relative', width: '100%', height: '140px' }}>
               <Image
-                src={cards[4].imatgeUrl || getMockImg(mockColors[4])}
+                src={cards[4].imatgeThumbnailUrl || cards[4].imatgeUrl || getMockImg(mockColors[4])}
                 alt={cards[4].nom || 'Imatge destacada 5'}
                 fill
                 style={{ objectFit: 'cover' }}
