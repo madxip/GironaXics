@@ -2582,6 +2582,22 @@
     padding-bottom: 96px;
 }
 
+.af-card {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--crema-fosca, #eae2d1);
+    box-shadow: 0 2px 16px rgba(0,0,0,0.04);
+}
+
+.af-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 28px 32px 24px;
+    border-bottom: 1px solid var(--crema-fosca, #eae2d1);
+}
+
 .af-back-link {
     display: inline-flex;
     align-items: center;
@@ -2594,14 +2610,6 @@
     margin-bottom: 20px;
 }
 .af-back-link:hover { color: var(--verd); }
-
-.af-header {
-    background: white;
-    border-radius: 12px 12px 0 0;
-    border: 1px solid var(--crema-fosca, #eae2d1);
-    border-bottom: none;
-    padding: 28px 32px 0;
-}
 
 .af-kicker {
     font-size: 11px;
@@ -2620,14 +2628,6 @@
     margin: 0;
     font-weight: 600;
     line-height: 1.1;
-}
-
-.af-title-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 16px;
-    margin-bottom: 24px;
 }
 
 .af-status {
@@ -2675,13 +2675,6 @@
     font-weight: 700;
 }
 .af-tab-short { display: none; }
-
-.af-form {
-    background: white;
-    border-radius: 0 0 12px 12px;
-    border: 1px solid var(--crema-fosca, #eae2d1);
-    border-top: none;
-}
 
 .af-panel {
     padding: 32px;
@@ -2819,16 +2812,16 @@
 
 @media (max-width: 768px) {
     .af-outer { padding-bottom: 80px; }
-    .af-header {
-        padding: 20px 16px 0;
-        border-radius: 0;
-        border: none;
+    .af-card { border-radius: 0; border: none; box-shadow: none; }
+    .af-card-top {
+        padding: 20px 16px 16px;
+        flex-wrap: wrap;
     }
     .af-page-title { font-size: 24px; }
+    .af-tabs { padding: 0; }
     .af-tab { padding: 12px 10px; font-size: 13px; }
     .af-tab-long { display: none; }
     .af-tab-short { display: inline; }
-    .af-form { border-radius: 0; border: none; }
     .af-panel { padding: 20px 16px; gap: 20px; }
     .af-row-2 { grid-template-columns: 1fr; gap: 16px; }
     .af-row-3 { grid-template-columns: 1fr; gap: 16px; }
