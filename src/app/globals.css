@@ -157,24 +157,26 @@
             text-indent: 0;
         }
 
-        /* Contenidor de paraules en format grid per superposició sense JS */
+        /* Slider vertical en CSS pur (evita desincronització de delays) */
         .words-container {
-            display: grid;
+            height: 1.9em;
+            overflow: hidden;
+            position: relative;
+            display: block;
+        }
+
+        .words-slider {
+            display: flex;
+            flex-direction: column;
+            animation: slide-up-anim 10.4s infinite cubic-bezier(0.76, 0, 0.24, 1);
         }
 
         .word-slide {
-            grid-area: 1 / 1;
+            height: 1.9em;
             display: flex;
             flex-direction: column;
-            opacity: 0;
-            animation: slide-anim 10.4s infinite ease-in-out;
-            pointer-events: none;
+            justify-content: center;
         }
-
-        .word-slide.slide-1 { animation-delay: 0s; }
-        .word-slide.slide-2 { animation-delay: 2.6s; }
-        .word-slide.slide-3 { animation-delay: 5.2s; }
-        .word-slide.slide-4 { animation-delay: 7.8s; }
 
         .word-slide .line-2 {
             color: var(--fosc);
@@ -186,27 +188,25 @@
             font-style: italic;
         }
 
-        @keyframes slide-anim {
-            0% {
-                transform: translateY(20px);
-                opacity: 0;
-            }
-            3% {
-                transform: translateY(0);
-                opacity: 1;
-            }
-            22% {
-                transform: translateY(0);
-                opacity: 1;
-            }
-            25% {
-                transform: translateY(-20px);
-                opacity: 0;
-            }
-            100% {
-                transform: translateY(-20px);
-                opacity: 0;
-            }
+        @keyframes slide-up-anim {
+            /* Slot 1: les millors extraescolars */
+            0% { transform: translateY(0); }
+            21% { transform: translateY(0); }
+            
+            /* Transició 1 -> 2 */
+            25% { transform: translateY(-20%); }
+            46% { transform: translateY(-20%); }
+            
+            /* Transició 2 -> 3 */
+            50% { transform: translateY(-40%); }
+            71% { transform: translateY(-40%); }
+            
+            /* Transició 3 -> 4 */
+            75% { transform: translateY(-60%); }
+            96% { transform: translateY(-60%); }
+            
+            /* Transició 4 -> 5 (loop fluid cap a la primera repetida) */
+            100% { transform: translateY(-80%); }
         }
 
         .hero-subtitle {
