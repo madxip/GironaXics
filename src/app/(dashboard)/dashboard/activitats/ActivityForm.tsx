@@ -943,7 +943,7 @@ export default function ActivityForm({
           </div>
 
           {/* Tab navigation (border-bottom creates the line under tabs) */}
-          <nav className="af-tabs" role="tablist">
+          <div className="af-tabs" role="tablist">
             {TABS.map((tab, i) => (
               <button
                 key={i}
@@ -957,14 +957,14 @@ export default function ActivityForm({
                 <span className="af-tab-short">{tab.short}</span>
               </button>
             ))}
-          </nav>
+          </div>
 
           {/* Form with tab panels + fixed bottom bar */}
           <form onSubmit={handleSubmit}>
             <input type="hidden" name="centreId" value={selectedCentreId} />
 
             {/* ══ TAB 0: INFORMACI\u00d3 B\u00c0SICA ══════════════════════════════ */}
-            <div role="tabpanel" hidden={activeTab !== 0} className="af-panel">
+            <div role="tabpanel" style={{ display: activeTab === 0 ? 'flex' : 'none', flexDirection: 'column', gap: '24px', padding: '32px' }}>
 
               {/* Admin: selector de centre */}
               {isAdmin && !initialData && allCentres && allCentres.length > 0 && (
@@ -1082,7 +1082,7 @@ export default function ActivityForm({
             </div>
 
             {/* ══ TAB 1: HORARI I PREU ══════════════════════════════════ */}
-            <div role="tabpanel" hidden={activeTab !== 1} className="af-panel">
+            <div role="tabpanel" style={{ display: activeTab === 1 ? 'flex' : 'none', flexDirection: 'column', gap: '24px', padding: '32px' }}>
 
               {/* DIES */}
               <div style={fieldGroupStyle}>
@@ -1273,7 +1273,7 @@ export default function ActivityForm({
             </div>
 
             {/* ══ TAB 2: DETALLS ════════════════════════════════════════ */}
-            <div role="tabpanel" hidden={activeTab !== 2} className="af-panel">
+            <div role="tabpanel" style={{ display: activeTab === 2 ? 'flex' : 'none', flexDirection: 'column', gap: '24px', padding: '32px' }}>
 
               <div style={fieldGroupStyle}>
                 <label style={labelStyle}>Descripci\u00f3 detallada</label>
@@ -1336,7 +1336,7 @@ export default function ActivityForm({
             </div>
 
             {/* ══ TAB 3: IMATGES ════════════════════════════════════════ */}
-            <div role="tabpanel" hidden={activeTab !== 3} className="af-panel">
+            <div role="tabpanel" style={{ display: activeTab === 3 ? 'flex' : 'none', flexDirection: 'column', gap: '24px', padding: '32px' }}>
 
               {/* Imatge destacada */}
               <div style={fieldGroupStyle}>
