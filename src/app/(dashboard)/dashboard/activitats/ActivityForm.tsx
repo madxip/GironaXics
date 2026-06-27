@@ -870,12 +870,12 @@ export default function ActivityForm({
                 <div style={{ fontSize: "32px", fontWeight: 700, color: "var(--verd-fosc)", marginBottom: "24px" }}>
                   <strong style={{ display: "block", fontSize: "12px", textTransform: "uppercase", opacity: 0.5, marginBottom: "6px", letterSpacing: "0.05em", fontWeight: 700 }}>PREU:</strong>
                   {(() => {
-                    let preuText = "Gratu\u00eft";
+                    let preuText = "A consultar";
                     if (priceUnit === "/mes" && priceVal) preuText = `${priceVal} \u20ac/mes`;
                     else if (priceUnit === "/trimestre" && priceVal) preuText = `${priceVal} \u20ac/trimestre`;
                     else if (priceUnit === "/any" && priceVal) preuText = `${priceVal} \u20ac/any`;
                     else if (priceUnit === "gratuit") preuText = "Gratu\u00eft";
-                    else if (priceUnit === "personalitzat") preuText = customPrice || "Consultar";
+                    else if (priceUnit === "personalitzat") preuText = customPrice || "A consultar";
                     if (preuText.includes("/")) {
                       const [priceV, priceU] = preuText.split("/");
                       return <>{priceV} <span style={{ fontSize: "16px", fontWeight: 400, opacity: 0.6 }}>/{priceU}</span></>;
