@@ -55,6 +55,9 @@ export async function GET() {
       markdown += `### [${a.nom}](${baseUrl}/activitats/${catSlug}/${a.slug})\n`;
       if (a.descripcio) markdown += `${a.descripcio}\n\n`;
       markdown += `- **Edat recomanada**: ${a.edat}\n`;
+      const { min: edatMin, max: edatMax } = parseEdatRange(a.edat);
+      if (edatMin !== null) markdown += `- **Edat m\u00ednima**: ${edatMin}\n`;
+      if (edatMax !== null) markdown += `- **Edat m\u00e0xima**: ${edatMax}\n`;
       markdown += `- **Categoria**: ${a.categoria}${a.subcategoria ? ` · ${a.subcategoria}` : ''}\n`;
       markdown += `- **Centre**: [${a.centre}](${baseUrl}/centres/${normalizeSlug(a.centre)})\n`;
       if (a.barri) markdown += `- **Barri**: [${a.barri}](${baseUrl}/barris/${normalizeSlug(a.barri)})\n`;
@@ -63,7 +66,7 @@ export async function GET() {
       if (a.durada) markdown += `- **Durada**: ${a.durada}\n`;
       if (a.idioma) markdown += `- **Idioma**: ${a.idioma}\n`;
       if (a.qui_imparteix) markdown += `- **Professor/Entitat**: ${a.qui_imparteix}\n`;
-      markdown += `- **Preu**: ${a.preu != null && a.preu !== '' ? `${a.preu}€/mes` : 'Preu a consultar'}\n\n`;
+      markdown += `- **Preu**: ${a.preu != null && a.preu !== '' ? `${a.preu}\u20ac/mes` : 'Preu a consultar'}\n\n`;
       markdown += `---\n\n`;
     });
 
@@ -78,4 +81,31 @@ export async function GET() {
     const errorMessage = error instanceof Error ? error.message : String(error);
     return new Response('Error generant llms.txt: ' + errorMessage, { status: 500 });
   }
+}
+
+function parseEdatRange(edatText: string | undefined): { min: number | null; max: number | null } {
+  if (!edatText) return { min: null, max: null };
+  const clean = edatText.toLowerCase().trim();
+  
+  // Casos de tipus "6-12", "6 a 12", "de 6 a 12"
+  const rangeMatch = clean.match(/(\d+)\s*(?:a|-|i)\s*(\d+)/);
+  if (rangeMatch) {
+    return { min: parseInt(rangeMatch[1], 10), max: parseInt(rangeMatch[2], 10) };
+  }
+
+  // Casos de tipus "a partir de 3", "des de 4", "+6", "6+"
+  const minMatch = clean.match(/(?:a partir de|des de|\+)\s*(\d+)|(\d+)\s*\+/);
+  if (minMatch) {
+    const num = parseInt(minMatch[1] || minMatch[2], 10);
+    return { min: num, max: 18 }; // 18 és el màxim
+  }
+
+  // Casos de número sol, ex: "5 anys"
+  const singleMatch = clean.match(/^(\d+)/);
+  if (singleMatch) {
+    const num = parseInt(singleMatch[1], 10);
+    return { min: num, max: num };
+  }
+
+  return { min: null, max: null };
 }

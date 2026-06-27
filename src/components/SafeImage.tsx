@@ -87,12 +87,5 @@ export default function SafeImage({ src, alt, ...props }: ImageProps) {
     }
   }
 
-  // Les imatges externes (Airtable, Unsplash...) ja vénen optimitzades des del seu CDN.
-  // Passar unoptimized evita que Vercel les torni a processar i consumeixi transformacions.
-  const isExternal = typeof src === 'string' && ALLOWED_DOMAINS.some(domain => {
-    try { return new URL(src).hostname.endsWith(domain) || new URL(src).hostname === domain; }
-    catch { return false; }
-  });
-
-  return <Image src={src} alt={alt} onError={() => setError(true)} unoptimized={isExternal} {...props} />;
+  return <Image src={src} alt={alt} onError={() => setError(true)} {...props} />;
 }

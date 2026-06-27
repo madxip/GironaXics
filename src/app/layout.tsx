@@ -39,14 +39,6 @@ export const metadata: Metadata = {
   openGraph: {
     title: "GironaXics - Extraescolars a Girona",
     description: "El directori d'extraescolars, tallers, casals i activitats de les comarques gironines.",
-    images: [
-      {
-        url: 'https://images.unsplash.com/photo-1516627145497-ae6968895b74?q=80&w=1200&auto=format&fit=crop',
-        width: 1200,
-        height: 630,
-        alt: 'GironaXics - Extraescolars a Girona',
-      },
-    ],
     locale: 'ca_ES',
     type: 'website',
   },
@@ -59,10 +51,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ca" className={`${dmSans.variable} ${playfair.variable}`}>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      </head>
       <body>
         {children}
         <AnalyticsTracker />

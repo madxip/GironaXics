@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 533" width="100%" height="100%">
+  <!-- Fons de marca -->
+  <rect width="100%" height="100%" fill="#D4EDD9"/>
+  <!-- Element gràfic abstracte (cercles superposats elegants) -->
+  <g transform="translate(400, 230)" opacity="0.8">
+    <circle cx="-50" cy="0" r="80" fill="#1A6B3A" opacity="0.15" />
+    <circle cx="50" cy="0" r="80" fill="#F5A623" opacity="0.1" />
+  </g>
+  <!-- Text del Logo -->
+  <g transform="translate(400, 370)">
+    <text text-anchor="middle" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="54" letter-spacing="-2px">
+      <tspan fill="#1A6B3A">Girona</tspan><tspan fill="#F5A623" font-weight="300">Xics</tspan>
+    </text>
+    <text y="50" text-anchor="middle" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="500" font-size="16" fill="#525250" letter-spacing="2px" text-transform="uppercase">
+      Activitat sense imatge
+    </text>
+  </g>
+</svg>

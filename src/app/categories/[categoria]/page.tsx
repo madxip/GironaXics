@@ -36,31 +36,71 @@ export default async function CategoriaPage({ params }: { params: { categoria: s
   const activitats = await getActivitatsByCategoria(params.categoria);
   const catDisplay = params.categoria.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "ItemList",
-    "name": `Activitats i extraescolars de ${catDisplay} a Girona`,
-    "description": `Llista completa de cursos i activitats de ${catDisplay} per a nens i joves a Girona.`,
-    "numberOfItems": activitats.length,
-    "itemListElement": activitats.map((a, index) => ({
-      "@type": "ListItem",
-      "position": index + 1,
-      "item": {
-        "@type": "Course",
-        "name": a.nom,
-        "description": a.descripcio || `Curs de ${a.nom} a Girona.`,
-        "provider": {
-          "@type": "LocalBusiness",
-          "name": a.centre
+  const centresNames = Array.from(new Set(activitats.map(a => a.centre).filter(Boolean))).slice(0, 3).join(', ');
+  const barrisNames = Array.from(new Set(activitats.map(a => a.barri).filter(Boolean))).slice(0, 4).join(', ');
+
+  const faqLd = {
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": `Quines extraescolars de ${catDisplay} hi ha disponibles a Girona?`,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": `Actualment hi ha ${activitats.length} activitats de ${catDisplay} llistades a Girona, impartides en centres destacats com ara ${centresNames || 'diversos centres col\u00b7laboradors'}.`
+        }
+      },
+      {
+        "@type": "Question",
+        "name": `A quins barris de Girona es fan activitats de ${catDisplay}?`,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": barrisNames 
+            ? `Es poden trobar activitats d'aquesta categoria en barris com ara ${barrisNames}.` 
+            : `Hi ha activitats d'aquesta categoria distribu\u00efdes per diferents zones i barris de la ciutat de Girona.`
+        }
+      },
+      {
+        "@type": "Question",
+        "name": `Com puc inscriure el meu fill a extraescolars de ${catDisplay}?`,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": `Pots trobar tota la informaci\u00f3 detallada a cada fitxa d'activitat i posar-te en contacte directament amb el centre organitzador a trav\u00e9s del formulari de contacte, tel\u00e8fon o correu electr\u00f2nic indicats.`
         }
       }
-    }))
+    ]
+  };
+
+  const combinedJsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "ItemList",
+        "name": `Activitats i extraescolars de ${catDisplay} a Girona`,
+        "description": `Llista completa de cursos i activitats de ${catDisplay} per a nens i joves a Girona.`,
+        "numberOfItems": activitats.length,
+        "itemListElement": activitats.map((a, index) => ({
+          "@type": "ListItem",
+          "position": index + 1,
+          "item": {
+            "@type": "Course",
+            "name": a.nom,
+            "description": a.descripcio || `Curs de ${a.nom} a Girona.`,
+            "provider": {
+              "@type": "LocalBusiness",
+              "name": a.centre
+            }
+          }
+        }))
+      },
+      faqLd
+    ]
   };
 
   return (
     <>
       <Nav />
-      <JsonLd data={jsonLd} />
+      <JsonLd data={combinedJsonLd as unknown as Record<string, unknown>} />
       <main id="main-content" style={{ padding: '120px 20px 60px', maxWidth: '1200px', margin: '0 auto', minHeight: '60vh' }}>
         <div style={{ fontFamily: 'var(--font-sans)', fontSize: '14px', marginBottom: '24px', opacity: 0.6 }}>
             <Link href="/" style={{ color: 'inherit', textDecoration: 'none' }}>{TXT_INICI}</Link> / 

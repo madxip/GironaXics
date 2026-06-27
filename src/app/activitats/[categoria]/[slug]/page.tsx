@@ -212,11 +212,14 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
     ? (tallersBarri.length > 0 ? TXT_MES_TALLERS_A : TXT_ALTRES_ACTIVITATS_A)
     : TXT_ALTRES_ACTIVITATS_A;
 
-  const jsonLd = {
-    "@context": "https://schema.org",
+  const baseUrl = 'https://gironaxics.cat';
+  const catSlug = normalizeSlug(activitat.categoria || 'altres');
+
+  const courseLd = {
     "@type": "Course",
     "name": activitat.nom,
     "description": activitat.descripcio || `Activitats de ${activitat.nom} a ${activitat.barri}.`,
+    "educationalLevel": activitat.edat,
     "provider": {
       "@type": "LocalBusiness",
       "name": activitat.centre,
@@ -226,6 +229,14 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
       },
       ...(centre?.telefon && { "telephone": centre.telefon })
     },
+    "location": {
+      "@type": "Place",
+      "name": activitat.centre,
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Girona"
+      }
+    },
     "offers": {
       "@type": "Offer",
       "price": activitat.preu,
@@ -233,16 +244,48 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
     }
   };
 
+  const breadcrumbLd = {
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Inici",
+        "item": baseUrl
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": activitat.categoria || "Categories",
+        "item": `${baseUrl}/categories/${catSlug}`
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": activitat.nom,
+        "item": `${baseUrl}/activitats/${catSlug}/${activitat.slug}`
+      }
+    ]
+  };
+
+  const combinedJsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      courseLd,
+      breadcrumbLd
+    ]
+  };
+
   return (
     <>
       <Nav />
       <CloseButton />
-      <script type="application/ld+json" {...{ dangerouslySetInnerHTML: { __html: safeJsonLd(jsonLd) } }} />
+      <script type="application/ld+json" {...{ dangerouslySetInnerHTML: { __html: safeJsonLd(combinedJsonLd) } }} />
 
       <main id="main-content" style={{ paddingBottom: '60px' }}>
         <div className="modal-hero" style={{ position: 'relative' }}>
           {/* Aprofitem la imatge pujada a Airtable, o deixem el placeholder de disseny si no n'hi ha cap */}
-          <SafeImage src={activitat.imatgeUrl || "https://images.unsplash.com/photo-1516627145497-ae6968895b74?q=80&w=2000&auto=format&fit=crop"} alt={activitat.nom} fill style={{ objectFit: 'cover' }} priority />
+          <SafeImage src={activitat.imatgeUrl || "/placeholder-activitat.svg"} alt={activitat.nom} fill style={{ objectFit: 'cover' }} priority sizes="(max-width: 768px) 100vw, 60vw" />
           <div className="modal-hero-gradient">
             <h1 className="modal-hero-title">{activitat.nom}</h1>
           </div>

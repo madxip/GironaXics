@@ -1,5 +1,6 @@
 export const revalidate = 86400; // revalida cada 24h (les Server Actions fan revalidatePath quan hi ha canvis)
 
+import { Metadata } from 'next';
 import Nav from '@/components/Nav';
 import Hero from '@/components/Hero';
 import Stats from '@/components/Stats';
@@ -12,6 +13,17 @@ import Footer from '@/components/Footer';
 import { getActivitats, getCentres, getSponsors, getCasalsBanner } from '@/lib/airtable';
 import type { Activitat } from '@/lib/types';
 import { Suspense } from 'react';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const [activitats, centres] = await Promise.all([
+    getActivitats(),
+    getCentres(),
+  ]);
+
+  return {
+    description: `M\u00e9s de ${activitats.length} activitats per a nens de 2 a 18 anys a Girona i comarques a ${centres.length} centres. Gratu\u00eft per a les fam\u00edlies. En catal\u00e0.`,
+  };
+}
 
 export default async function Home() {
   const [activitats, centres, sponsors, casalsBanner] = await Promise.all([
