@@ -498,6 +498,40 @@ export async function getCentreBySlug(slug: string): Promise<Centre | null> {
   return all.find(c => normalizeSlug(c.slug) === normalizedSearchSlug || (c.nom && normalizeSlug(c.nom) === normalizedSearchSlug)) || null;
 }
 
+/**
+ * Carrega un centre per ID directament des d'Airtable, sense el filtre actiu.
+ * S'usa al dashboard per permetre que centres nous (no actius encara) puguin
+ * editar les seves dades tot i que getCentres() els filtra del lloc públic.
+ */
+export async function getCentreByIdDirect(id: string): Promise<Centre | null> {
+  if (!API_KEY || !BASE_ID || !id) return null;
+  try {
+    const url = `https://api.airtable.com/v0/${BASE_ID}/Centres/${encodeURIComponent(id)}`;
+    const res = await fetchWithRetry(url, {
+      headers: { Authorization: `Bearer ${API_KEY}` },
+      cache: 'no-store',
+    });
+    if (!res.ok) return null;
+    const r = await res.json() as { id: string; fields: Record<string, unknown> };
+    const f = { ...r.fields } as unknown as Centre;
+    f.id = r.id;
+    f.adreca = (r.fields.adre\u00e7a || r.fields.adreca || '') as string;
+    const attachmentField = r.fields.Imatge || r.fields.imatge || r.fields.Logo || r.fields.logo || r.fields.Logotip || r.fields.logotip;
+    if (Array.isArray(attachmentField) && attachmentField.length > 0) {
+      f.imatgeUrl = (attachmentField[0] as { url: string }).url;
+    }
+    const customSlug = (r.fields.slug as string) || (r.fields.Slug as string);
+    f.slug = customSlug ? normalizeSlug(customSlug) : (r.fields.nom ? normalizeSlug(r.fields.nom as string) : r.id);
+    f.interessat = !!(r.fields.interessat || r.fields.Interessat || r.fields['col\u00b7laborador'] || r.fields['Col\u00b7laborador'] || r.fields.partner || r.fields.Partner);
+    f.vacances = (r.fields.vacances || r.fields.Vacances) as string | undefined;
+    return f;
+  } catch (error) {
+    console.error('[Airtable API] Error en getCentreByIdDirect:', error);
+    return null;
+  }
+}
+
+
 export async function getUserByEmail(email: string): Promise<{ id: string; nom: string; email: string; passwordHash: string; centreId: string | null; aprovat: boolean; isAdmin: boolean } | null> {
   if (!API_KEY || !BASE_ID) return null;
   try {

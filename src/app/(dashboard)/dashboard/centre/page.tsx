@@ -1,7 +1,7 @@
 import React from "react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { getCentres, getActivitats } from "@/lib/airtable";
+import { getCentreByIdDirect, getActivitats } from "@/lib/airtable";
 import { redirect } from "next/navigation";
 import CentreForm from "./CentreForm";
 import { BARRIS_GIRONA, BARRIS_GIRONA_SET } from "@/lib/barris";
@@ -20,8 +20,9 @@ export default async function CentreDashboardPage() {
     redirect("/dashboard");
   }
 
-  const centres = await getCentres();
-  const currentCentre = centres.find(c => c.id === centreId);
+  // Carrega el centre directament per ID, sense el filtre actiu=true,
+  // per permetre que centres nous (no publicats encara) puguin editar les seves dades.
+  const currentCentre = await getCentreByIdDirect(centreId);
 
   if (!currentCentre) {
     redirect("/dashboard");
