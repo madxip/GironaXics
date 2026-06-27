@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
@@ -24,8 +24,8 @@ interface ActivityFormProps {
 }
 
 const PREDEFINED_SUBCATEGORIES: Map<string, string[]> = new Map([
-  ["Esports", ["Futbol", "BÃ squet", "Ciclisme", "NataciÃ³", "Atletisme", "Patinatge", "Arts marcials", "GimnÃ stica", "Tennis / PÃ del"]],
-  ["Idiomes", ["AnglÃ¨s", "FrancÃ¨s", "Alemany"]]
+  ["Esports", ["Futbol", "Bàsquet", "Ciclisme", "Natació", "Atletisme", "Patinatge", "Arts marcials", "Gimnàstica", "Tennis / Pàdel"]],
+  ["Idiomes", ["Anglès", "Francès", "Alemany"]]
 ]);
 
 const safeGetSubcategories = (cat: string | undefined): string[] | undefined => {
@@ -33,35 +33,15 @@ const safeGetSubcategories = (cat: string | undefined): string[] | undefined => 
   return PREDEFINED_SUBCATEGORIES.get(cat);
 };
 
-const TXT_FORM_DESC = "Omple els detalls de l'activitat extraescolar per publicar-la a la guia.";
-const TXT_NOM_ACTIVITAT = "Nom de l'Activitat *";
-const TXT_CATEGORIA = "Categoria *";
-const TXT_SUBCATEGORIA = "Subcategoria / SubsecciÃ³";
+const TXT_SUBCATEGORIA = "Subcategoria / Subsecció";
 const TXT_ALTRA_SUBCATEGORIA = "Altra subcategoria...";
-const TXT_BARRI_GIRONA = "Barri de Girona *";
-const TXT_DIES = "Dies *";
-const TXT_HORARI = "Horari *";
-const TXT_EDAT = "Franja d'Edats *";
-const TXT_PREU_FACTURACIO = "Preu i FacturaciÃ³";
-const TXT_MENSUAL = "Mensual (â‚¬/mes)";
-const TXT_TRIMESTRAL = "Trimestral (â‚¬/trimestre)";
-const TXT_ANUAL = "Anual (â‚¬/any)";
-const TXT_GRATUIT = "GratuÃ¯t";
+const TXT_MENSUAL = "Mensual (€/mes)";
+const TXT_TRIMESTRAL = "Trimestral (€/trimestre)";
+const TXT_ANUAL = "Anual (€/any)";
+const TXT_GRATUIT = "Gratuït";
 const TXT_ALTRES_TEXT = "Altres / Text personalitzat";
-const TXT_DESCRIPCIO = "DescripciÃ³ detallada";
-const TXT_DURADA = "Durada de la sessiÃ³";
-const TXT_MATERIAL = "Observacions";
-const TXT_DATA_INICI = "Data d'Inici";
-const TXT_IDIOMA = "Idioma";
-const TXT_QUI_IMPARTEIX = "Qui ho imparteix?";
-const TXT_IMATGE_DESTACADA = "Imatge Destacada (Principal)";
-const TXT_IMATGE_DESC = "Aquesta imatge es mostrarÃ  com a capÃ§alera principal a la fitxa detallada de l'activitat.";
 const TXT_SENSE_IMATGE = "Sense Imatge";
-const TXT_FORMAT_RECOMENAT = "Format horitzontal recomanat (recomanat 1200x800). MÃ xim 4MB.";
-const TXT_GALERIA = "Galeria de Fotos";
-const TXT_GALERIA_DESC = "Pots afegir diverses imatges per mostrar la vida diÃ ria de l'activitat en un carrusel.";
-const TXT_CANCELAR = "CancelÂ·lar";
-const TXT_ACTIVITAT_GRATUITA = "L'activitat es publicarÃ  com a gratuÃ¯ta";
+const TXT_ACTIVITAT_GRATUITA = "L'activitat es publicarà com a gratuïta";
 
 // --- HELPERS DE PARSEIG I FORMAT PER A LA FASE 2 ---
 const parseDateRange = (text: string): { start: string; end: string } => {
