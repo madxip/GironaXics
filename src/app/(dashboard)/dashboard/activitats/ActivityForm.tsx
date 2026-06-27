@@ -745,13 +745,15 @@ export default function ActivityForm({
     }
   };
 
+  /* ── Tab labels ──────────────────────────────────────────── */
   const TABS = [
-    { long: "InformaciÃ³ bÃ sica", short: "Info" },
-    { long: "Horari i preu",     short: "Horari" },
-    { long: "Detalls",           short: "Detalls" },
-    { long: "Imatges",           short: "Imatges" },
+    { long: "Informaci\u00f3 b\u00e0sica", short: "Info" },
+    { long: "Horari i preu",              short: "Horari" },
+    { long: "Detalls",                    short: "Detalls" },
+    { long: "Imatges",                    short: "Imatges" },
   ];
 
+  /* ── Field style helpers ─────────────────────────────────── */
   const fieldStyle = (err?: boolean): React.CSSProperties => ({
     padding: "12px 14px",
     border: err ? "2.5px solid #b91c1c" : "1px solid rgba(26,107,58,0.2)",
