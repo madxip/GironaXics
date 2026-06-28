@@ -857,6 +857,36 @@
             position: relative;
         }
 
+        /* Banner Partners */
+        .banner-partners {
+            background-color: var(--verd-fosc);
+            padding: 100px 5vw;
+            position: relative;
+        }
+        .banner-partners .banner-title {
+            color: white !important;
+        }
+        .banner-partners .banner-desc {
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.85);
+            margin-bottom: 24px;
+            max-width: 600px;
+        }
+        .banner-partners .btn-partner {
+            display: inline-block;
+            background-color: var(--taronja);
+            color: var(--verd-fosc);
+            padding: 16px 32px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .banner-partners .btn-partner:hover {
+            background-color: white;
+            color: var(--verd-fosc);
+            transform: translateY(-2px);
+        }
+
         .banner-grid {
             display: flex;
             justify-content: space-between;
@@ -1167,6 +1197,10 @@
 
             .banner-title {
                 font-size: 48px;
+            }
+
+            .banner-partners .banner-desc {
+                font-size: 16px;
             }
 
             .footer-links {

@@ -69,6 +69,7 @@ export default function Nav() {
         </button>
         <Link href="/#filtres" className="hoverable" onClick={() => setMenuOpen(false)} tabIndex={menuOpen ? undefined : -1}>Activitats</Link>
         <Link href="/per-a-centres" className="hoverable" onClick={() => setMenuOpen(false)} tabIndex={menuOpen ? undefined : -1}>Centres</Link>
+        <Link href="/patrocinis" className="hoverable" onClick={() => setMenuOpen(false)} tabIndex={menuOpen ? undefined : -1}>Partners</Link>
       </div>
 
       {/* Nav */}
@@ -123,6 +124,7 @@ export default function Nav() {
         </Link>
         <div className="nav-right">
             <Link href="/per-a-centres" className="hoverable" style={{ textDecoration: 'none' }}>Per als centres</Link>
+            <Link href="/patrocinis" className="hoverable" style={{ textDecoration: 'none' }}>Partners</Link>
             <button
               onClick={() => setSearchOpen(true)}
               aria-label="Cerca"

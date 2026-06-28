@@ -7,15 +7,18 @@ import { sendInternalEmail } from '@/app/actions/sendEmail';
 
 const CATEGORIES_LLISTA = [
   "Esports",
-  "Dansa",
   "Idiomes",
+  "Programació i robòtica",
+  "Dansa",
+  "Salut i benestar",
+  "Ioga",
   "Música",
-  "Tecnologia",
+  "Creativitat i Expressió",
   "Teatre",
-  "Arts Plàstiques",
-  "Creativitat i Oci",
-  "Casals d'Estiu",
-  "Tallers"
+  "Naturalesa",
+  "Escacs",
+  "Cuina",
+  "Lleure"
 ];
 
 export default function PatrocinisPage() {
@@ -381,7 +384,7 @@ export default function PatrocinisPage() {
               
               <div className="sponsor-card-premium" style={{ background: getGradientStyle(mockGradient) }}>
                 <div className="sponsor-card-overlay"></div>
-                <div className="sponsor-top-badge">PATROCINAT · ESPORTS</div>
+                <div className="sponsor-top-badge">PATROCINAT · {formData.category.toUpperCase()}</div>
                 
                 <div className="sponsor-premium-content">
                   <h4 className="sponsor-premium-title">{mockTitle || 'El teu títol aquí'}</h4>

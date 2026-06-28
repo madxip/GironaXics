@@ -9,6 +9,7 @@ import Destacades from '@/components/Destacades';
 import Categories from '@/components/Categories';
 import ComFunciona from '@/components/ComFunciona';
 import BannerCentres from '@/components/BannerCentres';
+import BannerPartners from '@/components/BannerPartners';
 import Footer from '@/components/Footer';
 import { getActivitats, getCentres, getSponsors, getCasalsBanner } from '@/lib/airtable';
 import type { Activitat } from '@/lib/types';
@@ -77,6 +78,7 @@ export default async function Home() {
       <ComFunciona />
 
       <BannerCentres />
+      <BannerPartners />
       </main>
       <Footer />
     </>
