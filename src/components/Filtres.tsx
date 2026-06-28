@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Activitat, Sponsor, CasalsBanner } from '@/lib/types';
 import AccordionCategoria from './AccordionCategoria';
@@ -705,7 +706,7 @@ export default function Filtres({
                 {filtered.length === 0 ? (
                     <div className="results-empty">No s&apos;han trobat activitats amb aquests filtres.</div>
                 ) : (
-                    <div className={`results-split-grid ${activeSponsor ? 'has-sponsor' : ''}`}>
+                    <div className={`results-split-grid ${selectedCategoria !== 'Totes' ? 'has-sponsor' : ''}`}>
                       <style>{`
                         .results-split-grid {
                           display: flex;
@@ -968,51 +969,82 @@ export default function Filtres({
                       </div>
                       
                       {/* Sponsor enganxós / Sticky (1/3 de l'espai) */}
-                      {activeSponsor && (
+                      {selectedCategoria !== 'Totes' && (
                         <div className="sponsor-column">
-                          <a 
-                            href={activeSponsor.enllac} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="sponsor-card-premium hoverable"
-                            onClick={() => handleSponsorClick(activeSponsor.nom)}
-                            style={{
-                              backgroundImage: activeSponsor.imatgeFonsUrl 
-                                ? `url(${activeSponsor.imatgeFonsUrl})` 
-                                : `linear-gradient(135deg, #091a10 0%, #0c2214 50%, #112d1b 100%)`
-                            }}
-                          >
-                            {/* Fons fosc per llegibilitat */}
-                            <div className="sponsor-card-overlay"></div>
-                            
-                            {/* Badge superior: PATROCINAT · CATEGORIA */}
-                            <div className="sponsor-top-badge">
-                              PATROCINAT · {selectedCategoria.toUpperCase()}
-                            </div>
-                            
-                            {/* Contingut del patrocinador */}
-                            <div className="sponsor-premium-content">
-                               <h3 className="sponsor-premium-title">
-                                 {activeSponsor.titol || `Mou-te amb ${activeSponsor.nom}`}
-                               </h3>
-                              <p className="sponsor-premium-desc">
-                                {activeSponsor.descripcio || `El partner d'${selectedCategoria} a GironaXics. Troba tot el que necessites per a les teves activitats.`}
-                              </p>
+                          {activeSponsor ? (
+                            <a 
+                              href={activeSponsor.enllac} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="sponsor-card-premium hoverable"
+                              onClick={() => handleSponsorClick(activeSponsor.nom)}
+                              style={{
+                                backgroundImage: activeSponsor.imatgeFonsUrl 
+                                  ? `url(${activeSponsor.imatgeFonsUrl})` 
+                                  : `linear-gradient(135deg, #091a10 0%, #0c2214 50%, #112d1b 100%)`
+                              }}
+                            >
+                              {/* Fons fosc per llegibilitat */}
+                              <div className="sponsor-card-overlay"></div>
                               
-                              {/* Fila de botons inferiors */}
-                              <div className="sponsor-buttons-row">
-                                <div className="sponsor-logo-pill">
-                                  {activeSponsor.imatgeUrl && (
-                                    <div className="sponsor-logo-icon">
-                                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                                      <img src={activeSponsor.imatgeUrl} alt="" />
-                                    </div>
-                                  )}
-                                  <span className="sponsor-logo-text">{activeSponsor.nom.toUpperCase()}</span>
+                              {/* Badge superior: PATROCINAT · CATEGORIA */}
+                              <div className="sponsor-top-badge">
+                                PATROCINAT · {selectedCategoria.toUpperCase()}
+                              </div>
+                              
+                              {/* Contingut del patrocinador */}
+                              <div className="sponsor-premium-content">
+                                 <h3 className="sponsor-premium-title">
+                                   {activeSponsor.titol || `Mou-te amb ${activeSponsor.nom}`}
+                                 </h3>
+                                <p className="sponsor-premium-desc">
+                                  {activeSponsor.descripcio || `El partner d'${selectedCategoria} a GironaXics. Troba tot el que necessites per a les teves activitats.`}
+                                </p>
+                                
+                                {/* Fila de botons inferiors */}
+                                <div className="sponsor-buttons-row">
+                                  <div className="sponsor-logo-pill">
+                                    {activeSponsor.imatgeUrl && (
+                                      <div className="sponsor-logo-icon">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src={activeSponsor.imatgeUrl} alt="" />
+                                      </div>
+                                    )}
+                                    <span className="sponsor-logo-text">{activeSponsor.nom.toUpperCase()}</span>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </a>
+                            </a>
+                          ) : (
+                            <Link 
+                              href="/patrocinis" 
+                              className="sponsor-card-premium hoverable"
+                              style={{
+                                background: 'linear-gradient(135deg, var(--verd-fosc) 0%, #092e18 100%)',
+                                border: '2px dashed var(--taronja)',
+                                textDecoration: 'none'
+                              }}
+                            >
+                              <div className="sponsor-card-overlay" style={{ background: 'rgba(12, 34, 20, 0.4)' }}></div>
+                              <div className="sponsor-top-badge" style={{ backgroundColor: 'var(--taronja)', color: 'var(--verd-fosc)' }}>
+                                ESPAI DISPONIBLE
+                              </div>
+                              <div className="sponsor-premium-content">
+                                <h3 className="sponsor-premium-title" style={{ color: 'white' }}>
+                                  Vols patrocinar {selectedCategoria}?
+                                </h3>
+                                <p className="sponsor-premium-desc" style={{ color: 'rgba(255,255,255,0.9)' }}>
+                                  Converteix-te en el Partner exclusiu d&apos;aquesta categoria a GironaXics. Destaca la teva marca davant de milers de famílies.
+                                </p>
+                                <div className="sponsor-buttons-row">
+                                  <div className="sponsor-cta-pill" style={{ backgroundColor: 'var(--taronja)', color: 'var(--verd-fosc)' }}>
+                                    <span>Fes-te Partner</span>
+                                    <span className="arrow">→</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </Link>
+                          )}
                         </div>
                       )}
                     </div>

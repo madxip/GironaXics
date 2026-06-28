@@ -32,28 +32,29 @@ export default function PatrocinisPage() {
     company: '',
     email: '',
     category: 'Esports',
+    websiteUrl: '',
     message: ''
   });
 
   // Mockup Interactive State
-  const [mockTitle, setMockTitle] = useState('Mou-te amb Decathlon');
-  const [mockDesc, setMockDesc] = useState("Troba el millor equipament esportiu per a les teves extraescolars i campus d'estiu a Girona.");
-  const [mockBrand, setMockBrand] = useState('DECATHLON GIRONA');
-  const [mockGradient, setMockGradient] = useState('1'); // 1: Verd fosc, 2: Taronja/Fosc, 3: Blau/Verd, 4: Marró fosc
+  const [mockTitle, setMockTitle] = useState('');
+  const [mockDesc, setMockDesc] = useState('');
+  const [mockBrand, setMockBrand] = useState('');
+  const [mockGradient, setMockGradient] = useState('1'); // 1: Verd GironaXics, 2: Daurat, 3: Blau, 4: Vermell Vi
 
   const getGradientStyle = (id: string) => {
     switch (id) {
-      case '1': return 'linear-gradient(135deg, #091a10 0%, #0c2214 50%, #112d1b 100%)';
-      case '2': return 'linear-gradient(135deg, #2c1a04 0%, #1a0f02 50%, #0d0801 100%)';
-      case '3': return 'linear-gradient(135deg, #051d2c 0%, #03121c 50%, #02090e 100%)';
-      case '4': return 'linear-gradient(135deg, #1f1105 0%, #130a03 50%, #0a0501 100%)';
-      default: return 'linear-gradient(135deg, #091a10 0%, #0c2214 50%, #112d1b 100%)';
+      case '1': return 'linear-gradient(135deg, #1A6B3A 0%, #114c28 50%, #092e18 100%)';
+      case '2': return 'linear-gradient(135deg, #b3851b 0%, #7e5c10 50%, #4a3607 100%)';
+      case '3': return 'linear-gradient(135deg, #1e3a8a 0%, #172554 50%, #0f172a 100%)';
+      case '4': return 'linear-gradient(135deg, #881337 0%, #4c0519 50%, #310411 100%)';
+      default: return 'linear-gradient(135deg, #1A6B3A 0%, #114c28 50%, #092e18 100%)';
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.name && formData.company && formData.email && formData.message) {
+    if (formData.name && formData.company && formData.email) {
       setStatus('sending');
       try {
         await sendInternalEmail({
@@ -61,7 +62,7 @@ export default function PatrocinisPage() {
           nom: formData.name,
           empresaNom: formData.company,
           email: formData.email,
-          missatge: `Categoria d'interès: ${formData.category}\n\nMissatge:\n${formData.message}`,
+          missatge: `Categoria d'interès: ${formData.category}\nAdreça web: ${formData.websiteUrl || 'No indicada'}\n\nMissatge:\n${formData.message || 'Sense comentaris addicionals.'}`,
           website: website,
         });
         setStatus('ok');
@@ -321,6 +322,7 @@ export default function PatrocinisPage() {
                   type="text" 
                   value={mockTitle} 
                   onChange={(e) => setMockTitle(e.target.value)} 
+                  placeholder="Mou-te amb..."
                   maxLength={40}
                 />
               </div>
@@ -332,6 +334,7 @@ export default function PatrocinisPage() {
                   rows={3} 
                   value={mockDesc} 
                   onChange={(e) => setMockDesc(e.target.value)} 
+                  placeholder="Troba el millor equipament per a les teves extraescolars i campus d'estiu a Girona."
                   maxLength={140}
                 />
               </div>
@@ -343,6 +346,7 @@ export default function PatrocinisPage() {
                   type="text" 
                   value={mockBrand} 
                   onChange={(e) => setMockBrand(e.target.value)} 
+                  placeholder="La teva marca"
                   maxLength={25}
                 />
               </div>
@@ -351,27 +355,27 @@ export default function PatrocinisPage() {
                 <label>Color de fons de marca</label>
                 <div className="gradient-selector">
                   <button 
-                    aria-label="Verd fosc"
+                    aria-label="Verd GironaXics"
                     className={`gradient-btn ${mockGradient === '1' ? 'active' : ''}`} 
-                    style={{ background: getGradientStyle('1') }}
+                    style={{ background: '#1A6B3A' }}
                     onClick={() => setMockGradient('1')}
                   />
                   <button 
-                    aria-label="Taronja fosc"
+                    aria-label="Daurat Premium"
                     className={`gradient-btn ${mockGradient === '2' ? 'active' : ''}`} 
-                    style={{ background: getGradientStyle('2') }}
+                    style={{ background: '#b3851b' }}
                     onClick={() => setMockGradient('2')}
                   />
                   <button 
-                    aria-label="Blau fosc"
+                    aria-label="Blau Elegant"
                     className={`gradient-btn ${mockGradient === '3' ? 'active' : ''}`} 
-                    style={{ background: getGradientStyle('3') }}
+                    style={{ background: '#1e3a8a' }}
                     onClick={() => setMockGradient('3')}
                   />
                   <button 
-                    aria-label="Marró fosc"
+                    aria-label="Vermell Vi"
                     className={`gradient-btn ${mockGradient === '4' ? 'active' : ''}`} 
-                    style={{ background: getGradientStyle('4') }}
+                    style={{ background: '#881337' }}
                     onClick={() => setMockGradient('4')}
                   />
                 </div>
@@ -387,13 +391,13 @@ export default function PatrocinisPage() {
                 <div className="sponsor-top-badge">PATROCINAT · {formData.category.toUpperCase()}</div>
                 
                 <div className="sponsor-premium-content">
-                  <h4 className="sponsor-premium-title">{mockTitle || 'El teu títol aquí'}</h4>
-                  <p className="sponsor-premium-desc">{mockDesc || 'La teva descripció explicant la promoció de productes o serveis locals.'}</p>
+                  <h4 className="sponsor-premium-title">{mockTitle || 'Mou-te amb...'}</h4>
+                  <p className="sponsor-premium-desc">{mockDesc || 'Troba el millor equipament per a les teves extraescolars i campus d\'estiu a Girona.'}</p>
                   
                   <div className="sponsor-buttons-row">
                     <div className="sponsor-logo-pill">
                       <div className="sponsor-logo-icon-mock">
-                        {mockBrand ? mockBrand.charAt(0).toUpperCase() : 'P'}
+                        {mockBrand ? mockBrand.charAt(0).toUpperCase() : 'L'}
                       </div>
                       <span className="sponsor-logo-text">{(mockBrand || 'La teva marca').toUpperCase()}</span>
                     </div>
@@ -454,6 +458,16 @@ export default function PatrocinisPage() {
                 />
               </div>
               <div className="form-group">
+                <label htmlFor="partner-website-url">Adreça web de l&apos;empresa (opcional)</label>
+                <input
+                  id="partner-website-url"
+                  type="url"
+                  value={formData.websiteUrl}
+                  onChange={e => setFormData({ ...formData, websiteUrl: e.target.value })}
+                  placeholder="Ex. https://www.esportssoler.cat"
+                />
+              </div>
+              <div className="form-group">
                 <label htmlFor="partner-category">Categoria que t&apos;interessa patrocinar</label>
                 <select
                   id="partner-category"
@@ -467,11 +481,10 @@ export default function PatrocinisPage() {
                 </select>
               </div>
               <div className="form-group">
-                <label htmlFor="partner-message">Comentaris o objectius de marca</label>
+                <label htmlFor="partner-message">Comentaris o objectius de marca (opcional)</label>
                 <textarea
                   id="partner-message"
                   rows={4}
-                  required
                   value={formData.message}
                   onChange={e => setFormData({ ...formData, message: e.target.value })}
                   placeholder="Explica'ns breument què comercialitzeu i quins productes o serveis us agradaria promocionar."
