@@ -58,11 +58,11 @@ export default function PatrocinisPage() {
 
   const getGradientStyle = (id: string) => {
     switch (id) {
-      case '1': return 'linear-gradient(135deg, rgba(26, 107, 58, 0.7) 0%, rgba(9, 26, 15, 0.95) 100%)';
-      case '2': return 'linear-gradient(135deg, rgba(179, 133, 27, 0.7) 0%, rgba(74, 54, 7, 0.95) 100%)';
-      case '3': return 'linear-gradient(135deg, rgba(30, 58, 138, 0.7) 0%, rgba(15, 23, 42, 0.95) 100%)';
-      case '4': return 'linear-gradient(135deg, rgba(136, 19, 55, 0.7) 0%, rgba(49, 4, 17, 0.95) 100%)';
-      default: return 'linear-gradient(135deg, rgba(26, 107, 58, 0.7) 0%, rgba(9, 26, 15, 0.95) 100%)';
+      case '1': return 'linear-gradient(135deg, rgba(26, 107, 58, 0.25) 0%, rgba(9, 26, 15, 0.7) 100%)';
+      case '2': return 'linear-gradient(135deg, rgba(179, 133, 27, 0.25) 0%, rgba(74, 54, 7, 0.7) 100%)';
+      case '3': return 'linear-gradient(135deg, rgba(30, 58, 138, 0.25) 0%, rgba(15, 23, 42, 0.7) 100%)';
+      case '4': return 'linear-gradient(135deg, rgba(136, 19, 55, 0.25) 0%, rgba(49, 4, 17, 0.7) 100%)';
+      default: return 'linear-gradient(135deg, rgba(26, 107, 58, 0.25) 0%, rgba(9, 26, 15, 0.7) 100%)';
     }
   };
 
@@ -138,7 +138,7 @@ ${formData.message || 'Sense comentaris addicionals.'}`,
         .sponsor-card-overlay {
           position: absolute;
           top: 0; left: 0; right: 0; bottom: 0;
-          background: linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.3) 40%, rgba(0, 0, 0, 0.85) 100%);
+          background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.15) 50%, rgba(0, 0, 0, 0.65) 100%);
           z-index: 1;
         }
         .sponsor-top-badge {
