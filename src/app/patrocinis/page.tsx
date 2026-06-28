@@ -316,6 +316,20 @@ export default function PatrocinisPage() {
               <h3 style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: '22px', color: 'var(--verd-fosc)', margin: '0 0 12px' }}>Personalitza el banner</h3>
               
               <div>
+                <label htmlFor="mockup-category-select">Categoria del banner</label>
+                <select 
+                  id="mockup-category-select"
+                  value={formData.category} 
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #eae6df', borderRadius: '8px', backgroundColor: '#faf9f6', color: '#0c2214', fontSize: '14px', fontFamily: 'inherit', marginBottom: '14px' }}
+                >
+                  {CATEGORIES_LLISTA.map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
                 <label htmlFor="mockup-title">Títol de la promoció (CTA)</label>
                 <input 
                   id="mockup-title"
