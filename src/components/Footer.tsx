@@ -14,6 +14,7 @@ export default function Footer() {
                     </div>
                     <div>
                         <Link href="/per-a-centres" className="hoverable">Per als centres</Link>
+                        <Link href="/patrocinis" className="hoverable">Patrocinis / Partners</Link>
                         <Link href="/preguntes-frequents" className="hoverable">Preguntes freqüents</Link>
                     </div>
                     <div>
