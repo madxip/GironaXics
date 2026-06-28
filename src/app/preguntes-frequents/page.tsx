@@ -1,4 +1,4 @@
-﻿import Nav from '@/components/Nav';
+import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
 
@@ -34,15 +34,15 @@ export default function PreguntesFrequents() {
           No. GironaXics actua exclusivament com un <strong>directori i canal de comunicació</strong>. L'organització, gestió, cobrament i responsabilitat de cada activitat depèn íntegrament del centre o club anunciant.</p>
 
           <p><strong>4. Com s'actualitzen els preus i horaris?</strong><br />
-          La informació es sincronitza directament amb els nostres centres col·laboradors de Girona. Tanmateix, si detectes qualsevol dada errònia, et preguem que ens ho facis saber mitjançant la nostra pàgina de <Link href="/contacte" style={{color: 'var(--verd)'}}>contacte</Link>.</p>
+          Les dades mostrades al portal no es sincronitzen en temps real de forma automatitzada. Són els propis centres col·laboradors els encarregats de modificar-les des del seu panell de gestió o de comunicar-nos qualsevol actualització directament per tal que el nostre equip de suport la publiqui. Si detecteu qualsevol informació desactualitzada, us agrairem que ens ho feu saber a través del nostre formulari de <Link href="/contacte" style={{color: 'var(--verd)'}}>contacte</Link>.</p>
 
           <h2 style={{ marginTop: '50px' }}>Per a centres i acadèmies</h2>
 
           <p><strong>1. Quin cost té anunciar el meu centre a la web?</strong><br />
-          Actualment estem oferint un servei de promoció bàsica 100% gratuït per a tots els centres homologats i entitats esportives/culturals de la ciutat de Girona.</p>
+          Durant tot l'any 2026, la publicació i promoció del vostre centre és <strong>completament gratuïta</strong>. A partir de l'any 2027, el servei de manteniment i presència al directori passarà a tenir un cost de subscripció anual de <strong>60 euros</strong>, sense permanències ni despeses addicionals ocultes.</p>
 
           <p><strong>2. Quins requisits heu de complir per ser publicats?</strong><br />
-          Oferir activitats extraescolars destinades a nens, nenes o joves (de 0 a 18 anys) a la ciutat de Girona o el seu entorn immediat, i garantir una gestió professional i compromesa de les activitats.</p>
+          El vostre centre ha d'oferir activitats educatives, esportives, artístiques o de lleure destinades a infants i joves (de 0 a 18 anys). Geogràficament, donem cobertura tant a la ciutat de Girona com a qualsevol municipi de les <strong>comarques gironines</strong>. Així mateix, cal garantir una gestió de qualitat i un compromís professional amb les activitats oferides.</p>
 
           <p><strong>3. Com puc donar d'alta el meu centre o actualitzar les meves dades?</strong><br />
           Simplement visita la nostra secció <Link href="/per-a-centres" style={{color: 'var(--verd)'}}>Per als centres</Link> i omple el formulari amb les teves dades. El nostre equip es posarà en contacte amb tu de seguida.</p>
