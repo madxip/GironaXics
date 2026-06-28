@@ -21,34 +21,58 @@ const CATEGORIES_LLISTA = [
   "Lleure"
 ];
 
+const CATEGORY_IMAGES: Record<string, string> = {
+  "Esports": "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?q=80&w=600&auto=format&fit=crop",
+  "Idiomes": "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=600&auto=format&fit=crop",
+  "Programació i robòtica": "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?q=80&w=600&auto=format&fit=crop",
+  "Dansa": "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?q=80&w=600&auto=format&fit=crop",
+  "Salut i benestar": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=600&auto=format&fit=crop",
+  "Ioga": "https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=600&auto=format&fit=crop",
+  "Música": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=600&auto=format&fit=crop",
+  "Creativitat i Expressió": "https://images.unsplash.com/photo-1513364776144-60967b0f800f?q=80&w=600&auto=format&fit=crop",
+  "Teatre": "https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?q=80&w=600&auto=format&fit=crop",
+  "Naturalesa": "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=600&auto=format&fit=crop",
+  "Escacs": "https://images.unsplash.com/photo-1529699211952-734e80c4d42b?q=80&w=600&auto=format&fit=crop",
+  "Cuina": "https://images.unsplash.com/photo-1556910103-1c02745aae4d?q=80&w=600&auto=format&fit=crop",
+  "Lleure": "https://images.unsplash.com/photo-1473177104440-ffee2f37e098?q=80&w=600&auto=format&fit=crop"
+};
+
 export default function PatrocinisPage() {
   const [submitted, setSubmitted] = useState(false);
   const [status, setStatus] = useState<'idle' | 'sending' | 'ok' | 'error'>('idle');
   const [website, setWebsite] = useState('');
   
-  // Real Form State
+  // Real Form State (includes Mockup values synchronized)
   const [formData, setFormData] = useState({
     name: '',
     company: '',
     email: '',
     category: 'Esports',
     websiteUrl: '',
+    bannerTitle: '',
+    bannerDesc: '',
     message: ''
   });
 
-  // Mockup Interactive State
-  const [mockTitle, setMockTitle] = useState('');
-  const [mockDesc, setMockDesc] = useState('');
-  const [mockBrand, setMockBrand] = useState('');
   const [mockGradient, setMockGradient] = useState('1'); // 1: Verd GironaXics, 2: Daurat, 3: Blau, 4: Vermell Vi
 
   const getGradientStyle = (id: string) => {
     switch (id) {
-      case '1': return 'linear-gradient(135deg, #1A6B3A 0%, #114c28 50%, #092e18 100%)';
-      case '2': return 'linear-gradient(135deg, #b3851b 0%, #7e5c10 50%, #4a3607 100%)';
-      case '3': return 'linear-gradient(135deg, #1e3a8a 0%, #172554 50%, #0f172a 100%)';
-      case '4': return 'linear-gradient(135deg, #881337 0%, #4c0519 50%, #310411 100%)';
-      default: return 'linear-gradient(135deg, #1A6B3A 0%, #114c28 50%, #092e18 100%)';
+      case '1': return 'linear-gradient(135deg, rgba(26, 107, 58, 0.7) 0%, rgba(9, 26, 15, 0.95) 100%)';
+      case '2': return 'linear-gradient(135deg, rgba(179, 133, 27, 0.7) 0%, rgba(74, 54, 7, 0.95) 100%)';
+      case '3': return 'linear-gradient(135deg, rgba(30, 58, 138, 0.7) 0%, rgba(15, 23, 42, 0.95) 100%)';
+      case '4': return 'linear-gradient(135deg, rgba(136, 19, 55, 0.7) 0%, rgba(49, 4, 17, 0.95) 100%)';
+      default: return 'linear-gradient(135deg, rgba(26, 107, 58, 0.7) 0%, rgba(9, 26, 15, 0.95) 100%)';
+    }
+  };
+
+  const getGradientName = (id: string) => {
+    switch (id) {
+      case '1': return 'Verd GironaXics';
+      case '2': return 'Daurat Premium';
+      case '3': return 'Blau Elegant';
+      case '4': return 'Vermell Vi';
+      default: return 'Verd GironaXics';
     }
   };
 
@@ -62,7 +86,16 @@ export default function PatrocinisPage() {
           nom: formData.name,
           empresaNom: formData.company,
           email: formData.email,
-          missatge: `Categoria d'interès: ${formData.category}\nAdreça web: ${formData.websiteUrl || 'No indicada'}\n\nMissatge:\n${formData.message || 'Sense comentaris addicionals.'}`,
+          missatge: `Categoria d'interès: ${formData.category}
+Adreça web: ${formData.websiteUrl || 'No indicada'}
+Color de fons del banner: ${getGradientName(mockGradient)}
+
+Detalls del Banner Personalitzat:
+- Títol: ${formData.bannerTitle || 'Mou-te amb...'}
+- Descripció: ${formData.bannerDesc || 'Troba el millor equipament per a les teves extraescolars i campus d\'estiu a Girona.'}
+
+Comentaris / Objectius:
+${formData.message || 'Sense comentaris addicionals.'}`,
           website: website,
         });
         setStatus('ok');
@@ -105,7 +138,7 @@ export default function PatrocinisPage() {
         .sponsor-card-overlay {
           position: absolute;
           top: 0; left: 0; right: 0; bottom: 0;
-          background: linear-gradient(to bottom, rgba(12, 34, 20, 0.1) 0%, rgba(12, 34, 20, 0.4) 40%, rgba(9, 26, 15, 0.95) 100%);
+          background: linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.3) 40%, rgba(0, 0, 0, 0.85) 100%);
           z-index: 1;
         }
         .sponsor-top-badge {
@@ -334,8 +367,8 @@ export default function PatrocinisPage() {
                 <input 
                   id="mockup-title"
                   type="text" 
-                  value={mockTitle} 
-                  onChange={(e) => setMockTitle(e.target.value)} 
+                  value={formData.bannerTitle} 
+                  onChange={(e) => setFormData({ ...formData, bannerTitle: e.target.value })} 
                   placeholder="Mou-te amb..."
                   maxLength={40}
                 />
@@ -346,8 +379,8 @@ export default function PatrocinisPage() {
                 <textarea 
                   id="mockup-desc"
                   rows={3} 
-                  value={mockDesc} 
-                  onChange={(e) => setMockDesc(e.target.value)} 
+                  value={formData.bannerDesc} 
+                  onChange={(e) => setFormData({ ...formData, bannerDesc: e.target.value })} 
                   placeholder="Troba el millor equipament per a les teves extraescolars i campus d'estiu a Girona."
                   maxLength={140}
                 />
@@ -358,8 +391,8 @@ export default function PatrocinisPage() {
                 <input 
                   id="mockup-brand"
                   type="text" 
-                  value={mockBrand} 
-                  onChange={(e) => setMockBrand(e.target.value)} 
+                  value={formData.company} 
+                  onChange={(e) => setFormData({ ...formData, company: e.target.value })} 
                   placeholder="La teva marca"
                   maxLength={25}
                 />
@@ -400,20 +433,25 @@ export default function PatrocinisPage() {
             <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
               <h3 style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: '18px', color: 'var(--muted)', margin: '0 0 16px', textAlign: 'center' }}>VISTA PRÈVIA EN VIU</h3>
               
-              <div className="sponsor-card-premium" style={{ background: getGradientStyle(mockGradient) }}>
+              <div 
+                className="sponsor-card-premium" 
+                style={{ 
+                  backgroundImage: `${getGradientStyle(mockGradient)}, url(${CATEGORY_IMAGES[formData.category] || ''})`
+                }}
+              >
                 <div className="sponsor-card-overlay"></div>
                 <div className="sponsor-top-badge">PATROCINAT · {formData.category.toUpperCase()}</div>
                 
                 <div className="sponsor-premium-content">
-                  <h4 className="sponsor-premium-title">{mockTitle || 'Mou-te amb...'}</h4>
-                  <p className="sponsor-premium-desc">{mockDesc || 'Troba el millor equipament per a les teves extraescolars i campus d\'estiu a Girona.'}</p>
+                  <h4 className="sponsor-premium-title">{formData.bannerTitle || 'Mou-te amb...'}</h4>
+                  <p className="sponsor-premium-desc">{formData.bannerDesc || 'Troba el millor equipament per a les teves extraescolars i campus d\'estiu a Girona.'}</p>
                   
                   <div className="sponsor-buttons-row">
                     <div className="sponsor-logo-pill">
                       <div className="sponsor-logo-icon-mock">
-                        {mockBrand ? mockBrand.charAt(0).toUpperCase() : 'L'}
+                        {formData.company ? formData.company.charAt(0).toUpperCase() : 'L'}
                       </div>
-                      <span className="sponsor-logo-text">{(mockBrand || 'La teva marca').toUpperCase()}</span>
+                      <span className="sponsor-logo-text">{(formData.company || 'La teva marca').toUpperCase()}</span>
                     </div>
                     
                     <div className="sponsor-cta-pill">
