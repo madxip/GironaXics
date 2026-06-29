@@ -234,8 +234,8 @@ function mapActivitatRecord(
 
   // Mapejar imatges usant el slug ja generat per tenir rutes proxy permanents
   if (Array.isArray(r.fields.Imatge) && r.fields.Imatge.length > 0) {
-    const imgObj = r.fields.Imatge[0] as { url: string; thumbnails?: { large?: { url: string } } };
-    f.rawImatgeUrl = imgObj.url;
+    const imgObj = r.fields.Imatge[0] as { url: string; thumbnails?: { large?: { url: string }; full?: { url: string } } };
+    f.rawImatgeUrl = imgObj.thumbnails?.full?.url || imgObj.url;
     f.rawImatgeThumbnailUrl = imgObj.thumbnails?.large?.url || imgObj.url;
     f.imatgeUrl = `/api/imatges?type=activitat&slug=${f.slug}`;
     f.imatgeThumbnailUrl = `/api/imatges?type=activitat-thumb&slug=${f.slug}`;
