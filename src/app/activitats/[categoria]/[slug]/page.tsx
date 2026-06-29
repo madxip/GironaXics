@@ -165,6 +165,24 @@ function parseMarkdownToReact(text: string) {
   });
 }
 
+function formatMultilineText(text: string) {
+  if (!text) return null;
+  const lines = text.split(/\r?\n|\s+\/\s+/).map(l => l.trim()).filter(Boolean);
+  if (lines.length <= 1) {
+    return <span style={{ whiteSpace: 'pre-line' }}>{text}</span>;
+  }
+  return (
+    <ul style={{ listStyleType: 'none', padding: 0, margin: '4px 0 0 0', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+      {lines.map((line, idx) => (
+        <li key={idx} style={{ fontSize: '14px', position: 'relative', paddingLeft: '14px', lineHeight: '1.4' }}>
+          <span style={{ position: 'absolute', left: 0, top: '8px', width: '5px', height: '5px', borderRadius: '50%', backgroundColor: 'var(--verd, #1a6b3a)' }} />
+          {line}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export default async function ActivitatPage({ params }: { params: { categoria: string, slug: string } }) {
   const activitats = await getActivitats();
   const normalizedSearchSlug = normalizeSlug(decodeURIComponent(params.slug));
@@ -363,9 +381,9 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
                   {activitat.qui_imparteix && <div><strong style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', opacity: 0.5 }}>{TXT_IMPARTIT_PER}</strong>{activitat.qui_imparteix}</div>}
-                  <div><strong style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', opacity: 0.5 }}>{TXT_HORARI}</strong>{activitat.horari}</div>
-                  <div><strong style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', opacity: 0.5 }}>{TXT_DIES}</strong>{activitat.dies}</div>
-                  {activitat.durada && activitat.durada.trim() !== "" && <div><strong style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', opacity: 0.5 }}>{TXT_DURADA}</strong>{activitat.durada}</div>}
+                  <div><strong style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', opacity: 0.5 }}>{TXT_HORARI}</strong>{formatMultilineText(activitat.horari)}</div>
+                  <div><strong style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', opacity: 0.5 }}>{TXT_DIES}</strong>{formatMultilineText(activitat.dies)}</div>
+                  {activitat.durada && activitat.durada.trim() !== "" && <div><strong style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', opacity: 0.5 }}>{TXT_DURADA}</strong>{formatMultilineText(activitat.durada)}</div>}
                   {activitat.idioma && activitat.idioma.trim() !== "" && <div><strong style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', opacity: 0.5 }}>{TXT_IDIOMA}</strong>{activitat.idioma}</div>}
                   {activitat.torns && activitat.torns.trim() && (
                     <div>
