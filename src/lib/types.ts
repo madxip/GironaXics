@@ -29,6 +29,9 @@ export interface Activitat {
   tipus?: string; // Extraescolar, Casal, Taller / Oci
   torns?: string; // Torns del casal (una línia per torn: "DD/M/AA-DD/M/AA")
   centreVacances?: string; // Vacances del centre (una línia per rang: "DD/MM/AA-DD/MM/AA")
+  rawImatgeUrl?: string;
+  rawImatgeThumbnailUrl?: string;
+  rawGaleria?: string[];
 }
 
 export interface Sponsor {
@@ -41,6 +44,8 @@ export interface Sponsor {
   descripcio?: string;
   imatgeFonsUrl?: string;
   titol?: string;
+  rawImatgeUrl?: string;
+  rawImatgeFonsUrl?: string;
 }
 
 export interface Centre {
@@ -56,6 +61,7 @@ export interface Centre {
   imatgeUrl?: string;
   interessat?: boolean; // Centre ha confirmat participació (casella Airtable)
   vacances?: string; // Rangs de vacances (una línia per rang: "DD/MM/AA-DD/MM/AA")
+  rawImatgeUrl?: string;
 }
 
 export interface CasalsBanner {

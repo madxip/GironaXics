@@ -162,26 +162,10 @@ function mapActivitatRecord(
 
   if (centreId) {
     f.centre = centreMap.get(centreId) || centreId;
-    f.centreImatgeUrl = centreImatgeMap.get(centreId);
     f.centreInteressat = centreInteressatMap.get(centreId) || false;
     f.centreVacances = centreVacancesMap.get(centreId);
   }
-  if (!f.centreImatgeUrl && f.centre) {
-    f.centreImatgeUrl = centreImatgeMap.get(f.centre);
-  }
 
-  if (Array.isArray(r.fields.Imatge) && r.fields.Imatge.length > 0) {
-    const imgObj = r.fields.Imatge[0] as { url: string; thumbnails?: { large?: { url: string } } };
-    f.imatgeUrl = imgObj.url;
-    f.imatgeThumbnailUrl = imgObj.thumbnails?.large?.url || imgObj.url;
-  }
-  
-  if (Array.isArray(r.fields.Galeria)) {
-    f.galeria = (r.fields.Galeria as { url: string }[]).map((img) => img.url);
-  } else {
-    f.galeria = [];
-  }
-  
   f.material = (r.fields['descripció'] as string) || "";
   
   const rawCat = r.fields.categoria || r.fields.Categoria;
@@ -246,6 +230,30 @@ function mapActivitatRecord(
 
   if (f.slug && !f.slug.endsWith('-girona')) {
     f.slug = `${f.slug}-girona`;
+  }
+
+  // Mapejar imatges usant el slug ja generat per tenir rutes proxy permanents
+  if (Array.isArray(r.fields.Imatge) && r.fields.Imatge.length > 0) {
+    const imgObj = r.fields.Imatge[0] as { url: string; thumbnails?: { large?: { url: string } } };
+    f.rawImatgeUrl = imgObj.url;
+    f.rawImatgeThumbnailUrl = imgObj.thumbnails?.large?.url || imgObj.url;
+    f.imatgeUrl = `/api/imatges?type=activitat&slug=${f.slug}`;
+    f.imatgeThumbnailUrl = `/api/imatges?type=activitat-thumb&slug=${f.slug}`;
+  }
+  
+  if (Array.isArray(r.fields.Galeria)) {
+    f.rawGaleria = (r.fields.Galeria as { url: string }[]).map((img) => img.url);
+    f.galeria = f.rawGaleria.map((_, idx) => `/api/imatges?type=activitat-galeria&slug=${f.slug}&index=${idx}`);
+  } else {
+    f.rawGaleria = [];
+    f.galeria = [];
+  }
+
+  // Logo permanent per al centre
+  const cNomOrId = centreId || f.centre;
+  if (cNomOrId) {
+    const centreSlug = centreMap.get(cNomOrId) ? normalizeSlug(centreMap.get(cNomOrId)!) : normalizeSlug(cNomOrId);
+    f.centreImatgeUrl = `/api/imatges?type=centre&slug=${centreSlug}`;
   }
 
   f.destacada = !!r.fields.destacada;
@@ -453,13 +461,17 @@ async function _doFetchCentres(): Promise<Centre[]> {
     const f = { ...r.fields } as unknown as Centre;
     f.id = r.id;
     f.adreca = (r.fields.adreça || r.fields.adreca || "") as string;
+    
+    const customSlug = (r.fields.slug as string) || (r.fields.Slug as string);
+    f.slug = customSlug ? normalizeSlug(customSlug) : (r.fields.nom ? normalizeSlug(r.fields.nom as string) : r.id);
+    
     const attachmentField = r.fields.Imatge || r.fields.imatge || r.fields.Logo || r.fields.logo || r.fields.Logotip || r.fields.logotip;
     if (Array.isArray(attachmentField) && attachmentField.length > 0) {
       const att = attachmentField[0] as { url: string; thumbnails?: { large?: { url: string } } };
-      f.imatgeUrl = att.thumbnails?.large?.url || att.url;
+      f.rawImatgeUrl = att.thumbnails?.large?.url || att.url;
+      f.imatgeUrl = `/api/imatges?type=centre&slug=${f.slug}`;
     }
-    const customSlug = (r.fields.slug as string) || (r.fields.Slug as string);
-    f.slug = customSlug ? normalizeSlug(customSlug) : (r.fields.nom ? normalizeSlug(r.fields.nom as string) : r.id);
+    
     f.interessat = !!(r.fields.interessat || r.fields.Interessat || r.fields['col·laborador'] || r.fields['Col·laborador'] || r.fields.partner || r.fields.Partner);
     f.vacances = (r.fields.vacances || r.fields.Vacances) as string | undefined;
     return f;
@@ -1042,19 +1054,24 @@ export async function getSponsors(): Promise<Sponsor[]> {
       const f = r.fields;
 
       // Logo del patrocinador (camp "imatge")
+      let rawImatgeUrl = '';
       let imatgeUrl = '';
       const logoField = f.imatge || f.Imatge;
       if (Array.isArray(logoField) && logoField.length > 0) {
-        imatgeUrl = (logoField[0] as { url: string }).url;
+        rawImatgeUrl = (logoField[0] as { url: string }).url;
+        imatgeUrl = `/api/imatges?type=sponsor-logo&id=${r.id}`;
       }
 
       // Imatge de fons de la targeta (camp "background")
+      let rawImatgeFonsUrl = '';
       let imatgeFonsUrl = '';
       const bgField = f.background || f.Background || f.imatge_fons || f.Imatge_fons;
       if (Array.isArray(bgField) && bgField.length > 0) {
-        imatgeFonsUrl = (bgField[0] as { url: string }).url;
+        rawImatgeFonsUrl = (bgField[0] as { url: string }).url;
+        imatgeFonsUrl = `/api/imatges?type=sponsor-bg&id=${r.id}`;
       } else if (typeof bgField === 'string' && bgField) {
-        imatgeFonsUrl = bgField;
+        rawImatgeFonsUrl = bgField;
+        imatgeFonsUrl = bgField; // Si ja és una URL de text l'enllacem directament
       }
 
       // IMPORTANT: "categoria (from Activitat enllaçada)" retorna IDs de registre, NO noms.
@@ -1083,6 +1100,8 @@ export async function getSponsors(): Promise<Sponsor[]> {
         categoriaSlug,
         imatgeUrl,
         imatgeFonsUrl,
+        rawImatgeUrl,
+        rawImatgeFonsUrl,
         // "slogan" és el títol de la targeta a Airtable
         titol: (f.slogan || f.Slogan || f.titol || f.Titol || '') as string,
         descripcio: (f.descripcio || f.Descripcio || '') as string,

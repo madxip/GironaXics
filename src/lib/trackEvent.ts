@@ -10,6 +10,10 @@ export function trackEvent(
 ) {
   if (typeof window === 'undefined') return; // Seguretat SSR
 
+  const ua = window.navigator.userAgent.toLowerCase();
+  const isBot = /bot|crawl|spider|lighthouse|ahrefs|semrush|yandex|bing|google|yahoo|duckduckgo|facebook|twitter|linkedin|slack/i.test(ua);
+  if (isBot) return;
+
   const device = window.innerWidth <= 768 ? 'mobile' : 'desktop';
 
   fetch('/api/analytics', {
