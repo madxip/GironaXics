@@ -7,7 +7,6 @@ import { Activitat, Sponsor, CasalsBanner } from '@/lib/types';
 import AccordionCategoria from './AccordionCategoria';
 import { normalizeSlug } from '@/lib/utils';
 import { trackEvent } from '@/lib/trackEvent';
-import { BARRIS_GIRONA_SET } from '@/lib/barris';
 import { isTallerExpiredOrEnded, getNextTallerDate } from '@/lib/tallerDates';
 
 const renderBannerTitle = (title: string) => {
@@ -310,12 +309,15 @@ export default function Filtres({
     activitats.forEach(a => {
       if (!a.barri) return;
       const b = a.barri.trim();
-      if (BARRIS_GIRONA_SET.has(b)) gironaSet.add(b);
-      else altresSet.add(b);
+      if (b.startsWith('Girona - ') || b === 'Girona') {
+        gironaSet.add(b);
+      } else {
+        altresSet.add(b);
+      }
     });
     return {
-      girona: Array.from(gironaSet).sort(),
-      altres: Array.from(altresSet).sort()
+      girona: Array.from(gironaSet).sort((a, b) => a.localeCompare(b)),
+      altres: Array.from(altresSet).sort((a, b) => a.localeCompare(b))
     };
   }, [activitats]);
 
@@ -339,7 +341,7 @@ export default function Filtres({
       const matchBarri = selectedBarri === 'Totes'
         ? true
         : selectedBarri === 'Girona'
-          ? BARRIS_GIRONA_SET.has(a.barri?.trim() || '')
+          ? (a.barri?.trim().startsWith('Girona - ') || a.barri?.trim() === 'Girona')
           : a.barri === selectedBarri;
       return matchTipus && matchCat && matchSubcat && matchEdat && matchBarri;
     });
@@ -678,7 +680,10 @@ export default function Filtres({
                     >
                         <option value="Totes">Totes les poblacions</option>
                         <option value="Girona" style={{ fontWeight: 700 }}>Girona (tots els barris)</option>
-                        {barris.girona.map(b => <option key={b} value={b}>{'   ' + b}</option>)}
+                        {barris.girona.map(b => {
+                          const displayName = b.startsWith('Girona - ') ? b.replace('Girona - ', '') : b;
+                          return <option key={b} value={b}>{'   ' + displayName}</option>;
+                        })}
                         {barris.altres.length > 0 && (
                           <>
                             <option disabled style={{ color: '#999' }}>──────────────</option>
