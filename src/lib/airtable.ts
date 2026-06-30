@@ -171,6 +171,9 @@ function mapActivitatRecord(
   const rawCat = r.fields.categoria || r.fields.Categoria;
   f.categoria = Array.isArray(rawCat) ? (rawCat[0] as string) : (rawCat as string) || '';
   
+  const rawBarri = r.fields.barri || r.fields.Barri;
+  f.barri = Array.isArray(rawBarri) ? (rawBarri[0] as string) || '' : (rawBarri as string) || '';
+
   if (f.barri === 'Centro') {
     f.barri = 'Centre';
   }
