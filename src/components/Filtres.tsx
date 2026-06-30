@@ -306,7 +306,24 @@ export default function Filtres({
   const barris = useMemo(() => {
     const gironaSet = new Set<string>();
     const altresSet = new Set<string>();
-    activitats.forEach(a => {
+    
+    // Filtrem primer les activitats segons la pestanya seleccionada (selectedTipus)
+    const activeTipusActivitats = activitats.filter(a => {
+      const normalizedTipus = a.tipus?.toLowerCase().trim() || '';
+      return selectedTipus === 'Totes' || 
+             (selectedTipus === 'Extraescolars' && (normalizedTipus === '' || normalizedTipus.includes('extraescolar'))) ||
+             (selectedTipus === 'Casals' && normalizedTipus.includes('casal')) ||
+             (selectedTipus === 'Tallers i Oci' && (
+               normalizedTipus.includes('taller') || 
+               normalizedTipus.includes('oci') || 
+               normalizedTipus.includes('monograf') || 
+               normalizedTipus.includes('escape') || 
+               normalizedTipus.includes('aniversari') || 
+               normalizedTipus.includes('virtual')
+             ));
+    });
+
+    activeTipusActivitats.forEach(a => {
       if (!a.barri) return;
       const b = a.barri.trim();
       if (b.startsWith('Girona - ') || b === 'Girona') {
@@ -319,7 +336,7 @@ export default function Filtres({
       girona: Array.from(gironaSet).sort((a, b) => a.localeCompare(b)),
       altres: Array.from(altresSet).sort((a, b) => a.localeCompare(b))
     };
-  }, [activitats]);
+  }, [activitats, selectedTipus]);
 
   const filtered = useMemo(() => {
     const result = activitats.filter(a => {
