@@ -118,6 +118,7 @@ const renderBannerIcon = (nom: string) => {
 
 const EDAT_GROUPS = [
   'Totes',
+  'De 0 a 2 anys',
   'De 3 a 5 anys',
   'De 6 a 11 anys',
   'De 12 a 18 anys'
@@ -151,6 +152,12 @@ function matchEdatGroup(edatStr: string | undefined, group: string): boolean {
       // Si és una expressió oberta, no hi ha màxim (infinit)
       max = isOpenEnded ? Infinity : Math.max(...numbers);
     }
+  }
+
+  if (group === 'De 0 a 2 anys') {
+    if (s.includes('nadó') || s.includes('nado') || s.includes('nadons') || s.includes('lactant') || s.includes('bebè') || s.includes('bebe') || s.includes('llar d\'infants')) return true;
+    if (min !== null && min <= 2) return true;
+    return false;
   }
 
   if (group === 'De 3 a 5 anys') {
