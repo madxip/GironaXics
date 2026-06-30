@@ -787,7 +787,6 @@ export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'cen
       nom: data.nom,
       slug: slug,
       centre: [data.centreId],
-      barri: data.barri,
       categoria: data.categoria,
       edat: data.edat,
       preu: data.preu != null && data.preu !== '' ? String(data.preu) : undefined,
@@ -891,7 +890,6 @@ export async function updateActivitat(id: string, data: Partial<Omit<Activitat, 
       // El slug (URL) NO es regenera en editar per preservar el posicionament SEO.
       // Si cal canviar la URL, s'ha de fer manualment al camp "slug" d'Airtable.
     }
-    if (data.barri) fields.barri = data.barri;
     if (data.categoria) fields.categoria = data.categoria;
     if (data.subcategoria !== undefined) {
       const subcatId = data.subcategoria ? await getSubcategoryRecordIdByName(data.subcategoria) : null;

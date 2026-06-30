@@ -15,7 +15,6 @@ import MultiDatePicker from "@/components/MultiDatePicker";
 interface ActivityFormProps {
   initialData?: Activitat;
   categories: string[];
-  barris: { girona: string[]; altres: string[] };
   submitAction: (prevState: unknown, formData: FormData) => Promise<{ success: boolean; error?: string }>;
   title: string;
   centre?: Centre;
@@ -265,7 +264,6 @@ function parseMarkdownToReact(text: string) {
 export default function ActivityForm({
   initialData,
   categories,
-  barris,
   submitAction,
   title,
   centre,
@@ -291,17 +289,6 @@ export default function ActivityForm({
 
 
   const [nom, setNom] = useState(initialData?.nom || "");
-  const NOVA_POBLACIO = "__nova_poblacio__";
-  const [barri, setBarri] = useState(
-    (initialData?.barri && !barris.girona.includes(initialData.barri) && !barris.altres.includes(initialData.barri))
-      ? NOVA_POBLACIO
-      : (initialData?.barri || "")
-  );
-  const [customPoblacio, setCustomPoblacio] = useState(
-    (initialData?.barri && !barris.girona.includes(initialData.barri) && !barris.altres.includes(initialData.barri))
-      ? initialData.barri
-      : ""
-  );
   const [categoria, setCategoria] = useState(initialData?.categoria || "");
   // Admin: centre seleccionat quan crea una activitat per a un altre centre
   const [selectedCentreId, setSelectedCentreId] = useState<string>(
@@ -660,7 +647,6 @@ export default function ActivityForm({
 
     const errors: Record<string, boolean> = {};
     if (!nom.trim()) errors.nom = true;
-    if (!barri.trim() || (barri === NOVA_POBLACIO && !customPoblacio.trim())) errors.barri = true;
     if (!categoria.trim()) errors.categoria = true;
     if (!edat.trim()) errors.edat = true;
     if (!horari.trim()) errors.horari = true;
@@ -687,7 +673,6 @@ export default function ActivityForm({
     try {
       const formData = new FormData();
       formData.append("nom", nom);
-      formData.append("barri", barri === NOVA_POBLACIO ? customPoblacio.trim() : barri);
       formData.append("categoria", categoria);
       
       const subcategoria = predefinedSubs 
@@ -833,8 +818,10 @@ export default function ActivityForm({
               <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "flex-end", padding: "40px" }}>
                 <div>
                   {categoria && <span style={{ display: "inline-block", background: "rgba(255,255,255,0.15)", color: "white", padding: "4px 12px", borderRadius: "100px", fontSize: "13px", fontWeight: 700, marginBottom: "12px" }}>{categoria}</span>}
-                  <h1 style={{ color: "white", fontFamily: "var(--font-serif)", fontStyle: "italic", fontSize: "48px", margin: 0, lineHeight: 1.1 }}>{nom || "Sense t\u00edtol"}</h1>
-                  <p style={{ color: "rgba(255,255,255,0.8)", fontSize: "16px", margin: "8px 0 0" }}>{barri === "__nova_poblacio__" ? customPoblacio : barri}</p>
+                  <h1 style={{ color: "white", fontFamily: "var(--font-serif)", fontStyle: "italic", fontSize: "48px", margin: 0, lineHeight: 1.1 }}>{nom || "Sense títol"}</h1>
+                  <p style={{ color: "rgba(255,255,255,0.8)", fontSize: "16px", margin: "8px 0 0" }}>
+                    {(allCentres?.find(c => c.id === selectedCentreId) || centre)?.barri || ""}
+                  </p>
                 </div>
               </div>
             </div>
@@ -1002,8 +989,8 @@ export default function ActivityForm({
                 {validationErrors.nom && errMsg("* El nom de l\u2019activitat \u00e9s obligatori")}
               </div>
 
-              {/* CATEGORIA + TIPUS + BARRI */}
-              <div className="af-row-3">
+              {/* CATEGORIA + TIPUS */}
+              <div className="af-row-2">
                 <div style={fieldGroupStyle}>
                   <label htmlFor="categoria" style={labelStyle}>Categoria *</label>
                   <select id="categoria" value={categoria}
@@ -1024,30 +1011,6 @@ export default function ActivityForm({
                     <option value="Casal">Casal (Estiu, Nadal, Setmana Santa)</option>
                     <option value="Taller">{"Taller o Oci (Monogr\u00e0fic, puntual)"}</option>
                   </select>
-                </div>
-
-                <div style={fieldGroupStyle}>
-                  <label htmlFor="barri" style={labelStyle}>Barri de Girona *</label>
-                  <select id="barri" value={barri}
-                    onChange={e => handleFieldChange("barri", e.target.value, setBarri)}
-                    disabled={loading} style={{ ...fieldStyle(validationErrors.barri), cursor: "pointer" }}>
-                    <option value="">-- Tria un barri --</option>
-                    <optgroup label="Barris de Girona">
-                      {barris.girona.map(b => <option key={b} value={b}>{b}</option>)}
-                    </optgroup>
-                    {barris.altres.length > 0 && (
-                      <optgroup label="Altres poblacions">
-                        {barris.altres.map(b => <option key={b} value={b}>{b}</option>)}
-                      </optgroup>
-                    )}
-                    {isAdmin && <option value="__nova_poblacio__" style={{ fontWeight: 600 }}>{"+ Afegir nova poblaci\u00f3..."}</option>}
-                  </select>
-                  {isAdmin && barri === "__nova_poblacio__" && (
-                    <input type="text" placeholder={"Escriu el nom de la nova poblaci\u00f3..."}
-                      value={customPoblacio} onChange={e => setCustomPoblacio(e.target.value)}
-                      style={{ ...fieldStyle(validationErrors.barri), marginTop: "8px", background: "#f0fdf4" }} autoFocus />
-                  )}
-                  {validationErrors.barri && errMsg("* Selecciona un barri")}
                 </div>
               </div>
 
