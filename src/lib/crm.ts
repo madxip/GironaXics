@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import bcrypt from 'bcryptjs';
+import { getPoblacioRecordIdByName } from './airtable';
 
 export interface AirtableRawRecord {
   id: string;
@@ -313,6 +314,8 @@ export async function createCentreWithContact(
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '');
 
+    const poblacioId = centreData.barri ? await getPoblacioRecordIdByName(centreData.barri) : null;
+
     const fields = {
       nom,
       slug,
@@ -320,7 +323,7 @@ export async function createCentreWithContact(
       telefon: centreData.telefon || '',
       email: centreData.email || '',
       web: centreData.web || '',
-      barri: centreData.barri || '',
+      poblacio: poblacioId ? [poblacioId] : [],
       descripcio: centreData.descripcio || '',
     };
 

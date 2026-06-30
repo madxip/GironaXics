@@ -158,7 +158,7 @@ async function getSubcategoryRecordIdByName(name: string): Promise<string | null
   return null;
 }
 
-async function getPoblacioRecordIdByName(name: string): Promise<string | null> {
+export async function getPoblacioRecordIdByName(name: string): Promise<string | null> {
   if (!name) return null;
   try {
     const filter = `LOWER({Nom})="${name.toLowerCase().trim()}"`;

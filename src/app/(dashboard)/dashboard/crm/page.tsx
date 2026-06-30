@@ -2,6 +2,7 @@ import React from "react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { getCentresWithContacts } from "@/lib/crm";
+import { getPoblacions } from "@/lib/airtable";
 import CRMClient from "./CRMClient";
 import { ShieldCheck, Info } from "lucide-react";
 import { redirect } from "next/navigation";
@@ -22,6 +23,19 @@ export default async function CRMPage() {
 
   // Fetch initial centres with contacts
   const initialCentres = await getCentresWithContacts();
+
+  // Carrega totes les poblacions i les agrupa per comarca
+  const allPoblacions = await getPoblacions();
+  const poblacionsGrouped: Record<string, string[]> = {};
+
+  allPoblacions.forEach(p => {
+    if (p.comarca && p.nom) {
+      if (!poblacionsGrouped[p.comarca]) {
+        poblacionsGrouped[p.comarca] = [];
+      }
+      poblacionsGrouped[p.comarca].push(p.nom);
+    }
+  });
 
   return (
     <div>
@@ -62,6 +76,7 @@ export default async function CRMPage() {
       {/* CRM Interactive workspace */}
       <CRMClient 
         initialCentres={initialCentres} 
+        poblacions={poblacionsGrouped}
       />
     </div>
   );

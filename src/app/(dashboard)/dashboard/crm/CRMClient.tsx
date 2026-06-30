@@ -15,13 +15,10 @@ import {
 import { CRMCentre, CRMActivity } from "@/lib/crm";
 import { updateCentreAction, createCentreAction, getCentreActivitiesAction, updateCRMActivityAction } from "@/app/actions/crm";
 import Toast from "@/components/Toast";
-import { BARRIS_GIRONA } from "@/lib/barris";
-
 interface CRMClientProps {
   initialCentres: CRMCentre[];
+  poblacions: Record<string, string[]>;
 }
-
-const BARRIS = BARRIS_GIRONA;
 
 const CATEGORIES = [
   "Creativitat i Expressió",
@@ -38,10 +35,13 @@ const CATEGORIES = [
   "Teatre"
 ];
 
-export default function CRMClient({ initialCentres }: CRMClientProps) {
+export default function CRMClient({ initialCentres, poblacions }: CRMClientProps) {
   const [centres, setCentres] = useState<CRMCentre[]>(initialCentres);
   const [searchQuery, setSearchQuery] = useState("");
   const [barriFilter, setBarriFilter] = useState("Tots");
+  
+  // Llista de barris dinàmica a partir de poblacions
+  const BARRIS = Object.values(poblacions).flat().sort();
   
   // Selected centre for detail view
   const [selectedCentre, setSelectedCentre] = useState<CRMCentre | null>(null);
@@ -53,6 +53,7 @@ export default function CRMClient({ initialCentres }: CRMClientProps) {
   const [editTelefon, setEditTelefon] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [editWeb, setEditWeb] = useState("");
+  const [editComarca, setEditComarca] = useState("");
   const [editBarri, setEditBarri] = useState("");
   const [editDescripcio, setEditDescripcio] = useState("");
   const [editContactName, setEditContactName] = useState("");
@@ -65,6 +66,7 @@ export default function CRMClient({ initialCentres }: CRMClientProps) {
   const [newTelefon, setNewTelefon] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [newWeb, setNewWeb] = useState("");
+  const [newComarca, setNewComarca] = useState("");
   const [newBarri, setNewBarri] = useState("");
   const [newContactName, setNewContactName] = useState("");
   const [newContactEmail, setNewContactEmail] = useState("");
@@ -76,7 +78,6 @@ export default function CRMClient({ initialCentres }: CRMClientProps) {
   
   // Activity edit form states
   const [actNom, setActNom] = useState("");
-  const [actBarri, setActBarri] = useState("");
   const [actCategoria, setActCategoria] = useState("");
   const [actEdat, setActEdat] = useState("");
   const [actPreu, setActPreu] = useState<number | string>("");
@@ -124,6 +125,18 @@ export default function CRMClient({ initialCentres }: CRMClientProps) {
     setEditDescripcio(centre.descripcio);
     setEditContactName(centre.contactName);
     setEditContactEmail(centre.contactEmail);
+
+    // Cerca la comarca del centre
+    let initialComarca = "";
+    if (centre.barri) {
+      for (const [comarcaName, towns] of Object.entries(poblacions)) {
+        if (towns.includes(centre.barri)) {
+          initialComarca = comarcaName;
+          break;
+        }
+      }
+    }
+    setEditComarca(initialComarca);
   };
 
   // Save changes to centre details
@@ -239,7 +252,6 @@ export default function CRMClient({ initialCentres }: CRMClientProps) {
   const handleEditActivity = (activity: CRMActivity) => {
     setSelectedActivity(activity);
     setActNom(activity.nom);
-    setActBarri(activity.barri);
     setActCategoria(activity.categoria);
     setActEdat(activity.edat);
     setActPreu(activity.preu);
@@ -257,7 +269,6 @@ export default function CRMClient({ initialCentres }: CRMClientProps) {
     try {
       const res = await updateCRMActivityAction(selectedActivity.id, {
         nom: actNom,
-        barri: actBarri,
         categoria: actCategoria,
         edat: actEdat,
         preu: actPreu,
@@ -274,7 +285,6 @@ export default function CRMClient({ initialCentres }: CRMClientProps) {
             return {
               ...a,
               nom: actNom,
-              barri: actBarri,
               categoria: actCategoria,
               edat: actEdat,
               preu: actPreu,
@@ -626,10 +636,17 @@ export default function CRMClient({ initialCentres }: CRMClientProps) {
                   <input id="new-nom" type="text" required value={newNom} onChange={e => setNewNom(e.target.value)} style={{ width: "100%", padding: "10px", border: "1px solid var(--crema-fosca)", borderRadius: "6px", fontSize: "14px" }} placeholder="Club de Bàsquet Girona" />
                 </div>
                 <div>
-                  <label htmlFor="new-barri" style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "var(--verd)", textTransform: "uppercase", marginBottom: "6px" }}>Barri</label>
-                  <select id="new-barri" required value={newBarri} onChange={e => setNewBarri(e.target.value)} style={{ width: "100%", padding: "10px", border: "1px solid var(--crema-fosca)", borderRadius: "6px", fontSize: "14px", backgroundColor: "white" }}>
-                    <option value="">Selecciona barri...</option>
-                    {BARRIS.map(b => <option key={b} value={b}>{b}</option>)}
+                  <label htmlFor="new-comarca" style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "var(--verd)", textTransform: "uppercase", marginBottom: "6px" }}>Comarca</label>
+                  <select id="new-comarca" required value={newComarca} onChange={e => { setNewComarca(e.target.value); setNewBarri(""); }} style={{ width: "100%", padding: "10px", border: "1px solid var(--crema-fosca)", borderRadius: "6px", fontSize: "14px", backgroundColor: "white" }}>
+                    <option value="">Selecciona comarca...</option>
+                    {Object.keys(poblacions).sort().map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="new-barri" style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "var(--verd)", textTransform: "uppercase", marginBottom: "6px" }}>Municipi o Barri</label>
+                  <select id="new-barri" required disabled={!newComarca} value={newBarri} onChange={e => setNewBarri(e.target.value)} style={{ width: "100%", padding: "10px", border: "1px solid var(--crema-fosca)", borderRadius: "6px", fontSize: "14px", backgroundColor: !newComarca ? "#f5f5f5" : "white", cursor: !newComarca ? "not-allowed" : "pointer" }}>
+                    <option value="">Selecciona municipi...</option>
+                    {(poblacions[newComarca] || []).map(b => <option key={b} value={b}>{b}</option>)}
                   </select>
                 </div>
               </div>
@@ -814,10 +831,17 @@ export default function CRMClient({ initialCentres }: CRMClientProps) {
 
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                     <div>
-                      <label htmlFor="edit-barri" style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "var(--verd)", textTransform: "uppercase", marginBottom: "6px" }}>Barri</label>
-                      <select id="edit-barri" value={editBarri} onChange={e => setEditBarri(e.target.value)} style={{ width: "100%", padding: "10px", border: "1px solid var(--crema-fosca)", borderRadius: "6px", fontSize: "14px", backgroundColor: "white" }}>
-                        <option value="">No definit</option>
-                        {BARRIS.map(b => <option key={b} value={b}>{b}</option>)}
+                      <label htmlFor="edit-comarca" style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "var(--verd)", textTransform: "uppercase", marginBottom: "6px" }}>Comarca</label>
+                      <select id="edit-comarca" value={editComarca} onChange={e => { setEditComarca(e.target.value); setEditBarri(""); }} style={{ width: "100%", padding: "10px", border: "1px solid var(--crema-fosca)", borderRadius: "6px", fontSize: "14px", backgroundColor: "white" }}>
+                        <option value="">No definida</option>
+                        {Object.keys(poblacions).sort().map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label htmlFor="edit-barri" style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "var(--verd)", textTransform: "uppercase", marginBottom: "6px" }}>Municipi o Barri</label>
+                      <select id="edit-barri" disabled={!editComarca} value={editBarri} onChange={e => setEditBarri(e.target.value)} style={{ width: "100%", padding: "10px", border: "1px solid var(--crema-fosca)", borderRadius: "6px", fontSize: "14px", backgroundColor: !editComarca ? "#f5f5f5" : "white", cursor: !editComarca ? "not-allowed" : "pointer" }}>
+                        <option value="">Selecciona municipi...</option>
+                        {(poblacions[editComarca] || []).map(b => <option key={b} value={b}>{b}</option>)}
                       </select>
                     </div>
                     <div>
@@ -908,17 +932,11 @@ export default function CRMClient({ initialCentres }: CRMClientProps) {
                         <input id="act-nom" type="text" value={actNom} onChange={e => setActNom(e.target.value)} style={{ width: "100%", padding: "8px", border: "1px solid var(--crema-fosca)", borderRadius: "4px", fontSize: "14px" }} />
                       </div>
 
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "12px" }}>
                         <div>
                           <label htmlFor="act-categoria" style={{ display: "block", fontSize: "11px", fontWeight: 700, color: "var(--verd)", textTransform: "uppercase", marginBottom: "4px" }}>Categoria</label>
                           <select id="act-categoria" value={actCategoria} onChange={e => setActCategoria(e.target.value)} style={{ width: "100%", padding: "8px", border: "1px solid var(--crema-fosca)", borderRadius: "4px", fontSize: "13px", backgroundColor: "white" }}>
                             {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label htmlFor="act-barri" style={{ display: "block", fontSize: "11px", fontWeight: 700, color: "var(--verd)", textTransform: "uppercase", marginBottom: "4px" }}>Barri</label>
-                          <select id="act-barri" value={actBarri} onChange={e => setActBarri(e.target.value)} style={{ width: "100%", padding: "8px", border: "1px solid var(--crema-fosca)", borderRadius: "4px", fontSize: "13px", backgroundColor: "white" }}>
-                            {BARRIS.map(b => <option key={b} value={b}>{b}</option>)}
                           </select>
                         </div>
                       </div>
