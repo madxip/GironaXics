@@ -13,8 +13,14 @@ interface CentreFormProps {
 }
 
 export default function CentreForm({ initialData, barris }: CentreFormProps) {
+  const NOVA_POBLACIO = "__nova_poblacio__";
+  const initialIsCustom = !!(initialData.barri && 
+    !barris.girona.includes(initialData.barri) && 
+    !barris.altres.includes(initialData.barri));
+
   const [nom, setNom] = useState(initialData.nom || "");
-  const [barri, setBarri] = useState(initialData.barri || "");
+  const [selectedBarri, setSelectedBarri] = useState(initialIsCustom ? NOVA_POBLACIO : (initialData.barri || ""));
+  const [customPoblacio, setCustomPoblacio] = useState(initialIsCustom ? initialData.barri : "");
   const [adreca, setAdreca] = useState(initialData.adreca || "");
   const [telefon, setTelefon] = useState(initialData.telefon || "");
   const [email, setEmail] = useState(initialData.email || "");
@@ -81,9 +87,11 @@ export default function CentreForm({ initialData, barris }: CentreFormProps) {
     e.preventDefault();
     setMessage(null);
 
+    const finalBarri = selectedBarri === NOVA_POBLACIO ? customPoblacio.trim() : selectedBarri;
+
     const errors: Record<string, boolean> = {};
     if (!nom.trim()) errors.nom = true;
-    if (!barri.trim()) errors.barri = true;
+    if (!finalBarri.trim()) errors.barri = true;
 
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
@@ -112,7 +120,7 @@ export default function CentreForm({ initialData, barris }: CentreFormProps) {
     const formData = new FormData();
     formData.append("nom", nom);
     formData.append("centreId", initialData.id ?? "");
-    formData.append("barri", barri);
+    formData.append("barri", finalBarri);
     formData.append("adreca", adreca);
     formData.append("telefon", telefon);
     formData.append("email", email);
@@ -247,8 +255,8 @@ export default function CentreForm({ initialData, barris }: CentreFormProps) {
               </label>
               <select
                 id="barri"
-                value={barri}
-                onChange={(e) => handleFieldChange("barri", e.target.value, setBarri)}
+                value={selectedBarri}
+                onChange={(e) => handleFieldChange("barri", e.target.value, setSelectedBarri)}
                 style={{
                   width: "100%",
                   padding: "12px 16px",
@@ -271,13 +279,38 @@ export default function CentreForm({ initialData, barris }: CentreFormProps) {
                   ))}
                 </optgroup>
                 {barris.altres.length > 0 && (
-                  <optgroup label="Altres poblacions">
+                  <optgroup label="Altres poblacions existents">
                     {barris.altres.map((b) => (
                       <option key={b} value={b}>{b}</option>
                     ))}
                   </optgroup>
                 )}
+                <option value="__nova_poblacio__">-- Un altre municipi o comarca (fora de Girona) --</option>
               </select>
+              {selectedBarri === NOVA_POBLACIO && (
+                <input
+                  type="text"
+                  placeholder="Escriu el teu municipi o comarca (ex: Navata o Alt Empordà)"
+                  value={customPoblacio}
+                  onChange={(e) => handleFieldChange("barri", e.target.value, setCustomPoblacio)}
+                  style={{
+                    width: "100%",
+                    padding: "12px 16px",
+                    borderRadius: "8px",
+                    border: validationErrors.barri && !customPoblacio.trim()
+                      ? "2.5px solid #b91c1c" 
+                      : "1px solid var(--crema-fosca, #eae2d1)",
+                    fontSize: "15px",
+                    fontFamily: "inherit",
+                    backgroundColor: validationErrors.barri && !customPoblacio.trim() ? "#fef2f2" : "white",
+                    boxSizing: "border-box",
+                    outline: "none",
+                    marginTop: "8px",
+                    transition: "all 0.2s"
+                  }}
+                  autoFocus
+                />
+              )}
               {validationErrors.barri && (
                 <span style={{ color: "#b91c1c", fontSize: "12px", fontWeight: "600", marginTop: "4px", display: "block" }}>
                   * Selecciona un barri obligatori
