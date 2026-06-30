@@ -75,4 +75,9 @@ export interface CasalsBanner {
   dataLimit?: string;
 }
 
+export interface PoblacioRecord {
+  nom: string;
+  comarca: string;
+}
+
 

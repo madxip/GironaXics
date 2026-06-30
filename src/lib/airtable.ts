@@ -1,4 +1,4 @@
-import { Activitat, Centre, Sponsor, CasalsBanner } from './types';
+import { Activitat, Centre, Sponsor, CasalsBanner, PoblacioRecord } from './types';
 import activitatsSeed from '../../seed/activitats-inicials.json';
 import { normalizeSlug } from './utils';
 import { unstable_cache } from 'next/cache';
@@ -31,6 +31,10 @@ interface CacheStructure {
     timestamp: number;
     data: CasalsBanner | null;
   };
+  poblacions?: {
+    timestamp: number;
+    data: PoblacioRecord[];
+  };
 }
 
 // Cache global en memòria (es reinicia amb cada cold start del servidor)
@@ -56,9 +60,12 @@ function writeCache(data: CacheStructure) {
   if (data.casalsBanner !== undefined) {
     memoryCache.casalsBanner = data.casalsBanner;
   }
+  if (data.poblacions !== undefined) {
+    memoryCache.poblacions = data.poblacions;
+  }
 }
 
-/** Neteja tota la memòria cau (activitats + centres + sponsors + casalsBanner).
+/** Neteja tota la memòria cau (activitats + centres + sponsors + casalsBanner + poblacions).
  *  @param revalidateTagFn Passa `revalidateTag` des del server action per invalidar també la Next.js Data Cache. */
 export function clearAllCache(revalidateTagFn?: (tag: string) => void): void {
   delete memoryCache.activitats;
@@ -66,8 +73,12 @@ export function clearAllCache(revalidateTagFn?: (tag: string) => void): void {
   delete memoryCache.centres;
   delete memoryCache.sponsors;
   delete memoryCache.casalsBanner;
+  delete memoryCache.poblacions;
   if (revalidateTagFn) {
     try { revalidateTagFn('activitats'); } catch { /* ignore fora de request context */ }
+    try { revalidateTagFn('centres'); } catch { /* ignore fora de request context */ }
+    try { revalidateTagFn('sponsors'); } catch { /* ignore fora de request context */ }
+    try { revalidateTagFn('poblacions'); } catch { /* ignore fora de request context */ }
     try { revalidateTagFn('centres'); } catch { /* ignore */ }
   }
 }
@@ -143,6 +154,20 @@ async function getSubcategoryRecordIdByName(name: string): Promise<string | null
     }
   } catch (err) {
     console.error(`[Airtable API] Error fetching subcategory ID for ${name}:`, err);
+  }
+  return null;
+}
+
+async function getPoblacioRecordIdByName(name: string): Promise<string | null> {
+  if (!name) return null;
+  try {
+    const filter = `LOWER({Nom})="${name.toLowerCase().trim()}"`;
+    const records = await fetchAllRecords('Poblacions', filter);
+    if (records.length > 0) {
+      return records[0].id;
+    }
+  } catch (err) {
+    console.error(`[Airtable API] Error fetching poblacio ID for ${name}:`, err);
   }
   return null;
 }
@@ -997,7 +1022,14 @@ export async function updateCentre(id: string, data: Partial<Omit<Centre, 'id' |
     if (data.telefon !== undefined) fields.telefon = data.telefon;
     if (data.email !== undefined) fields.email = data.email;
     if (data.web !== undefined) fields.web = data.web;
-    if (data.barri !== undefined) fields.barri = data.barri;
+    if (data.barri !== undefined) {
+      const poblacioId = await getPoblacioRecordIdByName(data.barri);
+      if (poblacioId) {
+        fields.poblacio = [poblacioId];
+      } else {
+        fields.poblacio = [];
+      }
+    }
     if (data.descripcio !== undefined) fields.descripcio = data.descripcio;
 
     if (data.imatgeUrl !== undefined) {
@@ -1190,5 +1222,39 @@ export async function getCasalsBanner(): Promise<CasalsBanner | null> {
   }
   writeCache({ casalsBanner: { timestamp: Date.now(), data: null } });
   return null;
+}
+
+const _getCachedPoblacions = unstable_cache(
+  async () => {
+    const records = await fetchAllRecords('Poblacions');
+    return records.map(r => ({
+      nom: (r.fields.Nom || '') as string,
+      comarca: (r.fields.Comarca || '') as string
+    })).sort((a, b) => a.nom.localeCompare(b.nom));
+  },
+  ['gironaxics-poblacions-completes'],
+  { tags: ['poblacions'], revalidate: 86400 } // 24 hores
+);
+
+export async function getPoblacions(): Promise<PoblacioRecord[]> {
+  if (!API_KEY || !BASE_ID) return [];
+  
+  const cache = readCache();
+  const now = Date.now();
+  if (cache.poblacions && (now - cache.poblacions.timestamp < 86400 * 1000)) {
+    return cache.poblacions.data;
+  }
+  
+  try {
+    const data = await _getCachedPoblacions();
+    const updatedCache = readCache();
+    updatedCache.poblacions = { timestamp: Date.now(), data };
+    writeCache(updatedCache);
+    return data;
+  } catch (e) {
+    console.error('[Airtable API] Error in getPoblacions:', e);
+    if (cache.poblacions) return cache.poblacions.data;
+    return [];
+  }
 }
 

@@ -9,18 +9,24 @@ import Toast from "@/components/Toast";
 
 interface CentreFormProps {
   initialData: Centre;
-  barris: { girona: string[]; altres: string[] };
+  poblacions: Record<string, string[]>;
 }
 
-export default function CentreForm({ initialData, barris }: CentreFormProps) {
-  const NOVA_POBLACIO = "__nova_poblacio__";
-  const initialIsCustom = !!(initialData.barri && 
-    !barris.girona.includes(initialData.barri) && 
-    !barris.altres.includes(initialData.barri));
+export default function CentreForm({ initialData, poblacions }: CentreFormProps) {
+  // Trobar la comarca inicial a partir del barri actual
+  let initialComarca = "";
+  if (initialData.barri) {
+    for (const [comarcaName, towns] of Object.entries(poblacions)) {
+      if (towns.includes(initialData.barri)) {
+        initialComarca = comarcaName;
+        break;
+      }
+    }
+  }
 
   const [nom, setNom] = useState(initialData.nom || "");
-  const [selectedBarri, setSelectedBarri] = useState(initialIsCustom ? NOVA_POBLACIO : (initialData.barri || ""));
-  const [customPoblacio, setCustomPoblacio] = useState(initialIsCustom ? initialData.barri : "");
+  const [selectedComarca, setSelectedComarca] = useState(initialComarca);
+  const [selectedBarri, setSelectedBarri] = useState(initialData.barri || "");
   const [adreca, setAdreca] = useState(initialData.adreca || "");
   const [telefon, setTelefon] = useState(initialData.telefon || "");
   const [email, setEmail] = useState(initialData.email || "");
@@ -87,11 +93,9 @@ export default function CentreForm({ initialData, barris }: CentreFormProps) {
     e.preventDefault();
     setMessage(null);
 
-    const finalBarri = selectedBarri === NOVA_POBLACIO ? customPoblacio.trim() : selectedBarri;
-
     const errors: Record<string, boolean> = {};
     if (!nom.trim()) errors.nom = true;
-    if (!finalBarri.trim()) errors.barri = true;
+    if (!selectedBarri.trim()) errors.barri = true;
 
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
@@ -120,7 +124,7 @@ export default function CentreForm({ initialData, barris }: CentreFormProps) {
     const formData = new FormData();
     formData.append("nom", nom);
     formData.append("centreId", initialData.id ?? "");
-    formData.append("barri", finalBarri);
+    formData.append("barri", selectedBarri);
     formData.append("adreca", adreca);
     formData.append("telefon", telefon);
     formData.append("email", email);
@@ -249,71 +253,73 @@ export default function CentreForm({ initialData, barris }: CentreFormProps) {
               )}
             </div>
 
-            <div style={{ gridColumn: "span 2" }}>
+            <div style={{ gridColumn: "span 1" }}>
               <label style={{ display: "block", fontSize: "13px", fontWeight: 700, color: "var(--verd-fosc)", textTransform: "uppercase", marginBottom: "8px" }}>
-                Barri / Municipi *
+                Comarca *
+              </label>
+              <select
+                id="comarca"
+                value={selectedComarca}
+                onChange={(e) => {
+                  setSelectedComarca(e.target.value);
+                  setSelectedBarri("");
+                }}
+                style={{
+                  width: "100%",
+                  padding: "12px 16px",
+                  borderRadius: "8px",
+                  border: validationErrors.barri && !selectedComarca
+                    ? "2.5px solid #b91c1c" 
+                    : "1px solid var(--crema-fosca, #eae2d1)",
+                  fontSize: "15px",
+                  fontFamily: "inherit",
+                  backgroundColor: validationErrors.barri && !selectedComarca ? "#fef2f2" : "white",
+                  boxSizing: "border-box",
+                  outline: "none",
+                  transition: "all 0.2s",
+                  cursor: "pointer"
+                }}
+              >
+                <option value="">-- Tria una comarca --</option>
+                {Object.keys(poblacions).sort().map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ gridColumn: "span 1" }}>
+              <label style={{ display: "block", fontSize: "13px", fontWeight: 700, color: "var(--verd-fosc)", textTransform: "uppercase", marginBottom: "8px" }}>
+                Municipi o Barri *
               </label>
               <select
                 id="barri"
                 value={selectedBarri}
                 onChange={(e) => handleFieldChange("barri", e.target.value, setSelectedBarri)}
+                disabled={!selectedComarca}
                 style={{
                   width: "100%",
                   padding: "12px 16px",
                   borderRadius: "8px",
-                  border: validationErrors.barri 
+                  border: validationErrors.barri && !selectedBarri
                     ? "2.5px solid #b91c1c" 
                     : "1px solid var(--crema-fosca, #eae2d1)",
                   fontSize: "15px",
                   fontFamily: "inherit",
-                  backgroundColor: validationErrors.barri ? "#fef2f2" : "white",
+                  backgroundColor: validationErrors.barri && !selectedBarri ? "#fef2f2" : (!selectedComarca ? "#f5f5f5" : "white"),
                   boxSizing: "border-box",
                   outline: "none",
-                  transition: "all 0.2s"
+                  transition: "all 0.2s",
+                  cursor: !selectedComarca ? "not-allowed" : "pointer"
                 }}
               >
-                <option value="">-- Tria un barri o municipi --</option>
-                <optgroup label="Barris de Girona">
-                  {barris.girona.map((b) => (
-                    <option key={b} value={b}>{b}</option>
-                  ))}
-                </optgroup>
-                {barris.altres.length > 0 && (
-                  <optgroup label="Altres poblacions existents">
-                    {barris.altres.map((b) => (
-                      <option key={b} value={b}>{b}</option>
-                    ))}
-                  </optgroup>
-                )}
-                <option value="__nova_poblacio__">-- Un altre municipi o comarca (fora de Girona) --</option>
+                <option value="">-- Tria un municipi o barri --</option>
+                {(poblacions[selectedComarca] || []).map((b) => (
+                  <option key={b} value={b}>{b}</option>
+                ))}
               </select>
-              {selectedBarri === NOVA_POBLACIO && (
-                <input
-                  type="text"
-                  placeholder="Escriu el teu municipi o comarca (ex: Navata o Alt Empordà)"
-                  value={customPoblacio}
-                  onChange={(e) => handleFieldChange("barri", e.target.value, setCustomPoblacio)}
-                  style={{
-                    width: "100%",
-                    padding: "12px 16px",
-                    borderRadius: "8px",
-                    border: validationErrors.barri && !customPoblacio.trim()
-                      ? "2.5px solid #b91c1c" 
-                      : "1px solid var(--crema-fosca, #eae2d1)",
-                    fontSize: "15px",
-                    fontFamily: "inherit",
-                    backgroundColor: validationErrors.barri && !customPoblacio.trim() ? "#fef2f2" : "white",
-                    boxSizing: "border-box",
-                    outline: "none",
-                    marginTop: "8px",
-                    transition: "all 0.2s"
-                  }}
-                  autoFocus
-                />
-              )}
               {validationErrors.barri && (
                 <span style={{ color: "#b91c1c", fontSize: "12px", fontWeight: "600", marginTop: "4px", display: "block" }}>
-                  * Selecciona un barri obligatori
+                  * Selecciona la comarca i el municipi obligatoris
                 </span>
               )}
             </div>
