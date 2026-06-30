@@ -558,7 +558,9 @@ export async function getCentreByIdDirect(id: string): Promise<Centre | null> {
     const r = await res.json() as { id: string; fields: Record<string, unknown> };
     const f = { ...r.fields } as unknown as Centre;
     f.id = r.id;
-    f.adreca = (r.fields.adre\u00e7a || r.fields.adreca || '') as string;
+    const rawBarri = r.fields.barri || r.fields.Barri;
+    f.barri = Array.isArray(rawBarri) ? (rawBarri[0] as string) || '' : (rawBarri as string) || '';
+    f.adreca = (r.fields['adreça'] || r.fields['adreca'] || '') as string;
     const attachmentField = r.fields.Imatge || r.fields.imatge || r.fields.Logo || r.fields.logo || r.fields.Logotip || r.fields.logotip;
     if (Array.isArray(attachmentField) && attachmentField.length > 0) {
       const att = attachmentField[0] as { url: string; thumbnails?: { large?: { url: string } } };
