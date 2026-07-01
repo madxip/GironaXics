@@ -45,6 +45,7 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
     const imatgeUrl = formData.get("imatgeUrl") as string;
     const tipus = formData.get("tipus") as string;
     const torns = formData.get("torns") as string;
+    const poblacio_propia = formData.get("poblacio_propia") as string;
 
     // Parse galeria robustly
     const galeriaRaw = formData.get("galeria");
@@ -93,7 +94,8 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
       imatgeUrl: imatgeUrl || undefined,
       galeria: galeria.length > 0 ? galeria : undefined,
       tipus: tipus || "Extraescolar",
-      torns: torns || undefined
+      torns: torns || undefined,
+      poblacio_propia: poblacio_propia || undefined
     });
 
     if (!result) {
@@ -172,6 +174,7 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
     const imatgeUrl = formData.get("imatgeUrl") as string;
     const tipus = formData.get("tipus") as string;
     const torns = formData.get("torns") as string;
+    const poblacio_propia = formData.get("poblacio_propia") as string;
 
     const galeriaRaw = formData.get("galeria");
     let galeria: string[] | undefined = undefined;
@@ -210,7 +213,8 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
       imatgeUrl: imatgeUrl !== null ? imatgeUrl : undefined,
       galeria: galeria !== undefined ? galeria : undefined,
       tipus: tipus || "Extraescolar",
-      torns: torns !== null ? torns : undefined
+      torns: torns !== null ? torns : undefined,
+      poblacio_propia: poblacio_propia !== null ? poblacio_propia : undefined
     });
 
     if (!success) {

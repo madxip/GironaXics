@@ -1,4 +1,4 @@
-import { getAllActivitats, getCentres } from "@/lib/airtable";
+import { getAllActivitats, getCentres, getPoblacions } from "@/lib/airtable";
 import { updateActivitatAction } from "@/app/actions/activitats";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
@@ -82,6 +82,19 @@ export default async function EditarActivitatPage({ params }: EditarActivitatPag
     ...DEFAULT_CATEGORIES.map(c => c.trim())
   ])).sort();
 
+  // Carrega totes les poblacions i les agrupa per comarca
+  const allPoblacions = await getPoblacions();
+  const poblacionsGrouped: Record<string, string[]> = {};
+
+  allPoblacions.forEach(p => {
+    if (p.comarca && p.nom) {
+      if (!poblacionsGrouped[p.comarca]) {
+        poblacionsGrouped[p.comarca] = [];
+      }
+      poblacionsGrouped[p.comarca].push(p.nom);
+    }
+  });
+
   // Bind the ID to the server action so the form can just call it
   const boundUpdateAction = updateActivitatAction.bind(null, id);
 
@@ -92,6 +105,7 @@ export default async function EditarActivitatPage({ params }: EditarActivitatPag
       submitAction={boundUpdateAction}
       title={`Editar Activitat: ${activitat.nom}`}
       centre={centre}
+      poblacions={poblacionsGrouped}
     />
   );
 }

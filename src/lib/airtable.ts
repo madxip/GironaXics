@@ -202,6 +202,9 @@ function mapActivitatRecord(
   if (f.barri === 'Centro') {
     f.barri = 'Centre';
   }
+
+  const rawPoblacioPropia = r.fields.nom_poblacio_propia || r.fields.nomPoblacioPropia;
+  f.poblacio_propia = Array.isArray(rawPoblacioPropia) ? (rawPoblacioPropia[0] as string) || '' : (rawPoblacioPropia as string) || '';
   
   f.qui_imparteix = (r.fields.qui_imparteix as string) || (r.fields['Qui imparteix'] as string) || (r.fields['qui imparteix'] as string);
   f.tipus = (r.fields.tipus as string) || (r.fields.Tipus as string) || "Extraescolar";
@@ -784,6 +787,7 @@ export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'cen
     const slug = baseSlug.endsWith('-girona') ? baseSlug : `${baseSlug}-girona`;
     
     const subcatId = data.subcategoria ? await getSubcategoryRecordIdByName(data.subcategoria) : null;
+    const poblacioId = data.poblacio_propia ? await getPoblacioRecordIdByName(data.poblacio_propia) : null;
     
     const fields: Record<string, unknown> = {
       nom: data.nom,
@@ -804,7 +808,8 @@ export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'cen
       publicada: true,
       destacada: false,
       tipus: data.tipus || "Extraescolar",
-      torns: data.torns || null
+      torns: data.torns || null,
+      poblacio_propia: poblacioId ? [poblacioId] : []
     };
 
     if (subcatId) {
@@ -912,6 +917,10 @@ export async function updateActivitat(id: string, data: Partial<Omit<Activitat, 
     if (data.publicada !== undefined) fields.publicada = data.publicada;
     if (data.tipus !== undefined) fields.tipus = data.tipus || null;
     if (data.torns !== undefined) fields.torns = data.torns || null;
+    if (data.poblacio_propia !== undefined) {
+      const poblacioId = data.poblacio_propia ? await getPoblacioRecordIdByName(data.poblacio_propia) : null;
+      fields.poblacio_propia = poblacioId ? [poblacioId] : [];
+    }
 
     if (data.imatgeUrl !== undefined) {
       fields.Imatge = data.imatgeUrl ? [{ url: data.imatgeUrl }] : [];

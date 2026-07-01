@@ -77,6 +77,7 @@ export async function updateCRMActivityAction(
     descripcio?: string;
     publicada?: boolean;
     destacada?: boolean;
+    poblacio_propia?: string;
   }
 ): Promise<{ success: boolean; error?: string }> {
   try {
@@ -93,7 +94,8 @@ export async function updateCRMActivityAction(
       dies: data.dies,
       descripcio: data.descripcio,
       publicada: data.publicada,
-      destacada: data.destacada
+      destacada: data.destacada,
+      poblacio_propia: data.poblacio_propia
     });
 
     if (success) {

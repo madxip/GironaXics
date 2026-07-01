@@ -20,6 +20,7 @@ interface ActivityFormProps {
   centre?: Centre;
   allCentres?: Centre[];
   isAdmin?: boolean;
+  poblacions?: Record<string, string[]>;
 }
 
 const PREDEFINED_SUBCATEGORIES: Map<string, string[]> = new Map([
@@ -269,6 +270,7 @@ export default function ActivityForm({
   centre,
   allCentres,
   isAdmin,
+  poblacions,
 }: ActivityFormProps) {
   const router = useRouter();
   const [showPreview, setShowPreview] = useState(false);
@@ -290,6 +292,24 @@ export default function ActivityForm({
 
   const [nom, setNom] = useState(initialData?.nom || "");
   const [categoria, setCategoria] = useState(initialData?.categoria || "");
+  
+  // Localització personalitzada (override)
+  const initialPoblacio = initialData?.poblacio_propia || "";
+  const [hasCustomLocation, setHasCustomLocation] = useState(!!initialPoblacio);
+  const [customComarca, setCustomComarca] = useState("");
+  const [customPoblacio, setCustomPoblacio] = useState(initialPoblacio);
+
+  // Carrega la comarca a partir del barri/població inicial
+  React.useEffect(() => {
+    if (initialPoblacio && poblacions) {
+      for (const [comarcaName, towns] of Object.entries(poblacions)) {
+        if (towns.includes(initialPoblacio)) {
+          setCustomComarca(comarcaName);
+          break;
+        }
+      }
+    }
+  }, [initialPoblacio, poblacions]);
   // Admin: centre seleccionat quan crea una activitat per a un altre centre
   const [selectedCentreId, setSelectedCentreId] = useState<string>(
     initialData?.centreId || centre?.id || ""
@@ -706,6 +726,9 @@ export default function ActivityForm({
       formData.append("galeria", JSON.stringify(galeria));
       formData.append("tipus", tipus);
       formData.append("torns", torns);
+      
+      const finalPoblacioPropia = hasCustomLocation ? customPoblacio : "";
+      formData.append("poblacio_propia", finalPoblacioPropia);
       // Admin: afegir el centre seleccionat al FormData (no llegit del hidden input perquÃ¨ construÃ¯m FormData manualment)
       if (isAdmin && selectedCentreId) {
         formData.append("centreId", selectedCentreId);
@@ -1040,6 +1063,77 @@ export default function ActivityForm({
                   )}
                 </div>
               )}
+
+              {/* LOCALITZACIÓ PERSONALITZADA (OVERRIDE DE POBLACIÓ) */}
+              <div style={{ marginTop: "12px", borderTop: "1px solid rgba(26,107,58,0.1)", paddingTop: "20px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
+                  <input
+                    type="checkbox"
+                    id="override-location"
+                    checked={hasCustomLocation}
+                    onChange={e => {
+                      setHasCustomLocation(e.target.checked);
+                      if (!e.target.checked) {
+                        setCustomComarca("");
+                        setCustomPoblacio("");
+                      }
+                    }}
+                    style={{
+                      width: "18px",
+                      height: "18px",
+                      cursor: "pointer",
+                      accentColor: "var(--verd)"
+                    }}
+                  />
+                  <label htmlFor="override-location" style={{ fontSize: "14px", fontWeight: 600, color: "var(--verd-fosc)", cursor: "pointer" }}>
+                    Aquesta activitat s&apos;imparteix en una població o barri diferent del centre
+                  </label>
+                </div>
+
+                {hasCustomLocation && poblacions && (
+                  <div className="af-row-2" style={{ marginTop: "16px", animation: "fadeIn 0.2s ease" }}>
+                    <div style={fieldGroupStyle}>
+                      <label htmlFor="custom-comarca" style={labelStyle}>Comarca de l&apos;activitat *</label>
+                      <select
+                        id="custom-comarca"
+                        value={customComarca}
+                        onChange={e => {
+                          setCustomComarca(e.target.value);
+                          setCustomPoblacio("");
+                        }}
+                        style={{ ...fieldStyle(), cursor: "pointer" }}
+                        required={hasCustomLocation}
+                      >
+                        <option value="">-- Tria una comarca --</option>
+                        {Object.keys(poblacions).sort().map(c => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div style={fieldGroupStyle}>
+                      <label htmlFor="custom-poblacio" style={labelStyle}>Municipi o Barri de l&apos;activitat *</label>
+                      <select
+                        id="custom-poblacio"
+                        value={customPoblacio}
+                        onChange={e => setCustomPoblacio(e.target.value)}
+                        style={{
+                          ...fieldStyle(),
+                          cursor: !customComarca ? "not-allowed" : "pointer",
+                          backgroundColor: !customComarca ? "#f9f9f9" : "white"
+                        }}
+                        disabled={!customComarca}
+                        required={hasCustomLocation}
+                      >
+                        <option value="">-- Tria un municipi o barri --</option>
+                        {(poblacions[customComarca] || []).map(p => (
+                          <option key={p} value={p}>{p}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <p className="af-helper">{"Aquesta informaci\u00f3 identifica l'activitat dins la guia p\u00fablica."}</p>
             </div>

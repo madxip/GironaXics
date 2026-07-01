@@ -1,10 +1,9 @@
-import { getActivitats, getCentres } from "@/lib/airtable";
+import { getActivitats, getCentres, getPoblacions } from "@/lib/airtable";
 import { createActivitatAction } from "@/app/actions/activitats";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import ActivityForm from "../ActivityForm";
-
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +35,19 @@ export default async function NovaActivitatPage() {
   const allCentres = await getCentres();
   const centre = allCentres.find(c => c.id === session.user.centreId);
 
+  // Carrega totes les poblacions i les agrupa per comarca
+  const allPoblacions = await getPoblacions();
+  const poblacionsGrouped: Record<string, string[]> = {};
+
+  allPoblacions.forEach(p => {
+    if (p.comarca && p.nom) {
+      if (!poblacionsGrouped[p.comarca]) {
+        poblacionsGrouped[p.comarca] = [];
+      }
+      poblacionsGrouped[p.comarca].push(p.nom);
+    }
+  });
+
   // Dynamically build list of categories and barris, merging with standard defaults
   const categories = Array.from(new Set([
     ...activitats.map(a => a.categoria?.trim()).filter(Boolean),
@@ -50,6 +62,7 @@ export default async function NovaActivitatPage() {
       centre={centre}
       allCentres={isAdmin ? allCentres : undefined}
       isAdmin={isAdmin}
+      poblacions={poblacionsGrouped}
     />
   );
 }

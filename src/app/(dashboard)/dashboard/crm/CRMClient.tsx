@@ -85,6 +85,9 @@ export default function CRMClient({ initialCentres, poblacions }: CRMClientProps
   const [actDies, setActDies] = useState("");
   const [actDescripcio, setActDescripcio] = useState("");
   const [actPublicada, setActPublicada] = useState(false);
+  const [actHasCustomLocation, setActHasCustomLocation] = useState(false);
+  const [actCustomComarca, setActCustomComarca] = useState("");
+  const [actCustomPoblacio, setActCustomPoblacio] = useState("");
   const [actDestacada, setActDestacada] = useState(false);
 
   // Global states
@@ -260,6 +263,21 @@ export default function CRMClient({ initialCentres, poblacions }: CRMClientProps
     setActDescripcio(activity.descripcio);
     setActPublicada(activity.publicada);
     setActDestacada(activity.destacada);
+
+    const initialPoblacio = activity.poblacio_propia || "";
+    setActCustomPoblacio(initialPoblacio);
+    setActHasCustomLocation(!!initialPoblacio);
+
+    let initialComarca = "";
+    if (initialPoblacio && poblacions) {
+      for (const [comarcaName, towns] of Object.entries(poblacions)) {
+        if (towns.includes(initialPoblacio)) {
+          initialComarca = comarcaName;
+          break;
+        }
+      }
+    }
+    setActCustomComarca(initialComarca);
   };
 
   // Save changes to activity
@@ -267,6 +285,7 @@ export default function CRMClient({ initialCentres, poblacions }: CRMClientProps
     if (!selectedActivity || !selectedCentre) return;
     setIsSaving(true);
     try {
+      const finalPoblacioPropia = actHasCustomLocation ? actCustomPoblacio : "";
       const res = await updateCRMActivityAction(selectedActivity.id, {
         nom: actNom,
         categoria: actCategoria,
@@ -276,7 +295,8 @@ export default function CRMClient({ initialCentres, poblacions }: CRMClientProps
         dies: actDies,
         descripcio: actDescripcio,
         publicada: actPublicada,
-        destacada: actDestacada
+        destacada: actDestacada,
+        poblacio_propia: finalPoblacioPropia
       });
 
       if (res.success) {
@@ -292,7 +312,8 @@ export default function CRMClient({ initialCentres, poblacions }: CRMClientProps
               dies: actDies,
               descripcio: actDescripcio,
               publicada: actPublicada,
-              destacada: actDestacada
+              destacada: actDestacada,
+              poblacio_propia: finalPoblacioPropia
             };
           }
           return a;
@@ -966,6 +987,69 @@ export default function CRMClient({ initialCentres, poblacions }: CRMClientProps
                       <div>
                         <label htmlFor="act-desc" style={{ display: "block", fontSize: "11px", fontWeight: 700, color: "var(--verd)", textTransform: "uppercase", marginBottom: "4px" }}>Descripció</label>
                         <textarea id="act-desc" rows={4} value={actDescripcio} onChange={e => setActDescripcio(e.target.value)} style={{ width: "100%", padding: "8px", border: "1px solid var(--crema-fosca)", borderRadius: "4px", fontSize: "14px", resize: "vertical", fontFamily: "var(--font-sans)", boxSizing: "border-box" }} />
+                      </div>
+
+                      {/* LOCALITZACIÓ PERSONALITZADA (CRM ADMIN) */}
+                      <div style={{ padding: "12px", border: "1px solid var(--crema-fosca)", borderRadius: "6px", backgroundColor: "#fcfbf7" }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>
+                          <input
+                            type="checkbox"
+                            checked={actHasCustomLocation}
+                            onChange={e => {
+                              setActHasCustomLocation(e.target.checked);
+                              if (!e.target.checked) {
+                                setActCustomComarca("");
+                                setActCustomPoblacio("");
+                              }
+                            }}
+                          />
+                          Lloc/Població diferent de la del centre
+                        </label>
+
+                        {actHasCustomLocation && (
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginTop: "12px", animation: "fadeIn 0.2s ease" }}>
+                            <div>
+                              <label htmlFor="act-custom-comarca" style={{ display: "block", fontSize: "11px", fontWeight: 700, color: "var(--verd)", textTransform: "uppercase", marginBottom: "4px" }}>Comarca</label>
+                              <select
+                                id="act-custom-comarca"
+                                value={actCustomComarca}
+                                onChange={e => {
+                                  setActCustomComarca(e.target.value);
+                                  setActCustomPoblacio("");
+                                }}
+                                style={{ width: "100%", padding: "6px 8px", border: "1px solid var(--crema-fosca)", borderRadius: "4px", fontSize: "13px", backgroundColor: "white" }}
+                              >
+                                <option value="">-- Comarca --</option>
+                                {Object.keys(poblacions).sort().map(c => (
+                                  <option key={c} value={c}>{c}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <label htmlFor="act-custom-poblacio" style={{ display: "block", fontSize: "11px", fontWeight: 700, color: "var(--verd)", textTransform: "uppercase", marginBottom: "4px" }}>Municipi o Barri</label>
+                              <select
+                                id="act-custom-poblacio"
+                                value={actCustomPoblacio}
+                                onChange={e => setActCustomPoblacio(e.target.value)}
+                                disabled={!actCustomComarca}
+                                style={{
+                                  width: "100%",
+                                  padding: "6px 8px",
+                                  border: "1px solid var(--crema-fosca)",
+                                  borderRadius: "4px",
+                                  fontSize: "13px",
+                                  backgroundColor: !actCustomComarca ? "#f2f2f2" : "white",
+                                  cursor: !actCustomComarca ? "not-allowed" : "pointer"
+                                }}
+                              >
+                                <option value="">-- Municipi --</option>
+                                {(poblacions[actCustomComarca] || []).map(p => (
+                                  <option key={p} value={p}>{p}</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       {/* Toggles */}
