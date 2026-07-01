@@ -60,8 +60,8 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
       galeria = formData.getAll("galeria") as string[];
     }
 
-    if (!nom || !barri || !categoria || !edat || !horari || !dies) {
-      return { success: false, error: "Si us plau, omple com a mÃ­nim els camps obligatoris (Nom, Barri, Categoria, Edat, Horari i Dies)." };
+    if (!nom || !categoria || !edat || !horari || !dies) {
+      return { success: false, error: "Si us plau, omple com a mínim els camps obligatoris (Nom, Categoria, Edat, Horari i Dies)." };
     }
 
     // Validacio: admin ha de seleccionar un centre; sense centreId Airtable retornaria INVALID_RECORD_ID
@@ -188,8 +188,8 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
       galeria = formData.getAll("galeria") as string[];
     }
 
-    if (!nom || !barri || !categoria || !edat || !horari || !dies) {
-      return { success: false, error: "Si us plau, omple com a mÃ­nim els camps obligatoris (Nom, Barri, Categoria, Edat, Horari i Dies)." };
+    if (!nom || !categoria || !edat || !horari || !dies) {
+      return { success: false, error: "Si us plau, omple com a mínim els camps obligatoris (Nom, Categoria, Edat, Horari i Dies)." };
     }
 
     const preu = preuStr ? preuStr.trim() : undefined;
