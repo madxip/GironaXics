@@ -23,7 +23,7 @@ export default function ActivitatsTable({ activitats, isAdmin }: Props) {
     const q = query.toLowerCase().trim();
     if (!q) return activitats;
     return activitats.filter(a =>
-      a.nom.toLowerCase().includes(q) ||
+      (a.nom && a.nom.toLowerCase().includes(q)) ||
       (a.centre && a.centre.toLowerCase().includes(q))
     );
   }, [activitats, query]);

@@ -13,6 +13,7 @@ import ActivitatCard from '@/components/ActivitatCard';
 import CloseButton from '@/components/CloseButton';
 import Galeria from '@/components/Galeria';
 import ContactModal from '@/components/ContactModal';
+import TrackActivityView from '@/components/TrackActivityView';
 import ContactPhoneButton from '@/components/ContactPhoneButton';
 
 export async function generateStaticParams() {
@@ -296,6 +297,7 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
 
   return (
     <>
+      <TrackActivityView activitatId={activitat.id!} activitatNom={activitat.nom} />
       <Nav />
       <CloseButton />
       <script type="application/ld+json" {...{ dangerouslySetInnerHTML: { __html: safeJsonLd(combinedJsonLd) } }} />
