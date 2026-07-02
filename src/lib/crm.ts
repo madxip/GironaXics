@@ -204,7 +204,10 @@ export async function updateCentreAndContact(
     if (centreData.telefon !== undefined) centreFields.telefon = centreData.telefon;
     if (centreData.email !== undefined) centreFields.email = centreData.email;
     if (centreData.web !== undefined) centreFields.web = centreData.web;
-    if (centreData.barri !== undefined) centreFields.barri = centreData.barri;
+    if (centreData.barri !== undefined) {
+      const poblacioId = centreData.barri ? await getPoblacioRecordIdByName(centreData.barri) : null;
+      centreFields.poblacio = poblacioId ? [poblacioId] : [];
+    }
     if (centreData.descripcio !== undefined) centreFields.descripcio = centreData.descripcio;
 
     if (Object.keys(centreFields).length > 0) {
