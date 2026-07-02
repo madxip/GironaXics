@@ -200,7 +200,17 @@ export default function Filtres({
     const saved = sessionStorage.getItem('gironaxics-scroll');
     if (saved) {
       sessionStorage.removeItem('gironaxics-scroll');
-      window.scrollTo({ top: parseInt(saved, 10), behavior: 'instant' });
+      const targetScroll = parseInt(saved, 10);
+      
+      // Intent immediat per si el DOM ja té l'alçada
+      window.scrollTo(0, targetScroll);
+      
+      // Intent retardat per donar temps a Next.js a pintar les targetes al DOM
+      const timer = setTimeout(() => {
+        window.scrollTo({ top: targetScroll, behavior: 'instant' });
+      }, 100);
+      
+      return () => clearTimeout(timer);
     }
   }, []);
 
