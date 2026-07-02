@@ -322,13 +322,6 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
       className={`activitat-card hoverable ${isInteressat ? 'premium-card' : 'normal-card'}`}
       onClick={saveScroll}
     >
-      {/* Badge premium per a centres confirmats */}
-      {isInteressat && (
-        <span className="activitat-badge">
-          ★ Centre confirmat
-        </span>
-      )}
-
       {/* Contingut interior */}
       <div className="activitat-card-content">
         {imageUrl ? (
@@ -350,6 +343,12 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
         )}
         
         <div className="activitat-info">
+          {/* Badge premium per a centres confirmats */}
+          {isInteressat && (
+            <span className="activitat-badge">
+              ★ Centre confirmat
+            </span>
+          )}
           <div className="activitat-title-row">
             <div className="result-title">{activitat.nom}</div>
           </div>
