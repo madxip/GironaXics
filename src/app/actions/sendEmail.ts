@@ -214,7 +214,7 @@ export async function sendContactEmail(data: {
 }
 
 export async function sendInternalEmail(data: {
-  type: 'contacte' | 'centre' | 'partner';
+  type: 'contacte' | 'centre' | 'partner' | 'registre';
   nom: string;
   email: string;
   centreNom?: string;
@@ -261,7 +261,7 @@ export async function sendInternalEmail(data: {
     throw new Error("El missatge és obligatori i no pot superar els 2000 caràcters.");
   }
 
-  if (data.type === 'centre') {
+  if (data.type === 'centre' || data.type === 'registre') {
     if (!data.centreNom || data.centreNom.trim().length === 0 || data.centreNom.length > 100) {
       throw new Error("El nom del centre és obligatori i no pot superar els 100 caràcters.");
     }
@@ -274,20 +274,44 @@ export async function sendInternalEmail(data: {
   }
 
   // Define subject and HTML content based on type
-  const subject = data.type === 'centre' 
-    ? `[GironaXics] Sol·licitud de registre de centre: ${data.centreNom}`
-    : data.type === 'partner'
-      ? `[GironaXics] Nova sol·licitud de Partner / Patrocini: ${data.empresaNom}`
-      : `[GironaXics] Nou missatge de contacte general`;
+  const subject = data.type === 'registre'
+    ? `[GironaXics] NOU REGISTRE de compte de centre: ${data.centreNom}`
+    : data.type === 'centre' 
+      ? `[GironaXics] Sol·licitud d'informació / Alta de centre: ${data.centreNom}`
+      : data.type === 'partner'
+        ? `[GironaXics] Nova sol·licitud de Partner / Patrocini: ${data.empresaNom}`
+        : `[GironaXics] Nou missatge de contacte general`;
 
-  const htmlContent = data.type === 'centre'
+  const htmlContent = data.type === 'registre'
     ? `
       <div style="font-family:sans-serif;max-width:600px;margin:0 auto;color:#1A1A18">
         <div style="background:#1A6B3A;padding:20px 32px">
           <span style="color:white;font-size:20px;font-weight:700">Girona<span style="color:#F5A623">Xics</span></span>
         </div>
         <div style="padding:32px">
-          <h2 style="margin:0 0 16px;color:#1A6B3A">Sol·licitud d'Alta de Centre</h2>
+          <h2 style="margin:0 0 16px;color:#1A6B3A">Nou Registre de Compte de Centre</h2>
+          <table style="width:100%;border-collapse:collapse;margin-bottom:24px">
+            <tr><td style="padding:8px 0;border-bottom:1px solid #EDE8DF;color:#525250;width:160px">Nom del Contacte</td><td style="padding:8px 0;border-bottom:1px solid #EDE8DF"><strong>${esc(data.nom)}</strong></td></tr>
+            <tr><td style="padding:8px 0;border-bottom:1px solid #EDE8DF;color:#525250">Nom del Centre</td><td style="padding:8px 0;border-bottom:1px solid #EDE8DF"><strong>${esc(data.centreNom || '')}</strong></td></tr>
+            <tr><td style="padding:8px 0;border-bottom:1px solid #EDE8DF;color:#525250">Correu electrònic</td><td style="padding:8px 0;border-bottom:1px solid #EDE8DF"><a href="mailto:${esc(data.email)}" style="color:#1A6B3A">${esc(data.email)}</a></td></tr>
+          </table>
+          <p style="margin:0 0 8px;font-size:12px;color:#525250;text-transform:uppercase;letter-spacing:0.05em">Detalls del registre:</p>
+          <div style="background:#F7F4EE;border-radius:4px;padding:20px;margin-bottom:32px;white-space:pre-wrap">${esc(data.missatge)}</div>
+          <a href="mailto:${esc(data.email)}" style="display:inline-block;background:#1A6B3A;color:white;padding:12px 24px;border-radius:4px;text-decoration:none;font-weight:700">Respon a ${esc(data.nom)}</a>
+        </div>
+        <div style="padding:16px 32px;border-top:1px solid #EDE8DF;font-size:12px;color:#525250">
+          Enviat automàticament per GironaXics
+        </div>
+      </div>
+    `
+    : data.type === 'centre'
+      ? `
+      <div style="font-family:sans-serif;max-width:600px;margin:0 auto;color:#1A1A18">
+        <div style="background:#1A6B3A;padding:20px 32px">
+          <span style="color:white;font-size:20px;font-weight:700">Girona<span style="color:#F5A623">Xics</span></span>
+        </div>
+        <div style="padding:32px">
+          <h2 style="margin:0 0 16px;color:#1A6B3A">Sol·licitud d'Informació / Alta de Centre</h2>
           <table style="width:100%;border-collapse:collapse;margin-bottom:24px">
             <tr><td style="padding:8px 0;border-bottom:1px solid #EDE8DF;color:#525250;width:160px">Nom del Contacte</td><td style="padding:8px 0;border-bottom:1px solid #EDE8DF"><strong>${esc(data.nom)}</strong></td></tr>
             <tr><td style="padding:8px 0;border-bottom:1px solid #EDE8DF;color:#525250">Nom del Centre</td><td style="padding:8px 0;border-bottom:1px solid #EDE8DF"><strong>${esc(data.centreNom || '')}</strong></td></tr>

@@ -68,7 +68,7 @@ export async function registerCentreAction(prevState: unknown, formData: FormDat
     // 5. Send notification email to the administrator (hola@gironaxics.cat)
     try {
       await sendInternalEmail({
-        type: 'centre',
+        type: 'registre',
         nom: nom,
         email: email,
         centreNom: nouCentreNom || "Centre Existent (ID: " + centreId + ")",
