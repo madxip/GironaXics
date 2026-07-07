@@ -293,7 +293,7 @@ export default function AdminCentresTab({ initialCentres, poblacions }: AdminCen
           {/* Taula de centres */}
           <div style={{ backgroundColor: "white", borderRadius: "16px", border: "1px solid var(--verd-pallid)", overflow: "hidden", boxShadow: "0 4px 20px rgba(26,107,58,0.02)" }}>
             <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "14.5px" }}>
+              <table style={{ width: "100%", minWidth: "950px", borderCollapse: "collapse", textAlign: "left", fontSize: "14.5px" }}>
                 <thead>
                   <tr style={{ backgroundColor: "var(--crema-fosca)", borderBottom: "1px solid rgba(26,107,58,0.1)", color: "var(--verd-fosc)", fontWeight: 700 }}>
                     <th style={{ padding: "16px 20px" }}>Centre</th>
@@ -639,7 +639,7 @@ export default function AdminCentresTab({ initialCentres, poblacions }: AdminCen
             </div>
           ) : (
             <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "14.5px" }}>
+              <table style={{ width: "100%", minWidth: "900px", borderCollapse: "collapse", textAlign: "left", fontSize: "14.5px" }}>
                 <thead>
                   <tr style={{ backgroundColor: "#f9fbf8", borderBottom: "1.5px solid var(--crema-fosca)", color: "var(--verd-fosc)", fontWeight: 700 }}>
                     <th style={{ padding: "14px 16px" }}>Activitat</th>

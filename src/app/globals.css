@@ -1997,13 +1997,11 @@
             }
             
             .dashboard-desktop-table {
-                display: none !important;
+                display: block !important;
             }
             
             .dashboard-mobile-list {
-                display: flex !important;
-                flex-direction: column;
-                gap: 16px;
+                display: none !important;
             }
         }
 

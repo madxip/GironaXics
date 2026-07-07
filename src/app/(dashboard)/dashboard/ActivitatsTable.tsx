@@ -146,7 +146,7 @@ export default function ActivitatsTable({ activitats, isAdmin }: Props) {
         style={{ backgroundColor: "white", borderRadius: "16px", border: "1px solid var(--verd-pallid)", boxShadow: "0 10px 30px rgba(26,107,58,0.02)", overflow: "hidden" }}
       >
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "15px" }}>
+          <table style={{ width: "100%", minWidth: "1000px", borderCollapse: "collapse", textAlign: "left", fontSize: "15px" }}>
             <thead>
               <tr style={{ backgroundColor: "rgba(26,107,58,0.02)", borderBottom: "1px solid var(--verd-pallid)" }}>
                 {isAdmin && (
