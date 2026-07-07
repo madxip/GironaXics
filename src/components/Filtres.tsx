@@ -296,12 +296,42 @@ export default function Filtres({
 
   const categories = useMemo(() => {
     const set = new Set<string>();
-    activitats.forEach(a => {
+    
+    // Filtrem primer pel tipus de pestanya actual per saber quines categories tenen activitats reals en aquest tipus
+    const filteredByTipus = activitats.filter(a => {
+      const normalizedTipus = a.tipus?.toLowerCase().trim() || '';
+      return selectedTipus === 'Totes' || 
+             (selectedTipus === 'Extraescolars' && (normalizedTipus === '' || normalizedTipus.includes('extraescolar'))) ||
+             (selectedTipus === 'Casals' && normalizedTipus.includes('casal')) ||
+             (selectedTipus === 'Tallers i Oci' && (
+               normalizedTipus.includes('taller') || 
+               normalizedTipus.includes('oci') || 
+               normalizedTipus.includes('monograf') || 
+               normalizedTipus.includes('escape') || 
+               normalizedTipus.includes('aniversari') || 
+               normalizedTipus.includes('virtual')
+             ));
+    });
+
+    filteredByTipus.forEach(a => {
       const cats = a.categories || [a.categoria];
       cats.forEach((c: string) => { if (c) set.add(c); });
     });
     return ['Totes', ...Array.from(set).sort()];
-  }, [activitats]);
+  }, [activitats, selectedTipus]);
+
+  // Si la categoria seleccionada no té cap activitat per al tipus actual (pestanya),
+  // reseteja la categoria a 'Totes' per evitar pantalles de "No s'han trobat activitats" innecessàries
+  useEffect(() => {
+    if (selectedCategoria !== 'Totes' && categories.length > 1) {
+      if (!categories.includes(selectedCategoria)) {
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete('categoria');
+        params.delete('subcategoria');
+        router.replace(`?${params.toString()}`, { scroll: false });
+      }
+    }
+  }, [selectedTipus, categories, selectedCategoria, router, searchParams]);
 
   const subcategories = useMemo(() => {
     if (selectedCategoria === 'Totes') return ['Totes'];
