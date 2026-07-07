@@ -77,7 +77,29 @@ export async function POST(req: NextRequest) {
         }
       }
     } catch (catboxErr) {
-      console.warn("[Upload API] Error amb Catbox, intentant fallback a Tmpfiles:", catboxErr);
+      console.warn("[Upload API] Error amb Catbox, intentant fallback a Uguu.se:", catboxErr);
+    }
+
+    // 3.5. Fallback alternatiu: Uguu.se (durada de 24h, ideal per a Airtable)
+    try {
+      const uguuForm = new FormData();
+      const blob = new Blob([buffer], { type: file.type });
+      uguuForm.append("files[]", blob, file.name);
+
+      const response = await fetch("https://uguu.se/upload.php", {
+        method: "POST",
+        body: uguuForm,
+        signal: AbortSignal.timeout(10000)
+      });
+
+      if (response.ok) {
+        const resData = await response.json();
+        if (resData.success && resData.files?.[0]?.url) {
+          return NextResponse.json({ url: resData.files[0].url });
+        }
+      }
+    } catch (uguuErr) {
+      console.warn("[Upload API] Error amb Uguu.se, intentant fallback a Tmpfiles:", uguuErr);
     }
 
     // 4. Fallback: Pujar a TmpFiles (Airtable importarà la imatge immediatament abans de l'expiració de 60 minuts)
