@@ -8,7 +8,10 @@ import { normalizeSlug } from '@/lib/utils';
 export default function Categories({ activitats = [] }: { activitats?: Activitat[] }) {
   const uniqueCats = useMemo(() => {
     const set = new Set<string>();
-    activitats.forEach(a => { if (a.categoria) set.add(a.categoria); });
+    activitats.forEach(a => {
+      const cats = a.categories || [a.categoria];
+      cats.forEach((c: string) => { if (c) set.add(c); });
+    });
     return Array.from(set).sort();
   }, [activitats]);
 

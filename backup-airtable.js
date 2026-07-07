@@ -95,6 +95,7 @@ async function main() {
     'Sponsors',
     'Casals',
     'Analytics',
+    'Poblacions',
   ];
 
   // Carpeta de backup amb data i hora

@@ -194,7 +194,14 @@ function mapActivitatRecord(
   f.material = (r.fields['descripció'] as string) || "";
   
   const rawCat = r.fields.categoria || r.fields.Categoria;
-  f.categoria = Array.isArray(rawCat) ? (rawCat[0] as string) : (rawCat as string) || '';
+  let categoriesArray: string[] = [];
+  if (Array.isArray(rawCat)) {
+    categoriesArray = rawCat.map(c => String(c).trim());
+  } else if (typeof rawCat === 'string' && rawCat) {
+    categoriesArray = rawCat.split(',').map(c => c.trim());
+  }
+  f.categoria = categoriesArray[0] || '';
+  f.categories = categoriesArray;
   
   const rawBarri = r.fields.barri || r.fields.Barri;
   f.barri = Array.isArray(rawBarri) ? (rawBarri[0] as string) || '' : (rawBarri as string) || '';
@@ -462,7 +469,10 @@ export async function getActivitatsByCategoria(cat: string): Promise<Activitat[]
   // We assume 'cat' URL param is a slug, so we normalize the categoria from data to match.
   // Example: "Arts plàstiques" -> "arts-plastiques"
   const normalizedCat = normalizeSlug(decodeURIComponent(cat));
-  return all.filter(a => normalizeSlug(a.categoria) === normalizedCat);
+  return all.filter(a => {
+    const cats = a.categories || [a.categoria];
+    return cats.some(c => normalizeSlug(c) === normalizedCat);
+  });
 }
 
 export async function getActivitatsByBarri(barri: string): Promise<Activitat[]> {
@@ -778,7 +788,7 @@ export async function getActivitatsByCentreId(centreId: string): Promise<Activit
   }
 }
 
-export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'centre'> & { centreId: string }): Promise<Activitat | null> {
+export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'centre' | 'categoria'> & { centreId: string; categoria: string | string[] }): Promise<Activitat | null> {
   if (!API_KEY || !BASE_ID) return null;
   try {
     const url = `https://api.airtable.com/v0/${BASE_ID}/Activitats`;
@@ -789,11 +799,15 @@ export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'cen
     const subcatId = data.subcategoria ? await getSubcategoryRecordIdByName(data.subcategoria) : null;
     const poblacioId = data.poblacio_propia ? await getPoblacioRecordIdByName(data.poblacio_propia) : null;
     
+    const finalCategoria = Array.isArray(data.categoria)
+      ? data.categoria
+      : (data.categoria ? [data.categoria] : []);
+
     const fields: Record<string, unknown> = {
       nom: data.nom,
       slug: slug,
       centre: [data.centreId],
-      categoria: data.categoria,
+      categoria: finalCategoria,
       edat: data.edat,
       preu: data.preu != null && data.preu !== '' ? String(data.preu) : undefined,
       horari: data.horari,
@@ -886,7 +900,7 @@ export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'cen
   }
 }
 
-export async function updateActivitat(id: string, data: Partial<Omit<Activitat, 'id' | 'slug' | 'centre' | 'centreId'>>): Promise<boolean> {
+export async function updateActivitat(id: string, data: Partial<Omit<Activitat, 'id' | 'slug' | 'centre' | 'centreId' | 'categoria'>> & { categoria?: string | string[] }): Promise<boolean> {
   if (!API_KEY || !BASE_ID) return false;
   try {
     const url = `https://api.airtable.com/v0/${BASE_ID}/Activitats`;
@@ -897,7 +911,11 @@ export async function updateActivitat(id: string, data: Partial<Omit<Activitat, 
       // El slug (URL) NO es regenera en editar per preservar el posicionament SEO.
       // Si cal canviar la URL, s'ha de fer manualment al camp "slug" d'Airtable.
     }
-    if (data.categoria) fields.categoria = data.categoria;
+    if (data.categoria) {
+      fields.categoria = Array.isArray(data.categoria)
+        ? data.categoria
+        : [data.categoria];
+    }
     if (data.subcategoria !== undefined) {
       const subcatId = data.subcategoria ? await getSubcategoryRecordIdByName(data.subcategoria) : null;
       fields.subcategoria_enllac = subcatId ? [subcatId] : [];

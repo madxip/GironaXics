@@ -12,7 +12,10 @@ import Link from 'next/link';
 export async function generateStaticParams() {
   const activitats = await getActivitats();
   const categories = new Set<string>();
-  activitats.forEach(a => { if (a.categoria) categories.add(normalizeSlug(a.categoria)); });
+  activitats.forEach(a => {
+    const cats = a.categories || [a.categoria];
+    cats.forEach((c: string) => { if (c) categories.add(normalizeSlug(c)); });
+  });
   return Array.from(categories).map(categoria => ({ categoria }));
 }
 

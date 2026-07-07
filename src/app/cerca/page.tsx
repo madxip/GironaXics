@@ -25,7 +25,7 @@ export default async function CercaPage({ searchParams }: { searchParams: { q?: 
         removeAccents((a.centre || '').toLowerCase()).includes(queryNormalized) ||
         removeAccents((a.descripcio || '').toLowerCase()).includes(queryNormalized) ||
         removeAccents((a.barri || '').toLowerCase()).includes(queryNormalized) ||
-        removeAccents((a.categoria || '').toLowerCase()).includes(queryNormalized)
+        (a.categories || [a.categoria || '']).some((c: string) => removeAccents(c.toLowerCase()).includes(queryNormalized))
       )
     : all;
 

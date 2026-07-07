@@ -296,7 +296,10 @@ export default function Filtres({
 
   const categories = useMemo(() => {
     const set = new Set<string>();
-    activitats.forEach(a => { if (a.categoria) set.add(a.categoria); });
+    activitats.forEach(a => {
+      const cats = a.categories || [a.categoria];
+      cats.forEach((c: string) => { if (c) set.add(c); });
+    });
     return ['Totes', ...Array.from(set).sort()];
   }, [activitats]);
 
@@ -304,7 +307,8 @@ export default function Filtres({
     if (selectedCategoria === 'Totes') return ['Totes'];
     const set = new Set<string>();
     activitats.forEach(a => {
-      if (a.categoria === selectedCategoria && a.subcategoria) {
+      const cats = a.categories || [a.categoria];
+      if (cats.includes(selectedCategoria) && a.subcategoria) {
         set.add(a.subcategoria);
       }
     });
@@ -362,7 +366,8 @@ export default function Filtres({
                            normalizedTipus.includes('aniversari') || 
                            normalizedTipus.includes('virtual')
                          ));
-      const matchCat = selectedCategoria === 'Totes' || a.categoria === selectedCategoria;
+      const cats = a.categories || [a.categoria];
+      const matchCat = selectedCategoria === 'Totes' || cats.includes(selectedCategoria);
       const matchSubcat = selectedCategoria === 'Totes' || selectedSubcategoria === 'Totes' || a.subcategoria === selectedSubcategoria;
       const matchEdat = matchEdatGroup(a.edat, selectedEdat);
       const matchBarri = selectedBarri === 'Totes'

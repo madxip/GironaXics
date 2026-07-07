@@ -29,7 +29,7 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
 
     const nom = formData.get("nom") as string;
     const barri = formData.get("barri") as string;
-    const categoria = formData.get("categoria") as string;
+    const categories = formData.getAll("categoria") as string[];
     const edat = formData.get("edat") as string;
     const preuStr = formData.get("preu") as string;
     const horari = formData.get("horari") as string;
@@ -60,7 +60,7 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
       galeria = formData.getAll("galeria") as string[];
     }
 
-    if (!nom || !categoria || !edat || !horari || !dies) {
+    if (!nom || categories.length === 0 || !edat || !horari || !dies) {
       return { success: false, error: "Si us plau, omple com a mínim els camps obligatoris (Nom, Categoria, Edat, Horari i Dies)." };
     }
 
@@ -75,7 +75,7 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
     const result = await createActivitat({
       nom,
       barri,
-      categoria,
+      categoria: categories,
       subcategoria: subcategoria || undefined,
       edat,
       preu,
@@ -114,11 +114,13 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
     } catch (e) {
       console.error("[Revalidate] Error revalidating '/dashboard':", e);
     }
-    try {
-      revalidatePath(`/categories/${normalizeSlug(categoria)}`);
-    } catch (e) {
-      console.error(`[Revalidate] Error revalidating '/categories/${normalizeSlug(categoria)}':`, e);
-    }
+    categories.forEach(cat => {
+      try {
+        revalidatePath(`/categories/${normalizeSlug(cat)}`);
+      } catch (e) {
+        console.error(`[Revalidate] Error revalidating '/categories/${normalizeSlug(cat)}':`, e);
+      }
+    });
     try {
       revalidatePath(`/barris/${normalizeSlug(barri)}`);
     } catch (e) {
@@ -126,7 +128,7 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
     }
     try {
       if (result && result.slug) {
-        revalidatePath(`/activitats/${normalizeSlug(categoria)}/${result.slug}`);
+        revalidatePath(`/activitats/${normalizeSlug(categories[0] || 'altres')}/${result.slug}`);
       }
     } catch (e) {
       console.error("[Revalidate] Error revalidating activity page:", e);
@@ -158,7 +160,7 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
 
     const nom = formData.get("nom") as string;
     const barri = formData.get("barri") as string;
-    const categoria = formData.get("categoria") as string;
+    const categories = formData.getAll("categoria") as string[];
     const edat = formData.get("edat") as string;
     const preuStr = formData.get("preu") as string;
     const horari = formData.get("horari") as string;
@@ -188,7 +190,7 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
       galeria = formData.getAll("galeria") as string[];
     }
 
-    if (!nom || !categoria || !edat || !horari || !dies) {
+    if (!nom || categories.length === 0 || !edat || !horari || !dies) {
       return { success: false, error: "Si us plau, omple com a mínim els camps obligatoris (Nom, Categoria, Edat, Horari i Dies)." };
     }
 
@@ -197,7 +199,7 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
     const success = await updateActivitat(id, {
       nom,
       barri,
-      categoria,
+      categoria: categories,
       subcategoria: subcategoria !== null ? subcategoria : undefined,
       edat,
       preu,
@@ -233,11 +235,13 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
     } catch (e) {
       console.error("[Revalidate] Error revalidating '/dashboard':", e);
     }
-    try {
-      revalidatePath(`/categories/${normalizeSlug(categoria)}`);
-    } catch (e) {
-      console.error(`[Revalidate] Error revalidating '/categories/${normalizeSlug(categoria)}':`, e);
-    }
+    categories.forEach(cat => {
+      try {
+        revalidatePath(`/categories/${normalizeSlug(cat)}`);
+      } catch (e) {
+        console.error(`[Revalidate] Error revalidating '/categories/${normalizeSlug(cat)}':`, e);
+      }
+    });
     try {
       revalidatePath(`/barris/${normalizeSlug(barri)}`);
     } catch (e) {
@@ -246,7 +250,7 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
     try {
       const baseSlug = normalizeSlug(nom);
       const newSlug = baseSlug.endsWith('-girona') ? baseSlug : `${baseSlug}-girona`;
-      revalidatePath(`/activitats/${normalizeSlug(categoria)}/${newSlug}`);
+      revalidatePath(`/activitats/${normalizeSlug(categories[0] || 'altres')}/${newSlug}`);
     } catch (e) {
       console.error("[Revalidate] Error revalidating activity page:", e);
     }

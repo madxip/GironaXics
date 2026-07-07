@@ -162,7 +162,10 @@ export default function ActivitatsTable({ activitats, isAdmin }: Props) {
                   <td style={{ padding: "16px 20px" }}>
                     <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 500, padding: "4px 10px", borderRadius: "20px", backgroundColor: "#f0fdf4", color: "#166534", border: "1px solid #dcfce7" }}>
                       <Tag size={12} />
-                      {act.subcategoria ? `${act.categoria} • ${act.subcategoria}` : act.categoria}
+                      {(() => {
+                        const catsStr = act.categories ? act.categories.join(' • ') : act.categoria;
+                        return act.subcategoria ? `${catsStr} • ${act.subcategoria}` : catsStr;
+                      })()}
                     </span>
                   </td>
 
@@ -271,7 +274,10 @@ export default function ActivitatsTable({ activitats, isAdmin }: Props) {
             </div>
             <div className="dashboard-mobile-card-footer">
               <span style={{ fontSize: "12px", color: "var(--muted)", fontWeight: 500 }}>
-                {act.subcategoria ? `${act.categoria} · ${act.subcategoria}` : act.categoria}
+                {(() => {
+                  const catsStr = act.categories ? act.categories.join(' · ') : act.categoria;
+                  return act.subcategoria ? `${catsStr} · ${act.subcategoria}` : catsStr;
+                })()}
               </span>
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <Link href={`/dashboard/activitats/${act.id}/editar`} title="Editar" className="dashboard-action-btn" style={{ padding: "8px 12px", fontSize: "13px", display: "inline-flex", alignItems: "center", gap: "6px" }}>

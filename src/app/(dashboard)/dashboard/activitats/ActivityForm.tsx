@@ -291,7 +291,20 @@ export default function ActivityForm({
 
 
   const [nom, setNom] = useState(initialData?.nom || "");
-  const [categoria, setCategoria] = useState(initialData?.categoria || "");
+  
+  const getInitialCategories = (): string[] => {
+    if (initialData) {
+      if (initialData.categories && initialData.categories.length > 0) {
+        return initialData.categories;
+      }
+      if (initialData.categoria) {
+        return Array.isArray(initialData.categoria) ? initialData.categoria : [initialData.categoria];
+      }
+    }
+    return [];
+  };
+
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(getInitialCategories());
   
   // Localització personalitzada (override)
   const initialPoblacio = initialData?.poblacio_propia || "";
@@ -344,15 +357,21 @@ export default function ActivityForm({
     isPredefined ? "" : initialSub
   );
 
-  const handleCategoriaChange = (newCat: string) => {
-    setCategoria(newCat);
-    setSubSelectValue("");
-    setCustomSubValue("");
-    if (newCat.trim()) {
-      setValidationErrors(prev => ({ ...prev, categoria: false }));
-    }
+  const handleCategoryToggle = (catName: string) => {
+    setSelectedCategories(prev => {
+      const next = prev.includes(catName)
+        ? prev.filter(c => c !== catName)
+        : [...prev, catName];
+      if (next.length > 0) {
+        setValidationErrors(prevErrors => ({ ...prevErrors, categoria: false }));
+      }
+      return next;
+    });
   };
-  const predefinedSubs = safeGetSubcategories(categoria);
+
+  const predefinedSubs = selectedCategories.includes("Esports")
+    ? safeGetSubcategories("Esports")
+    : (selectedCategories.includes("Idiomes") ? safeGetSubcategories("Idiomes") : undefined);
   const [edat, setEdat] = useState(initialData?.edat || "");
   // Parse the initial price for unit dropdown and inputs
   const getInitialPriceState = () => {
@@ -667,7 +686,7 @@ export default function ActivityForm({
 
     const errors: Record<string, boolean> = {};
     if (!nom.trim()) errors.nom = true;
-    if (!categoria.trim()) errors.categoria = true;
+    if (selectedCategories.length === 0) errors.categoria = true;
     if (!edat.trim()) errors.edat = true;
     if (!horari.trim()) errors.horari = true;
     if (!dies.trim()) errors.dies = true;
@@ -693,7 +712,9 @@ export default function ActivityForm({
     try {
       const formData = new FormData();
       formData.append("nom", nom);
-      formData.append("categoria", categoria);
+      selectedCategories.forEach(c => {
+        formData.append("categoria", c);
+      });
       
       const subcategoria = predefinedSubs 
         ? (subSelectValue === "Altres" ? customSubValue : subSelectValue)
@@ -840,7 +861,7 @@ export default function ActivityForm({
               )}
               <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "flex-end", padding: "40px" }}>
                 <div>
-                  {categoria && <span style={{ display: "inline-block", background: "rgba(255,255,255,0.15)", color: "white", padding: "4px 12px", borderRadius: "100px", fontSize: "13px", fontWeight: 700, marginBottom: "12px" }}>{categoria}</span>}
+                  {selectedCategories.length > 0 && <span style={{ display: "inline-block", background: "rgba(255,255,255,0.15)", color: "white", padding: "4px 12px", borderRadius: "100px", fontSize: "13px", fontWeight: 700, marginBottom: "12px" }}>{selectedCategories.join(', ')}</span>}
                   <h1 style={{ color: "white", fontFamily: "var(--font-serif)", fontStyle: "italic", fontSize: "48px", margin: 0, lineHeight: 1.1 }}>{nom || "Sense títol"}</h1>
                   <p style={{ color: "rgba(255,255,255,0.8)", fontSize: "16px", margin: "8px 0 0" }}>
                     {(allCentres?.find(c => c.id === selectedCentreId) || centre)?.barri || ""}
@@ -1015,14 +1036,49 @@ export default function ActivityForm({
               {/* CATEGORIA + TIPUS */}
               <div className="af-row-2">
                 <div style={fieldGroupStyle}>
-                  <label htmlFor="categoria" style={labelStyle}>Categoria *</label>
-                  <select id="categoria" value={categoria}
-                    onChange={e => handleCategoriaChange(e.target.value)}
-                    disabled={loading} style={{ ...fieldStyle(validationErrors.categoria), cursor: "pointer" }}>
-                    <option value="">-- Tria una categoria --</option>
-                    {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                  {validationErrors.categoria && errMsg("* Selecciona una categoria")}
+                  <label style={labelStyle}>Categories *</label>
+                  <div style={{ 
+                    display: "grid", 
+                    gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", 
+                    gap: "10px", 
+                    padding: "15px", 
+                    background: "var(--crema-fosca)", 
+                    borderRadius: "10px", 
+                    border: validationErrors.categoria ? "1.5px solid #d93025" : "1px solid rgba(26,107,58,0.15)",
+                    maxHeight: "220px",
+                    overflowY: "auto"
+                  }}>
+                    {categories.map(c => {
+                      const isChecked = selectedCategories.includes(c);
+                      return (
+                        <label key={c} style={{ 
+                          display: "flex", 
+                          alignItems: "center", 
+                          gap: "8px", 
+                          fontSize: "13px", 
+                          fontWeight: 500, 
+                          color: "var(--verd-fosc)", 
+                          cursor: "pointer",
+                          padding: "6px 10px",
+                          borderRadius: "6px",
+                          background: isChecked ? "rgba(26,107,58,0.08)" : "transparent",
+                          transition: "background 0.2s"
+                        }}>
+                          <input 
+                            type="checkbox" 
+                            checked={isChecked} 
+                            onChange={() => handleCategoryToggle(c)} 
+                            style={{ 
+                              cursor: "pointer",
+                              accentColor: "var(--verd)"
+                            }}
+                          />
+                          {c}
+                        </label>
+                      );
+                    })}
+                  </div>
+                  {validationErrors.categoria && errMsg("* Selecciona com a mínim una categoria")}
                 </div>
 
                 <div style={fieldGroupStyle}>
@@ -1038,7 +1094,7 @@ export default function ActivityForm({
               </div>
 
               {/* SUBCATEGORIA */}
-              {(categoria === "Esports" || categoria === "Idiomes") && (
+              {(selectedCategories.includes("Esports") || selectedCategories.includes("Idiomes")) && (
                 <div style={fieldGroupStyle}>
                   <label style={labelStyle}>{TXT_SUBCATEGORIA}</label>
                   {predefinedSubs ? (

@@ -18,7 +18,12 @@ export async function GET() {
 
     markdown += `## Categories d'Activitats\n`;
     markdown += `Les activitats es classifiquen en les següents categories, cadascuna amb la seva respectiva URL per a consultes detallades:\n\n`;
-    const categories = Array.from(new Set(activitats.map(a => a.categoria).filter(Boolean)));
+    const catsSet = new Set<string>();
+    activitats.forEach(a => {
+      const cats = a.categories || [a.categoria];
+      cats.forEach((c: string) => { if (c) catsSet.add(c); });
+    });
+    const categories = Array.from(catsSet).filter(Boolean);
     categories.forEach(cat => {
       const slug = normalizeSlug(cat);
       markdown += `- [**${cat}**](${baseUrl}/categories/${slug})\n`;

@@ -24,7 +24,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const barris = new Set<string>();
 
   const activitatRoutes = activitats.map((a) => {
-    if (a.categoria) categories.add(normalizeSlug(a.categoria));
+    const cats = a.categories || [a.categoria];
+    cats.forEach((c: string) => { if (c) categories.add(normalizeSlug(c)); });
     if (a.centre) centres.add(normalizeSlug(a.centre));
     if (a.barri) barris.add(normalizeSlug(a.barri));
 

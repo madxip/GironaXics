@@ -6,6 +6,7 @@ export interface Activitat {
   centreId?: string; // The record ID of the center
   barri: string;
   categoria: string;
+  categories?: string[];
   edat: string;
   preu?: number | string;
   destacada: boolean;

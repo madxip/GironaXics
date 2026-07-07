@@ -11,6 +11,7 @@ const DEFAULT_CATEGORIES = [
   "Creativitat i Expressió",
   "Cuina",
   "Dansa",
+  "En Família",
   "Escacs",
   "Esports",
   "Idiomes",

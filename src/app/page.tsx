@@ -41,7 +41,11 @@ export default async function Home() {
 
 
 
-  const uniqueCategories = new Set(activitats.map((a: Activitat) => a.categoria?.trim()).filter(Boolean));
+  const uniqueCategories = new Set<string>();
+  activitats.forEach((a: Activitat) => {
+    const cats = a.categories || [a.categoria];
+    cats.forEach((c: string) => { if (c?.trim()) uniqueCategories.add(c.trim()); });
+  });
   const numCategories = uniqueCategories.size;
 
   return (
