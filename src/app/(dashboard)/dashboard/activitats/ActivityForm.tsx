@@ -21,6 +21,7 @@ interface ActivityFormProps {
   allCentres?: Centre[];
   isAdmin?: boolean;
   poblacions?: Record<string, string[]>;
+  initialCentreId?: string;
 }
 
 const PREDEFINED_SUBCATEGORIES: Map<string, string[]> = new Map([
@@ -271,6 +272,7 @@ export default function ActivityForm({
   allCentres,
   isAdmin,
   poblacions,
+  initialCentreId,
 }: ActivityFormProps) {
   const router = useRouter();
   const [showPreview, setShowPreview] = useState(false);
@@ -325,7 +327,7 @@ export default function ActivityForm({
   }, [initialPoblacio, poblacions]);
   // Admin: centre seleccionat quan crea una activitat per a un altre centre
   const [selectedCentreId, setSelectedCentreId] = useState<string>(
-    initialData?.centreId || centre?.id || ""
+    initialCentreId || initialData?.centreId || centre?.id || ""
   );
   const [centreSearch, setCentreSearch] = useState("");
 

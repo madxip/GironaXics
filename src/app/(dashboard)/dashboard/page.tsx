@@ -1,11 +1,12 @@
 import React from "react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { getActivitatsByCentreId, getAllActivitats, getCentres } from "@/lib/airtable";
+import { getActivitatsByCentreId, getAllActivitats, getCentres, getPoblacions } from "@/lib/airtable";
+import { getCentresWithContacts, CRMCentre } from "@/lib/crm";
 import Link from "next/link";
 import { Plus, Activity, ShieldCheck, Info, Lock } from "lucide-react";
 import ActivitatsTable from "./ActivitatsTable";
-import RefreshCacheButton from "./RefreshCacheButton";
+import AdminDashboardTabs from "./AdminDashboardTabs";
 
 export const dynamic = "force-dynamic";
 
@@ -30,13 +31,29 @@ export default async function DashboardPage() {
   const userCentre = centres.find(c => c.id === centreId);
   const centreNom = isAdmin ? "Administrador" : (userCentre ? userCentre.nom : "El teu Centre");
 
+  // Carrega dades exclusives d'admin
+  let initialCentresForAdmin: CRMCentre[] = [];
+  const poblacionsGrouped: Record<string, string[]> = {};
+  if (isAdmin) {
+    initialCentresForAdmin = await getCentresWithContacts();
+    const allPoblacions = await getPoblacions();
+    allPoblacions.forEach(p => {
+      if (p.comarca && p.nom) {
+        if (!poblacionsGrouped[p.comarca]) {
+          poblacionsGrouped[p.comarca] = [];
+        }
+        poblacionsGrouped[p.comarca].push(p.nom);
+      }
+    });
+  }
+
   return (
     <div>
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "40px", flexWrap: "wrap", gap: "20px" }}>
         <div>
           <h1 style={{ fontFamily: "var(--font-serif)", fontStyle: "italic", fontSize: "36px", color: "var(--verd-fosc)", margin: 0, display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-            {isAdmin ? "Totes les Activitats" : `Benvingut, ${centreNom}`}
+            {isAdmin ? "Tauler de Control" : `Benvingut, ${centreNom}`}
             {isAdmin && (
               <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "13px", fontStyle: "normal", fontWeight: 700, backgroundColor: "rgba(217,87,56,0.1)", color: "#d95738", padding: "4px 12px", borderRadius: "99px", border: "1px solid rgba(217,87,56,0.2)" }}>
                 <ShieldCheck size={14} /> Admin
@@ -45,14 +62,13 @@ export default async function DashboardPage() {
           </h1>
           <p style={{ fontSize: "15px", color: "var(--muted)", marginTop: "6px", margin: 0 }}>
             {isAdmin
-              ? `${activitats.length} activitats en total · ${publicadesCount} publicades · ${activitats.length - publicadesCount} esborranys`
+              ? `${activitats.length} activitats registrades · ${publicadesCount} publicades · ${initialCentresForAdmin.length} centres actius`
               : "Aquí pots crear, editar o eliminar les activitats extraescolars que ofereix el teu centre."
             }
           </p>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-          {isAdmin && <RefreshCacheButton />}
           <Link
             href="/dashboard/compte"
             style={{ display: "inline-flex", alignItems: "center", gap: "8px", backgroundColor: "white", color: "var(--verd-fosc)", padding: "10px 18px", borderRadius: "8px", textDecoration: "none", fontWeight: 600, fontSize: "14px", border: "1px solid var(--crema-fosca)", transition: "all 0.2s" }}
@@ -60,19 +76,27 @@ export default async function DashboardPage() {
             <Lock size={15} />
             El meu compte
           </Link>
-          <Link
-            href="/dashboard/activitats/nova"
-            style={{ display: "inline-flex", alignItems: "center", gap: "8px", backgroundColor: "var(--verd)", color: "white", padding: "12px 24px", borderRadius: "8px", textDecoration: "none", fontWeight: 600, fontSize: "15px", fontFamily: "var(--font-serif)", fontStyle: "italic", boxShadow: "0 4px 12px rgba(26,107,58,0.15)", transition: "all 0.2s" }}
-            className="dashboard-primary-btn"
-          >
-            <Plus size={18} />
-            Afegir Activitat
-          </Link>
+          {!isAdmin && (
+            <Link
+              href="/dashboard/activitats/nova"
+              style={{ display: "inline-flex", alignItems: "center", gap: "8px", backgroundColor: "var(--verd)", color: "white", padding: "12px 24px", borderRadius: "8px", textDecoration: "none", fontWeight: 600, fontSize: "15px", fontFamily: "var(--font-serif)", fontStyle: "italic", boxShadow: "0 4px 12px rgba(26,107,58,0.15)", transition: "all 0.2s" }}
+              className="dashboard-primary-btn"
+            >
+              <Plus size={18} />
+              Afegir Activitat
+            </Link>
+          )}
         </div>
       </div>
 
       {/* Contingut principal */}
-      {activitats.length === 0 ? (
+      {isAdmin ? (
+        <AdminDashboardTabs 
+          initialCentres={initialCentresForAdmin}
+          activitats={activitats}
+          poblacions={poblacionsGrouped}
+        />
+      ) : activitats.length === 0 ? (
         <div style={{ backgroundColor: "white", borderRadius: "16px", border: "1px solid var(--verd-pallid)", padding: "60px 40px", textAlign: "center", boxShadow: "0 10px 30px rgba(26,107,58,0.02)", maxWidth: "600px", margin: "40px auto 0" }}>
           <div style={{ width: "64px", height: "64px", borderRadius: "50%", backgroundColor: "rgba(26,107,58,0.05)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--verd)", margin: "0 auto 24px" }}>
             <Activity size={32} />
@@ -93,9 +117,7 @@ export default async function DashboardPage() {
           <div style={{ marginTop: "16px", padding: "14px 20px", backgroundColor: "white", borderRadius: "12px", border: "1px solid var(--verd-pallid)", display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: "var(--muted)" }}>
             <Info size={14} style={{ color: "var(--verd)", flexShrink: 0 }} />
             <span>
-              {isAdmin
-                ? "Els canvis via panell s'apliquen immediatament. Si has modificat dades directament a Airtable, fes servir el botó \"Actualitzar dades\"."
-                : "Els canvis que realitzis es veuran reflectits de manera instantània a la pàgina web pública."}
+              Els canvis que realitzis es veuran reflectits de manera instantània a la pàgina web pública.
             </span>
           </div>
         </>

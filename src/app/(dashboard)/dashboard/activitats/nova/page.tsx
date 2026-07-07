@@ -24,7 +24,7 @@ const DEFAULT_CATEGORIES = [
   "Teatre"
 ];
 
-export default async function NovaActivitatPage() {
+export default async function NovaActivitatPage({ searchParams }: { searchParams: { centreId?: string } }) {
   const session = await getServerSession(authOptions);
   
   if (!session || !session.user) {
@@ -64,6 +64,7 @@ export default async function NovaActivitatPage() {
       allCentres={isAdmin ? allCentres : undefined}
       isAdmin={isAdmin}
       poblacions={poblacionsGrouped}
+      initialCentreId={searchParams.centreId}
     />
   );
 }

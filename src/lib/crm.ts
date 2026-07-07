@@ -45,6 +45,7 @@ export interface CRMActivity {
   publicada: boolean;
   destacada: boolean;
   poblacio_propia?: string;
+  tipus?: string;
 }
 
 const LOCAL_DB_PATH = path.join(process.cwd(), 'backups', 'crm_centres_cache.json');
@@ -292,7 +293,8 @@ export async function getActivitiesByCentre(centreId: string, centreNom: string)
       descripcio: (r.fields.descripcio as string) || '',
       publicada: !!r.fields.publicada,
       destacada: !!r.fields.destacada,
-      poblacio_propia: Array.isArray(r.fields.nom_poblacio_propia) ? (r.fields.nom_poblacio_propia[0] as string) || '' : (r.fields.nom_poblacio_propia as string) || ''
+      poblacio_propia: Array.isArray(r.fields.nom_poblacio_propia) ? (r.fields.nom_poblacio_propia[0] as string) || '' : (r.fields.nom_poblacio_propia as string) || '',
+      tipus: (r.fields.tipus as string) || "Extraescolar"
     }));
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : 'Unknown error';

@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Plus, Activity, Globe, Building, BarChart2, Users } from "lucide-react";
+import { Plus, Activity, Globe, Building, BarChart2 } from "lucide-react";
 
 export default function DashboardNav({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname();
@@ -11,22 +11,17 @@ export default function DashboardNav({ isAdmin = false }: { isAdmin?: boolean })
   const links = [
     {
       href: "/dashboard",
-      label: "Les meves Activitats",
+      label: isAdmin ? "Activitats i Centres" : "Les meves Activitats",
       icon: Activity,
       exact: true
     },
-    ...(isAdmin ? [
+    ...(!isAdmin ? [
       {
-        href: "/dashboard/crm",
-        label: "Gestió de Centres (CRM)",
-        icon: Users
+        href: "/dashboard/centre",
+        label: "Dades del Centre",
+        icon: Building
       }
     ] : []),
-    {
-      href: "/dashboard/centre",
-      label: "Dades del Centre",
-      icon: Building
-    },
     {
       href: "/dashboard/activitats/nova",
       label: "Afegir Activitat",

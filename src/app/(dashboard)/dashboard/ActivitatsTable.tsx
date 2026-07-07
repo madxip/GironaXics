@@ -17,16 +17,27 @@ interface Props {
 export default function ActivitatsTable({ activitats, isAdmin }: Props) {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
+  const [selectedCentreFilter, setSelectedCentreFilter] = useState("Tots");
 
-  // Filtre de cerca
+  // Llista de tots els centres únics de les activitats
+  const uniqueCentres = useMemo(() => {
+    const set = new Set<string>();
+    activitats.forEach(a => { if (a.centre) set.add(a.centre); });
+    return Array.from(set).sort();
+  }, [activitats]);
+
+  // Filtre de cerca i centre
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
-    if (!q) return activitats;
-    return activitats.filter(a =>
-      (a.nom && a.nom.toLowerCase().includes(q)) ||
-      (a.centre && a.centre.toLowerCase().includes(q))
-    );
-  }, [activitats, query]);
+    return activitats.filter(a => {
+      const matchQuery = !q || (
+        (a.nom && a.nom.toLowerCase().includes(q)) ||
+        (a.centre && a.centre.toLowerCase().includes(q))
+      );
+      const matchCentre = selectedCentreFilter === "Tots" || a.centre === selectedCentreFilter;
+      return matchQuery && matchCentre;
+    });
+  }, [activitats, query, selectedCentreFilter]);
 
   // Paginació
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
@@ -86,17 +97,39 @@ export default function ActivitatsTable({ activitats, isAdmin }: Props) {
         }
       `}</style>
 
-      {/* ── Buscador ── */}
-      <div style={{ position: "relative", marginBottom: "16px" }}>
-        <Search size={16} style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--muted)", pointerEvents: "none" }} />
-        <input
-          type="text"
-          className="act-table-search"
-          placeholder={isAdmin ? "Cerca per nom d'activitat o centre..." : "Cerca per nom d'activitat..."}
-          value={query}
-          onChange={e => handleQuery(e.target.value)}
-          aria-label="Cerca activitats"
-        />
+      {/* ── Buscador i Filtres ── */}
+      <div style={{ display: "flex", gap: "12px", marginBottom: "16px", flexWrap: "wrap" }}>
+        <div style={{ position: "relative", flex: "1", minWidth: "260px" }}>
+          <Search size={16} style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--muted)", pointerEvents: "none" }} />
+          <input
+            type="text"
+            className="act-table-search"
+            placeholder={isAdmin ? "Cerca per nom d'activitat o centre..." : "Cerca per nom d'activitat..."}
+            value={query}
+            onChange={e => handleQuery(e.target.value)}
+            aria-label="Cerca activitats"
+          />
+        </div>
+        {isAdmin && (
+          <select
+            value={selectedCentreFilter}
+            onChange={e => { setSelectedCentreFilter(e.target.value); setPage(1); }}
+            style={{
+              padding: "12px 14px",
+              borderRadius: "10px",
+              border: "1px solid rgba(26,107,58,0.2)",
+              fontSize: "14px",
+              color: "var(--fosc)",
+              backgroundColor: "white",
+              outline: "none",
+              cursor: "pointer",
+              minWidth: "200px"
+            }}
+          >
+            <option value="Tots">-- Tots els centres --</option>
+            {uniqueCentres.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        )}
       </div>
 
       {/* ── Resum ── */}
