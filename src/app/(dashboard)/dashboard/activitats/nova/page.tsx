@@ -24,7 +24,7 @@ const DEFAULT_CATEGORIES = [
   "Teatre"
 ];
 
-export default async function NovaActivitatPage({ searchParams }: { searchParams: { centreId?: string } }) {
+export default async function NovaActivitatPage({ searchParams }: { searchParams: { centreId?: string; duplicateFrom?: string } }) {
   const session = await getServerSession(authOptions);
   
   if (!session || !session.user) {
@@ -55,16 +55,33 @@ export default async function NovaActivitatPage({ searchParams }: { searchParams
     ...DEFAULT_CATEGORIES.map(c => c.trim())
   ])).sort();
 
+  // Processament de la duplicació si existeix duplicateFrom
+  let duplicateData = undefined;
+  if (searchParams.duplicateFrom) {
+    const original = activitats.find(a => a.id === searchParams.duplicateFrom);
+    if (original) {
+      // Seguretat: Si no és admin, només pot duplicar activitats del seu propi centre
+      if (isAdmin || original.centreId === session.user.centreId) {
+        duplicateData = {
+          ...original,
+          id: undefined, // Traiem la ID perquè sigui una creació neta
+          slug: undefined, // Traiem el slug perquè se'n generi un de nou
+        };
+      }
+    }
+  }
+
   return (
     <ActivityForm
+      initialData={duplicateData}
       categories={categories}
       submitAction={createActivitatAction}
-      title="Nova Activitat Extraescolar"
+      title={duplicateData ? `Duplicar Activitat: ${duplicateData.nom}` : "Nova Activitat Extraescolar"}
       centre={centre}
       allCentres={isAdmin ? allCentres : undefined}
       isAdmin={isAdmin}
       poblacions={poblacionsGrouped}
-      initialCentreId={searchParams.centreId}
+      initialCentreId={duplicateData ? duplicateData.centreId : searchParams.centreId}
     />
   );
 }

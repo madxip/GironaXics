@@ -13,7 +13,7 @@ import MultiDatePicker from "@/components/MultiDatePicker";
 
 
 interface ActivityFormProps {
-  initialData?: Activitat;
+  initialData?: Partial<Activitat>;
   categories: string[];
   submitAction: (prevState: unknown, formData: FormData) => Promise<{ success: boolean; error?: string }>;
   title: string;

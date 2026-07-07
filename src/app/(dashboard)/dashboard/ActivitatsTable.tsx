@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { Edit2, MapPin, Calendar, CircleDollarSign, Tag, Search, ChevronLeft, ChevronRight, Building2 } from "lucide-react";
+import { Edit2, MapPin, Calendar, CircleDollarSign, Tag, Search, ChevronLeft, ChevronRight, Building2, Copy } from "lucide-react";
 import DeleteButton from "./DeleteButton";
 import TogglePublicada from "./TogglePublicada";
 import { Activitat } from "@/lib/types";
@@ -229,6 +229,9 @@ export default function ActivitatsTable({ activitats, isAdmin }: Props) {
                   {/* Accions */}
                   <td style={{ padding: "16px 20px", textAlign: "center" }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}>
+                      <Link href={`/dashboard/activitats/nova?duplicateFrom=${act.id}`} title="Duplicar activitat" className="dashboard-action-btn" style={{ color: "var(--verd)" }}>
+                        <Copy size={16} />
+                      </Link>
                       <Link href={`/dashboard/activitats/${act.id}/editar`} title="Editar activitat" className="dashboard-action-btn">
                         <Edit2 size={16} />
                       </Link>
@@ -312,8 +315,11 @@ export default function ActivitatsTable({ activitats, isAdmin }: Props) {
                   return act.subcategoria ? `${catsStr} · ${act.subcategoria}` : catsStr;
                 })()}
               </span>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <Link href={`/dashboard/activitats/${act.id}/editar`} title="Editar" className="dashboard-action-btn" style={{ padding: "8px 12px", fontSize: "13px", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <Link href={`/dashboard/activitats/nova?duplicateFrom=${act.id}`} title="Duplicar" className="dashboard-action-btn" style={{ padding: "8px 10px", fontSize: "13px", display: "inline-flex", alignItems: "center", gap: "4px", color: "var(--verd)" }}>
+                  <Copy size={14} /><span>Duplica</span>
+                </Link>
+                <Link href={`/dashboard/activitats/${act.id}/editar`} title="Editar" className="dashboard-action-btn" style={{ padding: "8px 10px", fontSize: "13px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
                   <Edit2 size={14} /><span>Editar</span>
                 </Link>
                 <DeleteButton id={act.id!} nom={act.nom} />

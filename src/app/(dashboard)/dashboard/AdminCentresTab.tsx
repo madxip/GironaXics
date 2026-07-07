@@ -14,6 +14,7 @@ import {
   ArrowLeft, 
   Loader2,
   Tag,
+  Copy,
   X
 } from "lucide-react";
 import { CRMCentre, CRMActivity } from "@/lib/crm";
@@ -713,6 +714,24 @@ export default function AdminCentresTab({ initialCentres, poblacions }: AdminCen
                       {/* Accions */}
                       <td style={{ padding: "14px 16px", textAlign: "right" }}>
                         <div style={{ display: "flex", gap: "6px", justifyContent: "flex-end" }}>
+                          <Link 
+                            href={`/dashboard/activitats/nova?duplicateFrom=${act.id}`}
+                            className="dashboard-action-btn"
+                            title="Duplicar activitat"
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              backgroundColor: "white",
+                              color: "var(--verd)",
+                              border: "1px solid var(--crema-fosca)",
+                              padding: "6px 10px",
+                              borderRadius: "6px",
+                              textDecoration: "none",
+                              fontSize: "12.5px"
+                            }}
+                          >
+                            <Copy size={12} />
+                          </Link>
                           <Link 
                             href={`/dashboard/activitats/${act.id}/editar`}
                             className="dashboard-action-btn"
