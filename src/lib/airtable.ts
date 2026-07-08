@@ -158,6 +158,48 @@ async function getSubcategoryRecordIdByName(name: string): Promise<string | null
   return null;
 }
 
+/**
+ * Retorna totes les subcategories d'Airtable agrupades per categoria.
+ * Ex: Map { "Esports" => ["Futbol", "Bàsquet", ...], "Idiomes" => ["Anglès", ...] }
+ */
+export async function getSubcategories(): Promise<Map<string, string[]>> {
+  const result = new Map<string, string[]>();
+  try {
+    const records = await fetchAllRecords('Subcategories');
+    for (const r of records) {
+      const nom = (r.fields.Nom || r.fields.nom) as string | undefined;
+      if (!nom) continue;
+      // El camp Categoria pot ser un linked record (array d'IDs) o un text
+      const catRaw = r.fields.Categoria || r.fields.categoria;
+      let cats: string[] = [];
+      if (Array.isArray(catRaw)) {
+        // Linked records: busca el nom del linked record
+        cats = (r.fields['Categoria (from Activitats)'] as string[] | undefined) ||
+               (r.fields.CategoriaText as string[] | undefined) ||
+               [];
+        // Fallback: si és array de strings directament
+        if (cats.length === 0 && typeof catRaw[0] === 'string' && !catRaw[0].startsWith('rec')) {
+          cats = catRaw as string[];
+        }
+      } else if (typeof catRaw === 'string' && catRaw) {
+        cats = [catRaw];
+      }
+      if (cats.length === 0) {
+        // Sense categoria assignada: afegim a "General"
+        cats = ['General'];
+      }
+      for (const cat of cats) {
+        if (!result.has(cat)) result.set(cat, []);
+        if (!result.get(cat)!.includes(nom)) result.get(cat)!.push(nom);
+      }
+    }
+  } catch (err) {
+    console.error('[Airtable API] Error fetching subcategories:', err);
+  }
+  return result;
+}
+
+
 export async function getPoblacioRecordIdByName(name: string): Promise<string | null> {
   if (!name) return null;
   try {

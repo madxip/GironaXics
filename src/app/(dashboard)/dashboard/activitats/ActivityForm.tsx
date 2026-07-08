@@ -15,6 +15,7 @@ import MultiDatePicker from "@/components/MultiDatePicker";
 interface ActivityFormProps {
   initialData?: Partial<Activitat>;
   categories: string[];
+  subcategories?: Map<string, string[]>;
   submitAction: (prevState: unknown, formData: FormData) => Promise<{ success: boolean; error?: string }>;
   title: string;
   centre?: Centre;
@@ -29,8 +30,13 @@ const PREDEFINED_SUBCATEGORIES: Map<string, string[]> = new Map([
   ["Idiomes", ["Anglès", "Francès", "Alemany"]]
 ]);
 
-const safeGetSubcategories = (cat: string | undefined): string[] | undefined => {
+const safeGetSubcategories = (cat: string | undefined, dynamicSubs?: Map<string, string[]>): string[] | undefined => {
   if (!cat || typeof cat !== "string") return undefined;
+  // Primer intenta les subcategories dinàmiques d'Airtable
+  if (dynamicSubs && dynamicSubs.size > 0) {
+    return dynamicSubs.get(cat) || undefined;
+  }
+  // Fallback al llistat hardcoded
   return PREDEFINED_SUBCATEGORIES.get(cat);
 };
 
@@ -263,17 +269,7 @@ function parseMarkdownToReact(text: string) {
   });
 }
 
-export default function ActivityForm({
-  initialData,
-  categories,
-  submitAction,
-  title,
-  centre,
-  allCentres,
-  isAdmin,
-  poblacions,
-  initialCentreId,
-}: ActivityFormProps) {
+export default function ActivityForm({ initialData = {}, categories, subcategories, submitAction, title, centre, allCentres, isAdmin = false, poblacions, initialCentreId }: ActivityFormProps) {
   const router = useRouter();
   const [showPreview, setShowPreview] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
@@ -349,7 +345,7 @@ export default function ActivityForm({
 
   // Subcategories states
   const initialSub = initialData?.subcategoria || "";
-  const hasPredefined = safeGetSubcategories(initialData?.categoria);
+  const hasPredefined = safeGetSubcategories(initialData?.categoria, subcategories);
   const isPredefined = !!(hasPredefined && hasPredefined.includes(initialSub));
 
   const [subSelectValue, setSubSelectValue] = useState(
@@ -372,8 +368,8 @@ export default function ActivityForm({
   };
 
   const predefinedSubs = selectedCategories.includes("Esports")
-    ? safeGetSubcategories("Esports")
-    : (selectedCategories.includes("Idiomes") ? safeGetSubcategories("Idiomes") : undefined);
+    ? safeGetSubcategories("Esports", subcategories)
+    : (selectedCategories.includes("Idiomes") ? safeGetSubcategories("Idiomes", subcategories) : undefined);
   const [edat, setEdat] = useState(initialData?.edat || "");
   // Parse the initial price for unit dropdown and inputs
   const getInitialPriceState = () => {

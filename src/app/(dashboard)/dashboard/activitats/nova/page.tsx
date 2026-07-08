@@ -1,4 +1,4 @@
-import { getActivitats, getCentres, getPoblacions } from "@/lib/airtable";
+import { getActivitats, getCentres, getPoblacions, getSubcategories } from "@/lib/airtable";
 import { createActivitatAction } from "@/app/actions/activitats";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
@@ -32,12 +32,13 @@ export default async function NovaActivitatPage({ searchParams }: { searchParams
   }
 
   const isAdmin = !!session.user.isAdmin;
-  const activitats = await getActivitats();
-  const allCentres = await getCentres();
+  const [activitats, allCentres, allPoblacions, subcategories] = await Promise.all([
+    getActivitats(),
+    getCentres(),
+    getPoblacions(),
+    getSubcategories(),
+  ]);
   const centre = allCentres.find(c => c.id === session.user.centreId);
-
-  // Carrega totes les poblacions i les agrupa per comarca
-  const allPoblacions = await getPoblacions();
   const poblacionsGrouped: Record<string, string[]> = {};
 
   allPoblacions.forEach(p => {
@@ -75,6 +76,7 @@ export default async function NovaActivitatPage({ searchParams }: { searchParams
     <ActivityForm
       initialData={duplicateData}
       categories={categories}
+      subcategories={subcategories}
       submitAction={createActivitatAction}
       title={duplicateData ? `Duplicar Activitat: ${duplicateData.nom}` : "Nova Activitat Extraescolar"}
       centre={centre}

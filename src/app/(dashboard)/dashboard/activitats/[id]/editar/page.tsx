@@ -1,4 +1,4 @@
-import { getAllActivitats, getCentres, getPoblacions } from "@/lib/airtable";
+import { getAllActivitats, getCentres, getPoblacions, getSubcategories } from "@/lib/airtable";
 import { updateActivitatAction } from "@/app/actions/activitats";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
@@ -77,14 +77,12 @@ export default async function EditarActivitatPage({ params }: EditarActivitatPag
   const allCentres = await getCentres();
   const centre = allCentres.find(c => c.id === session.user.centreId || c.nom === activitat.centre);
 
-  // Build options
+  // Build options en paral·lel
+  const [allPoblacions, subcategories] = await Promise.all([getPoblacions(), getSubcategories()]);
   const categories = Array.from(new Set([
     ...allActivitats.map(a => a.categoria?.trim()).filter(Boolean),
     ...DEFAULT_CATEGORIES.map(c => c.trim())
   ])).sort();
-
-  // Carrega totes les poblacions i les agrupa per comarca
-  const allPoblacions = await getPoblacions();
   const poblacionsGrouped: Record<string, string[]> = {};
 
   allPoblacions.forEach(p => {
@@ -103,6 +101,7 @@ export default async function EditarActivitatPage({ params }: EditarActivitatPag
     <ActivityForm
       initialData={activitat}
       categories={categories}
+      subcategories={subcategories}
       submitAction={boundUpdateAction}
       title={`Editar Activitat: ${activitat.nom}`}
       centre={centre}
