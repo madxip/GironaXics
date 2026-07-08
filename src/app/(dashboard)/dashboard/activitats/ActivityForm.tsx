@@ -996,7 +996,7 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
             <div role="tabpanel" style={{ display: activeTab === 0 ? 'flex' : 'none', flexDirection: 'column', gap: '24px', padding: '32px' }}>
 
               {/* Admin: selector de centre */}
-              {isAdmin && !initialData && allCentres && allCentres.length > 0 && (
+              {isAdmin && !initialData?.id && allCentres && allCentres.length > 0 && (
                 <div style={{ background: "linear-gradient(135deg, rgba(217,87,56,0.06), rgba(217,87,56,0.02))", border: "1.5px solid rgba(217,87,56,0.25)", borderRadius: "12px", padding: "20px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
                     <span style={{ background: "rgba(217,87,56,0.12)", color: "#d95738", borderRadius: "6px", padding: "4px 10px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>Admin</span>
