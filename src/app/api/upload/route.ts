@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import { put } from "@vercel/blob";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +28,6 @@ export async function POST(req: NextRequest) {
         { status: 401 }
       );
     }
-    // Admins no tenen centreId però sí poden pujar imatges
     if (!session.user.centreId && !session.user.isAdmin) {
       return NextResponse.json(
         { error: "No autoritzat. Cal iniciar sessió per pujar fitxers." },
@@ -60,18 +60,32 @@ export async function POST(req: NextRequest) {
 
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    // 3. Intentar pujar a Catbox (permanent i ràpid)
+    // 3. Vercel Blob Storage (permanent, primera opció)
+    if (process.env.BLOB_READ_WRITE_TOKEN) {
+      try {
+        const ext = file.name.split('.').pop() || 'jpg';
+        const filename = `imatges/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+        const blob = await put(filename, buffer, {
+          access: 'public',
+          contentType: file.type,
+        });
+        return NextResponse.json({ url: blob.url });
+      } catch (blobErr) {
+        console.warn("[Upload API] Error amb Vercel Blob, intentant fallback a Catbox:", blobErr);
+      }
+    }
+
+    // 4. Fallback: Catbox.moe (permanent)
     try {
       const catboxForm = new FormData();
       catboxForm.append("reqtype", "fileupload");
-      const blob = new Blob([buffer], { type: file.type });
-      catboxForm.append("fileToUpload", blob, file.name);
+      const catboxBlob = new Blob([buffer], { type: file.type });
+      catboxForm.append("fileToUpload", catboxBlob, file.name);
 
       const response = await fetch("https://catbox.moe/user/api.php", {
         method: "POST",
         body: catboxForm,
-        // Short timeout for fallback safety
-        signal: AbortSignal.timeout(10000) 
+        signal: AbortSignal.timeout(10000)
       });
 
       if (response.ok) {
@@ -84,11 +98,11 @@ export async function POST(req: NextRequest) {
       console.warn("[Upload API] Error amb Catbox, intentant fallback a Uguu.se:", catboxErr);
     }
 
-    // 3.5. Fallback alternatiu: Uguu.se (durada de 24h, ideal per a Airtable)
+    // 5. Fallback: Uguu.se (24h — només emergència)
     try {
       const uguuForm = new FormData();
-      const blob = new Blob([buffer], { type: file.type });
-      uguuForm.append("files[]", blob, file.name);
+      const uguuBlob = new Blob([buffer], { type: file.type });
+      uguuForm.append("files[]", uguuBlob, file.name);
 
       const response = await fetch("https://uguu.se/upload.php", {
         method: "POST",
@@ -99,37 +113,12 @@ export async function POST(req: NextRequest) {
       if (response.ok) {
         const resData = await response.json();
         if (resData.success && resData.files?.[0]?.url) {
+          console.warn("[Upload API] AVÍS: Imatge pujada a Uguu.se (temporal 24h). Vercel Blob no disponible.");
           return NextResponse.json({ url: resData.files[0].url });
         }
       }
     } catch (uguuErr) {
-      console.warn("[Upload API] Error amb Uguu.se, intentant fallback a Tmpfiles:", uguuErr);
-    }
-
-    // 4. Fallback: Pujar a TmpFiles (Airtable importarà la imatge immediatament abans de l'expiració de 60 minuts)
-    try {
-      const tmpForm = new FormData();
-      const blob = new Blob([buffer], { type: file.type });
-      tmpForm.append("file", blob, file.name);
-
-      const response = await fetch("https://tmpfiles.org/api/v1/upload", {
-        method: "POST",
-        body: tmpForm,
-        signal: AbortSignal.timeout(10000)
-      });
-
-      if (response.ok) {
-        const resData = await response.json();
-        if (resData.status === "success" && resData.data?.url) {
-          // Converteix la URL de visualització a la URL de descàrrega directa requerida per Airtable
-          // Visualització: https://tmpfiles.org/123456/imatge.png
-          // Directe: https://tmpfiles.org/dl/123456/imatge.png
-          const directUrl = resData.data.url.replace("tmpfiles.org/", "tmpfiles.org/dl/");
-          return NextResponse.json({ url: directUrl });
-        }
-      }
-    } catch (tmpErr) {
-      console.error("[Upload API] Error amb Tmpfiles:", tmpErr);
+      console.error("[Upload API] Error amb Uguu.se:", uguuErr);
     }
 
     return NextResponse.json({ error: "Tots els serveis de pujada d'imatges han fallat." }, { status: 500 });
