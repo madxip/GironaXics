@@ -12,6 +12,7 @@ import {
   MapPin,
   Users,
   RefreshCw,
+  Building2,
 } from "lucide-react";
 
 // ─── Tipus ───────────────────────────────────────────────────────────────────
@@ -27,6 +28,7 @@ interface StatsData {
     filterUses: number;
   };
   topActivitats: { label: string; views: number; contacts: number; ratio: number }[];
+  topCentres: { label: string; views: number; contacts: number; ratio: number }[];
   topCategories: { label: string; count: number }[];
   topBarris: { label: string; count: number }[];
   topEdats: { label: string; count: number }[];
@@ -224,6 +226,30 @@ export default function AnalyticsDashboard() {
                 </>
               )}
             </SectionCard>
+
+            {/* Centres — només admin */}
+            {isAdmin && (
+              <SectionCard title="Estadístiques per Centre" icon={Building2}>
+                {!data.topCentres || data.topCentres.length === 0 ? <EmptyState isAdmin={isAdmin} /> : (
+                  <>
+                    <div className="analytics-activity-row" style={{ fontWeight: 700, color: "var(--muted)", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em", paddingTop: 0 }}>
+                      <span>Centre</span>
+                      <span style={{ textAlign: "right" }}>Visites</span>
+                      <span style={{ textAlign: "right" }}>Contactes</span>
+                      <span style={{ textAlign: "right" }}>Conv.</span>
+                    </div>
+                    {data.topCentres.map((c, i) => (
+                      <div key={i} className="analytics-activity-row">
+                        <span style={{ fontWeight: 600, color: "var(--fosc)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={c.label}>{c.label}</span>
+                        <span style={{ textAlign: "right", fontWeight: 700, color: "var(--verd-fosc)" }}>{c.views}</span>
+                        <span style={{ textAlign: "right", color: "#2563eb", fontWeight: 600 }}>{c.contacts}</span>
+                        <span style={{ textAlign: "right", fontWeight: 700, color: c.ratio >= 20 ? "#16a34a" : c.ratio >= 5 ? "#d97706" : "var(--muted)" }}>{c.ratio}%</span>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </SectionCard>
+            )}
 
             {/* Categories — només admin */}
             {isAdmin && (

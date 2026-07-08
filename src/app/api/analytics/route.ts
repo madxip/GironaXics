@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
-import { getActivitatsByCentreId } from '@/lib/airtable';
+import { getActivitatsByCentreId, getActivitats } from '@/lib/airtable';
 
 const API_KEY = process.env.AIRTABLE_API_KEY;
 const BASE_ID = process.env.AIRTABLE_BASE_ID;
@@ -136,6 +136,19 @@ export async function GET(req: NextRequest) {
       allowedActivityIds = new Set(centreActivitats.map(a => a.id).filter(Boolean) as string[]);
     }
 
+    // Per admin: mapa activitat_id → nom de centre
+    const activitatCentreMap: Map<string, string> = new Map();
+    if (isAdmin) {
+      try {
+        const totsActivitats = await getActivitats();
+        for (const a of totsActivitats) {
+          if (a.id && a.centre) activitatCentreMap.set(a.id, a.centre);
+        }
+      } catch (e) {
+        console.warn('[Analytics] No s\'ha pogut carregar el mapa activitat→centre:', e);
+      }
+    }
+
     // Filtre d'events per activitat (si no és admin)
     const filterByActivity = (records: AirtableRecord[]) => {
       if (!allowedActivityIds) return records; // admin veu tot
@@ -186,6 +199,36 @@ export async function GET(req: NextRequest) {
     const mobileCount  = allWithDevice.filter(r => r.fields.device === 'mobile').length;
     const desktopCount = allWithDevice.filter(r => r.fields.device === 'desktop').length;
 
+    // Top Centres (només admin): agregar visites i contactes per centre
+    let topCentres: { label: string; views: number; contacts: number; ratio: number }[] = [];
+    if (isAdmin && activitatCentreMap.size > 0) {
+      const centreMap: Record<string, { views: number; contacts: number }> = {};
+      for (const r of activityViewsAll) {
+        const aid = r.fields.activitat_id;
+        const centre = aid ? activitatCentreMap.get(aid) : undefined;
+        if (centre) {
+          if (!centreMap[centre]) centreMap[centre] = { views: 0, contacts: 0 };
+          centreMap[centre].views++;
+        }
+      }
+      for (const r of [...contactPhoneAll, ...contactEmailAll]) {
+        const aid = r.fields.activitat_id;
+        const centre = aid ? activitatCentreMap.get(aid) : undefined;
+        if (centre) {
+          if (!centreMap[centre]) centreMap[centre] = { views: 0, contacts: 0 };
+          centreMap[centre].contacts++;
+        }
+      }
+      topCentres = Object.entries(centreMap)
+        .sort(([, a], [, b]) => b.views - a.views)
+        .map(([label, { views, contacts }]) => ({
+          label,
+          views,
+          contacts,
+          ratio: views > 0 ? Math.round((contacts / views) * 100) : 0,
+        }));
+    }
+
     return NextResponse.json({
       isAdmin,
       totals: {
@@ -199,6 +242,7 @@ export async function GET(req: NextRequest) {
         filterUses:         isAdmin ? filterCategoria.length + filterBarri.length + filterEdat.length : 0,
       },
       topActivitats,
+      topCentres,
       // Seccions globals: buides si no és admin
       topCategories:  isAdmin ? countBy(filterCategoria, 'event_label').slice(0, 8) : [],
       topBarris:      isAdmin ? countBy(filterBarri,     'event_label').slice(0, 8) : [],
