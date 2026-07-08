@@ -367,17 +367,38 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
 
             <div className="detail-col-right" style={{ gridColumn: 'span 6' }}>
               <div style={{ backgroundColor: 'white', padding: '32px', borderRadius: '4px', border: '1px solid var(--crema-fosca)' }}>
-                <div style={{ fontSize: '32px', fontWeight: 700, color: 'var(--verd-fosc)', marginBottom: '24px' }}>
+                <div style={{ marginBottom: '24px' }}>
                   <strong style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', opacity: 0.5, marginBottom: '6px', letterSpacing: '0.05em', fontWeight: 700, color: 'var(--muted)' }}>{TXT_PREU}</strong>
                   {(() => {
                     const formatted = formatPreu(activitat.preu);
+                    // Si conté | és un preu multi-opció (ex: "33 € un dia | 60 € dos dies")
+                    if (formatted.includes('|')) {
+                      const opcions = formatted.split('|').map(o => o.trim());
+                      return (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          {opcions.map((opcio, i) => (
+                            <span key={i} style={{ fontSize: '20px', fontWeight: 700, color: 'var(--verd-fosc)' }}>
+                              {i > 0 && <span style={{ fontSize: '12px', opacity: 0.4, marginRight: '6px', fontWeight: 400 }}>o bé</span>}
+                              {opcio}
+                            </span>
+                          ))}
+                        </div>
+                      );
+                    }
+                    // Preu llarg sense | (text descriptiu)
+                    if (formatted.length > 20) {
+                      return <span style={{ fontSize: '18px', fontWeight: 700, color: 'var(--verd-fosc)' }}>{formatted}</span>;
+                    }
+                    // Preu simple (número o text curt)
                     if (formatted.includes('/')) {
                       const [priceVal, priceUnit] = formatted.split('/');
                       return (
-                        <>{priceVal} <span style={{ fontSize: '16px', fontWeight: 400, opacity: 0.6 }}>/{priceUnit}</span></>
+                        <span style={{ fontSize: '32px', fontWeight: 700, color: 'var(--verd-fosc)' }}>
+                          {priceVal} <span style={{ fontSize: '16px', fontWeight: 400, opacity: 0.6 }}>/{priceUnit}</span>
+                        </span>
                       );
                     }
-                    return <>{formatted}</>;
+                    return <span style={{ fontSize: '32px', fontWeight: 700, color: 'var(--verd-fosc)' }}>{formatted}</span>;
                   })()}
                 </div>
 
