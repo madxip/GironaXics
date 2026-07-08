@@ -1430,10 +1430,7 @@ export default function ActivityForm({
 
               <div style={fieldGroupStyle}>
                 <label style={labelStyle}>Observacions</label>
-                <textarea value={material} onChange={e => setMaterial(e.target.value)} rows={4}
-                  placeholder={"Ex: Opci\u00f3 de fer setmanes soltes. 1 setmana: 100\u20ac \u00b7 2 setmanes: 190\u20ac"}
-                  disabled={loading}
-                  style={{ ...fieldStyle(), resize: "vertical", minHeight: "100px", lineHeight: 1.6 }} />
+                <RichTextEditor value={material} onChange={setMaterial} disabled={loading} />
               </div>
 
               {tipus === "Casal" && (
