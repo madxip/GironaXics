@@ -27,6 +27,7 @@ export interface CRMCentre {
   contactEmail: string;
   contactUserId?: string; // ID of the linked record in Usuaris_Centres
   activityCount: number;
+  actiu?: boolean; // Si false, el centre i les seves activitats no apareixen al web
 }
 
 export interface CRMActivity {
@@ -173,7 +174,8 @@ export async function getCentresWithContacts(): Promise<CRMCentre[]> {
         contactName: contact?.nom || '',
         contactEmail: contact?.email || '',
         contactUserId: contact?.id,
-        activityCount: Array.isArray(c.fields.Activitats) ? c.fields.Activitats.length : 0
+        activityCount: Array.isArray(c.fields.Activitats) ? c.fields.Activitats.length : 0,
+        actiu: !!(c.fields.actiu || c.fields.Actiu),
       };
     });
 
@@ -263,6 +265,25 @@ export async function updateCentreAndContact(
     const errorMsg = err instanceof Error ? err.message : 'Unknown error';
     console.error('[CRM] Error updating centre and contact:', errorMsg);
     throw err;
+  }
+}
+
+/**
+ * Toggle the `actiu` field of a centre directly in Airtable.
+ */
+export async function updateCentreActiu(centreId: string, actiu: boolean): Promise<boolean> {
+  if (!API_KEY || !BASE_ID) return false;
+  try {
+    await fetchFromAirtable('Centres', {
+      method: 'PATCH',
+      body: JSON.stringify({
+        records: [{ id: centreId, fields: { actiu } }]
+      })
+    });
+    return true;
+  } catch (err) {
+    console.error('[CRM] Error updating centre actiu:', err);
+    return false;
   }
 }
 

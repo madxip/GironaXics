@@ -15,14 +15,16 @@ import {
   Loader2,
   Tag,
   Copy,
-  X
+  X,
+  Power
 } from "lucide-react";
 import { CRMCentre, CRMActivity } from "@/lib/crm";
 import { 
   updateCentreAction, 
   createCentreAction, 
   getCentreActivitiesAction, 
-  updateCRMActivityAction 
+  updateCRMActivityAction,
+  toggleCentreActiuAction
 } from "@/app/actions/crm";
 import Toast from "@/components/Toast";
 import Link from "next/link";
@@ -46,6 +48,7 @@ export default function AdminCentresTab({ initialCentres, poblacions }: AdminCen
   const [isPending, startTransition] = useTransition();
   const [loadingActivities, setLoadingActivities] = useState(false);
   const [centreActivities, setCentreActivities] = useState<CRMActivity[]>([]);
+  const [togglingActiuId, setTogglingActiuId] = useState<string | null>(null);
 
   // Add Centre Form States
   const [newNom, setNewNom] = useState("");
@@ -300,19 +303,20 @@ export default function AdminCentresTab({ initialCentres, poblacions }: AdminCen
                     <th style={{ padding: "16px 20px" }}>Municipi / Barri</th>
                     <th style={{ padding: "16px 20px" }}>Dades de Contacte</th>
                     <th style={{ padding: "16px 20px" }}>Activitats</th>
+                    <th style={{ padding: "16px 20px", textAlign: "center" }}>Actiu</th>
                     <th style={{ padding: "16px 20px", textAlign: "right" }}>Accions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredCentres.length === 0 ? (
                     <tr>
-                      <td colSpan={5} style={{ padding: "40px", textAlign: "center", color: "var(--muted)" }}>
+                      <td colSpan={6} style={{ padding: "40px", textAlign: "center", color: "var(--muted)" }}>
                         No s'ha trobat cap centre que coincideixi amb la cerca.
                       </td>
                     </tr>
                   ) : (
                     filteredCentres.map(c => (
-                      <tr key={c.id} style={{ borderBottom: "1px solid var(--crema-fosca)" }} className="table-row-hover">
+                      <tr key={c.id} style={{ borderBottom: "1px solid var(--crema-fosca)", opacity: c.actiu === false ? 0.5 : 1, transition: "opacity 0.3s" }} className="table-row-hover">
                         {/* Nom i Logo */}
                         <td style={{ padding: "16px 20px" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -375,6 +379,48 @@ export default function AdminCentresTab({ initialCentres, poblacions }: AdminCen
                           }}>
                             <Activity size={12} /> {c.activityCount || 0}
                           </span>
+                        </td>
+
+                        {/* Toggle Actiu */}
+                        <td style={{ padding: "16px 20px", textAlign: "center" }}>
+                          <button
+                            title={c.actiu ? "Marcar com a Inactiu" : "Marcar com a Actiu"}
+                            disabled={togglingActiuId === c.id}
+                            onClick={() => {
+                              const newActiu = !c.actiu;
+                              setTogglingActiuId(c.id);
+                              setCentres(prev => prev.map(x => x.id === c.id ? { ...x, actiu: newActiu } : x));
+                              toggleCentreActiuAction(c.id, newActiu).then(res => {
+                                setTogglingActiuId(null);
+                                if (!res.success) {
+                                  // Revert optimistic update
+                                  setCentres(prev => prev.map(x => x.id === c.id ? { ...x, actiu: !newActiu } : x));
+                                  setToast({ type: "error", message: res.error || "Error actualitzant l'estat" });
+                                } else {
+                                  setToast({ type: "success", message: `Centre ${newActiu ? "activat" : "desactivat"} correctament` });
+                                }
+                              });
+                            }}
+                            style={{
+                              background: "none",
+                              border: "none",
+                              cursor: togglingActiuId === c.id ? "wait" : "pointer",
+                              padding: "4px",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "6px",
+                              fontSize: "12px",
+                              fontWeight: 600,
+                              color: c.actiu ? "var(--verd)" : "var(--muted)",
+                              transition: "color 0.2s"
+                            }}
+                          >
+                            {togglingActiuId === c.id
+                              ? <Loader2 size={18} style={{ animation: "spin 1s linear infinite" }} />
+                              : <Power size={18} style={{ color: c.actiu ? "var(--verd)" : "#ccc" }} />
+                            }
+                            <span>{c.actiu ? "Actiu" : "Inactiu"}</span>
+                          </button>
                         </td>
 
                         {/* Accions */}

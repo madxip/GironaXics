@@ -795,8 +795,23 @@ export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'cen
   try {
     const url = `https://api.airtable.com/v0/${BASE_ID}/Activitats`;
     
-    const baseSlug = normalizeSlug(data.nom);
-    const slug = baseSlug.endsWith('-girona') ? baseSlug : `${baseSlug}-girona`;
+    // ── Generació de l'slug descriptiu i únic ──────────────────────────────────
+    // Format: tipus-nom-edat-centre-lloc
+    // On "lloc" = barri (ex: girona-eixample) > poblacio_propia > 'girona'
+    const slugTipus  = data.tipus ? normalizeSlug(data.tipus) : 'extraescolar';
+    const slugNom    = normalizeSlug(data.nom);
+    const slugEdat   = data.edat ? normalizeSlug(data.edat) : '';
+    // Resolem el nom del centre a partir del centreId
+    let slugCentre = '';
+    try {
+      const centres = await getCentres();
+      const centreObj = centres.find(c => c.id === data.centreId);
+      slugCentre = centreObj?.nom ? normalizeSlug(centreObj.nom) : '';
+    } catch { /* si falla el lookup, l'slug no tindrà centre */ }
+    // Prioritat del lloc: barri > poblacio_propia > 'girona'
+    const rawLloc  = (typeof data.barri === 'string' && data.barri) ? data.barri : (data.poblacio_propia || 'girona');
+    const slugLloc = normalizeSlug(rawLloc);
+    const slug = [slugTipus, slugNom, slugEdat, slugCentre, slugLloc].filter(Boolean).join('-');
     
     const subcatId = data.subcategoria ? await getSubcategoryRecordIdByName(data.subcategoria) : null;
     const poblacioId = data.poblacio_propia ? await getPoblacioRecordIdByName(data.poblacio_propia) : null;

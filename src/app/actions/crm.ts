@@ -2,9 +2,9 @@
 
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { getCentresWithContacts, updateCentreAndContact, getActivitiesByCentre, createCentreWithContact, CRMCentre, CRMActivity } from "@/lib/crm";
-import { updateActivitat } from "@/lib/airtable";
-import { revalidatePath } from "next/cache";
+import { getCentresWithContacts, updateCentreAndContact, getActivitiesByCentre, createCentreWithContact, updateCentreActiu, CRMCentre, CRMActivity } from '@/lib/crm';
+import { updateActivitat } from '@/lib/airtable';
+import { revalidatePath, revalidateTag } from 'next/cache';
 
 // Helper to verify admin permissions
 async function verifyAdminUser() {
@@ -40,13 +40,40 @@ export async function updateCentreAction(
     await verifyAdminUser();
     const success = await updateCentreAndContact(centreId, centreData, contactData);
     if (success) {
-      revalidatePath("/dashboard/crm");
+      revalidatePath('/dashboard/crm');
       return { success: true };
     }
     return { success: false, error: "No s'ha pogut actualitzar el centre." };
   } catch (err) {
     console.error('[CRM Server Action] Error updating centre:', err);
-    const message = err instanceof Error ? err.message : "Error de connexió.";
+    const message = err instanceof Error ? err.message : 'Error de connexió.';
+    return { success: false, error: message };
+  }
+}
+
+/**
+ * Toggle the actiu state of a centre.
+ * Admin only.
+ */
+export async function toggleCentreActiuAction(
+  centreId: string,
+  actiu: boolean
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    await verifyAdminUser();
+    const success = await updateCentreActiu(centreId, actiu);
+    if (success) {
+      // Invalida la caché pública perquè el canvi sigui immediat al web
+      revalidateTag('centres');
+      revalidateTag('activitats');
+      revalidatePath('/');
+      revalidatePath('/dashboard');
+      return { success: true };
+    }
+    return { success: false, error: "No s'ha pogut actualitzar l'estat del centre." };
+  } catch (err) {
+    console.error('[CRM Server Action] Error toggling centre actiu:', err);
+    const message = err instanceof Error ? err.message : 'Error de connexió.';
     return { success: false, error: message };
   }
 }
