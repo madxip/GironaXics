@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import Image from './SafeImage';
 import { Activitat } from '@/lib/types';
-import { normalizeSlug, formatPreu } from '@/lib/utils';
+import { normalizeSlug } from '@/lib/utils';
 import { parseVacances, isInVacances, getNextValidTallerDate, MONTH_ABBR_CAT } from '@/lib/tallerDates';
 
 const saveScroll = () => {
@@ -94,20 +94,7 @@ const parseTallerDates = (text: string): ParsedDate[] => {
   return result;
 };
 
-const formatTallerPrice = (preuRaw: string | number | undefined): string => {
-  if (preuRaw === undefined || preuRaw === null) return 'N/A';
-  const str = String(preuRaw).trim();
-  if (!str) return 'N/A';
-  if (str.toLowerCase() === 'gratuït' || str.toLowerCase() === 'gratuit') return 'Gratuït';
-  
-  if (/^[0-9\s.,]+$/.test(str)) {
-    return `${str}€`;
-  }
-  if (str.includes('€')) {
-    return str;
-  }
-  return `${str}€`;
-};
+
 
 export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
   const catSlug = normalizeSlug(activitat.categoria);
@@ -119,39 +106,6 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
     const logoUrl = activitat.centreImatgeUrl;
     const diesLabel = (activitat.dies || "").toLowerCase().includes('torn') ? 'Torns' : 'Dies';
     
-    // Parse price to extract large bold number and small unit/period
-    const parseCasalPrice = (preuRaw: string | number | undefined) => {
-      if (preuRaw === undefined || preuRaw === null) return { num: 'N/A', unit: '' };
-      const str = String(preuRaw).trim();
-      if (!str) return { num: 'N/A', unit: '' };
-      
-      if (str.toLowerCase() === 'gratuït' || str.toLowerCase() === 'gratuit') {
-        return { num: '0', unit: '€ (Gratuït)' };
-      }
-      
-      if (/^[0-9\s.,]+$/.test(str)) {
-        return { num: str, unit: '€ /mes' };
-      }
-      
-      if (str.includes('€')) {
-        const parts = str.split('€');
-        const num = parts[0].trim();
-        let unit = parts.slice(1).join('€').trim();
-        if (unit.startsWith('/')) {
-          unit = `€ ${unit}`;
-        } else if (unit) {
-          unit = `€ / ${unit}`;
-        } else {
-          unit = '€ /mes';
-        }
-        return { num, unit };
-      }
-      
-      return { num: str, unit: '' };
-    };
-
-    const priceInfo = parseCasalPrice(activitat.preu);
-
     return (
       <Link href={href} className="casal-card-wrapper" onClick={saveScroll}>
         {/* Top Row: Logo & Badge */}
@@ -205,12 +159,7 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
           </div>
         </div>
 
-        {/* Bottom Bar */}
         <div className="casal-card-bottom-bar">
-          <div className="casal-card-price-container">
-            <span className="casal-card-price-num">{priceInfo.num}</span>
-            {priceInfo.unit && <span className="casal-card-price-unit">{priceInfo.unit}</span>}
-          </div>
           <span className="casal-card-action-text">
             Reserva plaça →
           </span>
@@ -221,7 +170,6 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
 
   if (isTaller) {
     const parsedDates = parseTallerDates(activitat.dies || '');
-    const formattedPrice = formatTallerPrice(activitat.preu);
 
     // ── Vacances logic ──────────────────────────────────────────
     const vacRanges = parseVacances(activitat.centreVacances || '');
@@ -306,7 +254,6 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
         {/* Divider and Bottom row */}
         <div className="taller-card-bottom-row">
           <span className="taller-card-time">{activitat.horari}</span>
-          <span className="taller-card-price">{formattedPrice}</span>
         </div>
       </Link>
     );
@@ -358,10 +305,6 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
               <span>{activitat.subcategoria || activitat.categoria}</span>
               <span>·</span>
               <span>{activitat.edat}</span>
-              <span>·</span>
-              <span className="activitat-price">
-                {formatPreu(activitat.preu)}
-              </span>
               {activitat.tipus && !activitat.tipus.toLowerCase().includes('extraescolar') && (
                 <>
                   <span>·</span>

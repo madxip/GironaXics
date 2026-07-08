@@ -354,12 +354,11 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
                   lineHeight: 1.5, 
                   color: 'var(--fosc)',
                   borderRadius: '0 4px 4px 0',
-                  whiteSpace: 'pre-line'
                 }}>
                   <strong style={{ display: 'block', color: 'var(--verd-fosc)', marginBottom: '8px', textTransform: 'uppercase', fontSize: '12px', letterSpacing: '0.05em' }}>
                     Observacions
                   </strong>
-                  {activitat.material}
+                  {parseMarkdownToReact(activitat.material)}
                 </div>
               )}
               <Galeria images={activitat.galeria} nom={activitat.nom} />
