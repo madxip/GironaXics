@@ -24,7 +24,7 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'n.uguu.se',
+        hostname: '*.uguu.se',
       },
       {
         protocol: 'https',
@@ -39,7 +39,7 @@ const nextConfig = {
     // and WebSockets (ws: wss:) for Hot Module Replacement (HMR) connection.
     const cspValue = isDev
       ? "default-src 'self'; img-src 'self' data: https: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' ws: wss: https://v5.airtableusercontent.com https://dl.airtable.com https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com; object-src 'none';"
-      : "default-src 'self'; img-src 'self' data: https://images.unsplash.com https://files.catbox.moe https://tmpfiles.org https://n.uguu.se https://*.public.blob.vercel-storage.com https://v5.airtableusercontent.com https://dl.airtable.com https://www.google-analytics.com; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://v5.airtableusercontent.com https://dl.airtable.com https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com; object-src 'none'; frame-ancestors 'none';";
+      : "default-src 'self'; img-src 'self' data: https://images.unsplash.com https://files.catbox.moe https://tmpfiles.org https://*.uguu.se https://*.public.blob.vercel-storage.com https://v5.airtableusercontent.com https://dl.airtable.com https://www.google-analytics.com; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://v5.airtableusercontent.com https://dl.airtable.com https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com; object-src 'none'; frame-ancestors 'none';";
 
     return [
       {
