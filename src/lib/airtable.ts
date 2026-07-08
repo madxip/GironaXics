@@ -273,7 +273,9 @@ function mapActivitatRecord(
   // Mapejar imatges usant el slug ja generat per tenir rutes proxy permanents
   if (Array.isArray(r.fields.Imatge) && r.fields.Imatge.length > 0) {
     const imgObj = r.fields.Imatge[0] as { url: string; thumbnails?: { large?: { url: string }; full?: { url: string } } };
-    f.rawImatgeUrl = imgObj.thumbnails?.full?.url || imgObj.url;
+    // Sempre usem la URL original d'Airtable, que és estable per a tots els formats (JPEG, PNG, WebP, AVIF...)
+    // Els thumbnails poden no existir per a formats moderns (WebP, AVIF) perquè Airtable no els genera
+    f.rawImatgeUrl = imgObj.url;
     f.rawImatgeThumbnailUrl = imgObj.thumbnails?.large?.url || imgObj.url;
     f.imatgeUrl = `/api/imatges?type=activitat&slug=${f.slug}`;
     f.imatgeThumbnailUrl = `/api/imatges?type=activitat-thumb&slug=${f.slug}`;
@@ -509,7 +511,7 @@ async function _doFetchCentres(): Promise<Centre[]> {
     const attachmentField = r.fields.Imatge || r.fields.imatge || r.fields.Logo || r.fields.logo || r.fields.Logotip || r.fields.logotip;
     if (Array.isArray(attachmentField) && attachmentField.length > 0) {
       const att = attachmentField[0] as { url: string; thumbnails?: { large?: { url: string } } };
-      f.rawImatgeUrl = att.thumbnails?.large?.url || att.url;
+      f.rawImatgeUrl = att.url; // URL original estable; thumbnails no es generen per WebP/AVIF
       f.imatgeUrl = `/api/imatges?type=centre&slug=${f.slug}`;
     }
     

@@ -4,14 +4,18 @@ import { authOptions } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-// Tipus MIME permesos (només imatges)
+// Tipus MIME permesos (imatges)
 const ALLOWED_TYPES = new Set([
   "image/jpeg",
+  "image/jpg",
   "image/png",
   "image/webp",
   "image/gif",
+  "image/avif",
+  "image/heic",
+  "image/heif",
 ]);
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
 export async function POST(req: NextRequest) {
   try {
@@ -41,7 +45,7 @@ export async function POST(req: NextRequest) {
     // 1. Validar tipus MIME
     if (!ALLOWED_TYPES.has(file.type)) {
       return NextResponse.json(
-        { error: "Tipus de fitxer no permès. Només s'accepten imatges (JPEG, PNG, WebP, GIF)." },
+        { error: "Tipus de fitxer no permès. Només s'accepten imatges (JPEG, PNG, WebP, AVIF, GIF, HEIC)." },
         { status: 400 }
       );
     }
@@ -49,7 +53,7 @@ export async function POST(req: NextRequest) {
     // 2. Validar mida del fitxer
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { error: "El fitxer és massa gran. La mida màxima permesa és 5 MB." },
+        { error: "El fitxer és massa gran. La mida màxima permesa és 10 MB." },
         { status: 400 }
       );
     }
