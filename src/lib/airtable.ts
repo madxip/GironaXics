@@ -144,18 +144,40 @@ async function fetchAllRecords(tableName: string, filterByFormula?: string): Pro
   return allRecords;
 }
 
-async function getSubcategoryRecordIdByName(name: string): Promise<string | null> {
+async function getOrCreateSubcategoryId(name: string): Promise<string | null> {
   if (!name) return null;
   try {
+    // 1. Intenta trobar la subcategoria existent
     const filter = `LOWER({Nom})="${name.toLowerCase().trim()}"`;
     const records = await fetchAllRecords('Subcategories', filter);
     if (records.length > 0) {
       return records[0].id;
     }
+    // 2. No existeix → crea-la automàticament
+    console.log(`[Airtable API] Subcategoria "${name}" no trobada. Creant-la...`);
+    const url = `https://api.airtable.com/v0/${BASE_ID}/Subcategories`;
+    const res = await fetchWithRetry(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        records: [{ fields: { Nom: name.trim() } }],
+      }),
+    });
+    if (!res.ok) {
+      console.error(`[Airtable API] Error creant subcategoria "${name}": ${res.status}`);
+      return null;
+    }
+    const data = await res.json();
+    const newId = data.records?.[0]?.id as string | undefined;
+    console.log(`[Airtable API] Subcategoria "${name}" creada amb ID: ${newId}`);
+    return newId || null;
   } catch (err) {
-    console.error(`[Airtable API] Error fetching subcategory ID for ${name}:`, err);
+    console.error(`[Airtable API] Error amb subcategoria "${name}":`, err);
+    return null;
   }
-  return null;
 }
 
 /**
@@ -855,7 +877,7 @@ export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'cen
     const slugLloc = normalizeSlug(rawLloc);
     const slug = [slugTipus, slugNom, slugEdat, slugCentre, slugLloc].filter(Boolean).join('-');
     
-    const subcatId = data.subcategoria ? await getSubcategoryRecordIdByName(data.subcategoria) : null;
+    const subcatId = data.subcategoria ? await getOrCreateSubcategoryId(data.subcategoria) : null;
     const poblacioId = data.poblacio_propia ? await getPoblacioRecordIdByName(data.poblacio_propia) : null;
     
     const finalCategoria = Array.isArray(data.categoria)
@@ -977,7 +999,7 @@ export async function updateActivitat(id: string, data: Partial<Omit<Activitat, 
         : [data.categoria];
     }
     if (data.subcategoria !== undefined) {
-      const subcatId = data.subcategoria ? await getSubcategoryRecordIdByName(data.subcategoria) : null;
+      const subcatId = data.subcategoria ? await getOrCreateSubcategoryId(data.subcategoria) : null;
       fields.subcategoria_enllac = subcatId ? [subcatId] : [];
     }
     if (data.edat) fields.edat = data.edat;
