@@ -901,7 +901,8 @@ export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'cen
         {
           fields
         }
-      ]
+      ],
+      typecast: true
     };
 
     const res = await fetchWithRetry(url, {
@@ -1012,7 +1013,8 @@ export async function updateActivitat(id: string, data: Partial<Omit<Activitat, 
           id,
           fields
         }
-      ]
+      ],
+      typecast: true
     };
 
     const res = await fetchWithRetry(url, {
