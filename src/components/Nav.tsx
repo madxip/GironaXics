@@ -63,7 +63,7 @@ export default function Nav() {
           onClick={() => setMenuOpen(false)}
           aria-label="Tanca el menú de navegació"
           tabIndex={menuOpen ? undefined : -1}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', font: 'inherit', color: 'inherit', padding: 0 }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', font: 'inherit', color: 'white', padding: 0, fontSize: '24px', lineHeight: 1 }}
         >
           ✕
         </button>
