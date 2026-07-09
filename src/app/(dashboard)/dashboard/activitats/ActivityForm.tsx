@@ -896,20 +896,42 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
                 )}
               </div>
               <div style={{ background: "white", padding: "32px", borderRadius: "12px", border: "1px solid var(--crema-fosca)", position: "sticky", top: "80px", alignSelf: "start" }}>
-                <div style={{ fontSize: "32px", fontWeight: 700, color: "var(--verd-fosc)", marginBottom: "24px" }}>
+                <div style={{ marginBottom: "24px" }}>
                   <strong style={{ display: "block", fontSize: "12px", textTransform: "uppercase", opacity: 0.5, marginBottom: "6px", letterSpacing: "0.05em", fontWeight: 700 }}>PREU:</strong>
                   {(() => {
                     let preuText = "A consultar";
-                    if (priceUnit === "/mes" && priceVal) preuText = `${priceVal} \u20ac/mes`;
-                    else if (priceUnit === "/trimestre" && priceVal) preuText = `${priceVal} \u20ac/trimestre`;
-                    else if (priceUnit === "/any" && priceVal) preuText = `${priceVal} \u20ac/any`;
-                    else if (priceUnit === "gratuit") preuText = "Gratu\u00eft";
+                    if (priceUnit === "/mes" && priceVal) preuText = `${priceVal} €/mes`;
+                    else if (priceUnit === "/trimestre" && priceVal) preuText = `${priceVal} €/trimestre`;
+                    else if (priceUnit === "/any" && priceVal) preuText = `${priceVal} €/any`;
+                    else if (priceUnit === "gratuit") preuText = "Gratuït";
                     else if (priceUnit === "personalitzat") preuText = customPrice || "A consultar";
+                    // Multi-opció amb |
+                    if (preuText.includes("|")) {
+                      const opcions = preuText.split("|").map(o => o.trim());
+                      return (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                          {opcions.map((opcio, i) => (
+                            <span key={i} style={{ fontSize: "20px", fontWeight: 700, color: "var(--verd-fosc)" }}>
+                              {opcio}
+                            </span>
+                          ))}
+                        </div>
+                      );
+                    }
+                    // Preu llarg sense | (text descriptiu)
+                    if (preuText.length > 20) {
+                      return <span style={{ fontSize: "18px", fontWeight: 700, color: "var(--verd-fosc)" }}>{preuText}</span>;
+                    }
+                    // Preu simple (número o text curt)
                     if (preuText.includes("/")) {
                       const [priceV, priceU] = preuText.split("/");
-                      return <>{priceV} <span style={{ fontSize: "16px", fontWeight: 400, opacity: 0.6 }}>/{priceU}</span></>;
+                      return (
+                        <span style={{ fontSize: "32px", fontWeight: 700, color: "var(--verd-fosc)" }}>
+                          {priceV} <span style={{ fontSize: "16px", fontWeight: 400, opacity: 0.6 }}>/{priceU}</span>
+                        </span>
+                      );
                     }
-                    return <>{preuText}</>;
+                    return <span style={{ fontSize: "32px", fontWeight: 700, color: "var(--verd-fosc)" }}>{preuText}</span>;
                   })()}
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "32px", fontSize: "14px" }}>

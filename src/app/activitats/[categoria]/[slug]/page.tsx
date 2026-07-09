@@ -377,7 +377,6 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                           {opcions.map((opcio, i) => (
                             <span key={i} style={{ fontSize: '20px', fontWeight: 700, color: 'var(--verd-fosc)' }}>
-                              {i > 0 && <span style={{ fontSize: '12px', opacity: 0.4, marginRight: '6px', fontWeight: 400 }}>o bé</span>}
                               {opcio}
                             </span>
                           ))}
