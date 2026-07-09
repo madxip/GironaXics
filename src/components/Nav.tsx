@@ -70,6 +70,15 @@ export default function Nav() {
         <Link href="/#filtres" className="hoverable" onClick={() => setMenuOpen(false)} tabIndex={menuOpen ? undefined : -1}>Activitats</Link>
         <Link href="/per-a-centres" className="hoverable" onClick={() => setMenuOpen(false)} tabIndex={menuOpen ? undefined : -1}>Centres</Link>
         <Link href="/patrocinis" className="hoverable" onClick={() => setMenuOpen(false)} tabIndex={menuOpen ? undefined : -1}>Partners</Link>
+        <Link
+          href="/login"
+          className="hoverable"
+          onClick={() => setMenuOpen(false)}
+          tabIndex={menuOpen ? undefined : -1}
+          style={{ marginTop: '8px', padding: '10px 20px', background: 'var(--verd)', color: 'white', borderRadius: '8px', textDecoration: 'none', fontWeight: 600, fontSize: '14px', textAlign: 'center' }}
+        >
+          Accés centres
+        </Link>
       </div>
 
       {/* Nav */}
@@ -137,6 +146,23 @@ export default function Nav() {
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>
             </button>
+            <Link
+              href="/login"
+              className="hoverable"
+              style={{
+                textDecoration: 'none',
+                fontSize: '13px',
+                fontWeight: 600,
+                color: 'var(--verd-fosc)',
+                border: '1.5px solid var(--verd)',
+                borderRadius: '20px',
+                padding: '5px 14px',
+                letterSpacing: '0.02em',
+                transition: 'background 0.15s, color 0.15s',
+              }}
+            >
+              Accés centres
+            </Link>
         </div>
         <button
           className="hamburger hoverable"
