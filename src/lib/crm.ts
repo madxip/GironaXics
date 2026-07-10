@@ -23,6 +23,7 @@ export interface CRMCentre {
   web: string;
   barri: string;
   descripcio: string;
+  imatgeUrl: string; // URL del logotip del centre
   contactName: string;
   contactEmail: string;
   contactUserId?: string; // ID of the linked record in Usuaris_Centres
@@ -162,6 +163,11 @@ export async function getCentresWithContacts(): Promise<CRMCentre[]> {
     // 3. Format CRM centres
     const formattedCentres: CRMCentre[] = centresRecords.map(c => {
       const contact = userByCentreMap.get(c.id);
+      // Attachment field: Airtable returns an array of objects with a 'url' property
+      const imatgeAttachments = c.fields.imatge as Array<{ url: string }> | undefined;
+      const imatgeUrl = Array.isArray(imatgeAttachments) && imatgeAttachments.length > 0
+        ? imatgeAttachments[0].url
+        : '';
       return {
         id: c.id,
         nom: (c.fields.nom as string) || '',
@@ -171,6 +177,7 @@ export async function getCentresWithContacts(): Promise<CRMCentre[]> {
         web: (c.fields.web as string) || '',
         barri: Array.isArray(c.fields.barri) ? (c.fields.barri[0] as string) || '' : (c.fields.barri as string) || '',
         descripcio: (c.fields.descripcio as string) || '',
+        imatgeUrl,
         contactName: contact?.nom || '',
         contactEmail: contact?.email || '',
         contactUserId: contact?.id,
@@ -212,6 +219,10 @@ export async function updateCentreAndContact(
       centreFields.poblacio = poblacioId ? [poblacioId] : [];
     }
     if (centreData.descripcio !== undefined) centreFields.descripcio = centreData.descripcio;
+    // Airtable attachment fields require an array of objects with a 'url' property
+    if (centreData.imatgeUrl !== undefined) {
+      centreFields.imatge = centreData.imatgeUrl ? [{ url: centreData.imatgeUrl }] : [];
+    }
 
     if (Object.keys(centreFields).length > 0) {
       await fetchFromAirtable('Centres', {
@@ -329,7 +340,7 @@ export async function getActivitiesByCentre(centreId: string, centreNom: string)
  */
 export async function createCentreWithContact(
   nom: string,
-  centreData: { adreca?: string; telefon?: string; email?: string; web?: string; barri?: string; descripcio?: string },
+  centreData: { adreca?: string; telefon?: string; email?: string; web?: string; barri?: string; descripcio?: string; imatgeUrl?: string },
   contactData: { nom?: string; email?: string }
 ): Promise<CRMCentre | null> {
   if (!API_KEY || !BASE_ID) return null;
@@ -344,7 +355,7 @@ export async function createCentreWithContact(
 
     const poblacioId = centreData.barri ? await getPoblacioRecordIdByName(centreData.barri) : null;
 
-    const fields = {
+    const fields: Record<string, unknown> = {
       nom,
       slug,
       adreça: centreData.adreca || '',
@@ -354,6 +365,9 @@ export async function createCentreWithContact(
       poblacio: poblacioId ? [poblacioId] : [],
       descripcio: centreData.descripcio || '',
     };
+    if (centreData.imatgeUrl) {
+      fields.imatge = [{ url: centreData.imatgeUrl }];
+    }
 
     const res = (await fetchFromAirtable('Centres', {
       method: 'POST',
@@ -396,6 +410,7 @@ export async function createCentreWithContact(
       web: centreData.web || '',
       barri: centreData.barri || '',
       descripcio: centreData.descripcio || '',
+      imatgeUrl: centreData.imatgeUrl || '',
       contactName: contactData.nom || '',
       contactEmail: contactData.email || '',
       contactUserId,

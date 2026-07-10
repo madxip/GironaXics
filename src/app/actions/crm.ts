@@ -143,7 +143,7 @@ export async function updateCRMActivityAction(
  */
 export async function createCentreAction(
   nom: string,
-  centreData: { adreca?: string; telefon?: string; email?: string; web?: string; barri?: string; descripcio?: string },
+  centreData: { adreca?: string; telefon?: string; email?: string; web?: string; barri?: string; descripcio?: string; imatgeUrl?: string },
   contactData: { nom?: string; email?: string }
 ): Promise<{ success: boolean; centre?: CRMCentre; error?: string }> {
   try {

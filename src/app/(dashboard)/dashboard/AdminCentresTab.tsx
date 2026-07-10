@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import React, { useState, useTransition, useRef } from "react";
 import { 
   Search, 
   Building, 
@@ -16,7 +16,9 @@ import {
   Tag,
   Copy,
   X,
-  Power
+  Power,
+  Upload,
+  Trash2
 } from "lucide-react";
 import { CRMCentre, CRMActivity } from "@/lib/crm";
 import { 
@@ -60,6 +62,9 @@ export default function AdminCentresTab({ initialCentres, poblacions }: AdminCen
   const [newBarri, setNewBarri] = useState("");
   const [newContactNom, setNewContactNom] = useState("");
   const [newContactEmail, setNewContactEmail] = useState("");
+  const [newImatgeUrl, setNewImatgeUrl] = useState("");
+  const [isUploadingNew, setIsUploadingNew] = useState(false);
+  const newFileInputRef = useRef<HTMLInputElement>(null);
 
   // Edit Centre Form States
   const [editNom, setEditNom] = useState("");
@@ -72,6 +77,9 @@ export default function AdminCentresTab({ initialCentres, poblacions }: AdminCen
   const [editContactNom, setEditContactNom] = useState("");
   const [editContactEmail, setEditContactEmail] = useState("");
   const [editDescripcio, setEditDescripcio] = useState("");
+  const [editImatgeUrl, setEditImatgeUrl] = useState("");
+  const [isUploadingEdit, setIsUploadingEdit] = useState(false);
+  const editFileInputRef = useRef<HTMLInputElement>(null);
 
   // Filtered centres
   const filteredCentres = centres.filter(c => {
@@ -101,6 +109,48 @@ export default function AdminCentresTab({ initialCentres, poblacions }: AdminCen
     }
   };
 
+  // Logo upload handler for Add modal
+  const handleLogoUploadNew = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingNew(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      if (!res.ok) throw new Error("Error en pujar el fitxer.");
+      const data = await res.json();
+      if (data.url) setNewImatgeUrl(data.url);
+      else throw new Error(data.error || "No s'ha obtingut cap URL.");
+    } catch {
+      setToast({ type: "error", message: "No s'ha pogut pujar el logotip. Intenta-ho de nou." });
+    } finally {
+      setIsUploadingNew(false);
+      if (newFileInputRef.current) newFileInputRef.current.value = "";
+    }
+  };
+
+  // Logo upload handler for Edit form
+  const handleLogoUploadEdit = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingEdit(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      if (!res.ok) throw new Error("Error en pujar el fitxer.");
+      const data = await res.json();
+      if (data.url) setEditImatgeUrl(data.url);
+      else throw new Error(data.error || "No s'ha obtingut cap URL.");
+    } catch {
+      setToast({ type: "error", message: "No s'ha pogut pujar el logotip. Intenta-ho de nou." });
+    } finally {
+      setIsUploadingEdit(false);
+      if (editFileInputRef.current) editFileInputRef.current.value = "";
+    }
+  };
+
   // Open Edit Profile modal
   const handleEditCentre = (centre: CRMCentre) => {
     setEditingCentre(centre);
@@ -113,6 +163,7 @@ export default function AdminCentresTab({ initialCentres, poblacions }: AdminCen
     setEditDescripcio(centre.descripcio || "");
     setEditContactNom(centre.contactName || "");
     setEditContactEmail(centre.contactEmail || "");
+    setEditImatgeUrl(centre.imatgeUrl || "");
 
     let comarca = "";
     if (centre.barri) {
@@ -141,7 +192,8 @@ export default function AdminCentresTab({ initialCentres, poblacions }: AdminCen
             email: newEmail,
             web: newWeb,
             barri: newBarri,
-            descripcio: ""
+            descripcio: "",
+            imatgeUrl: newImatgeUrl
           },
           {
             nom: newContactNom,
@@ -164,6 +216,7 @@ export default function AdminCentresTab({ initialCentres, poblacions }: AdminCen
           setNewBarri("");
           setNewContactNom("");
           setNewContactEmail("");
+          setNewImatgeUrl("");
         } else {
           setToast({ type: "error", message: res.error || "Error en crear el centre." });
         }
@@ -189,7 +242,8 @@ export default function AdminCentresTab({ initialCentres, poblacions }: AdminCen
             email: editEmail,
             web: editWeb,
             barri: editBarri,
-            descripcio: editDescripcio
+            descripcio: editDescripcio,
+            imatgeUrl: editImatgeUrl
           },
           {
             nom: editContactNom,
@@ -209,6 +263,7 @@ export default function AdminCentresTab({ initialCentres, poblacions }: AdminCen
                 web: editWeb,
                 barri: editBarri,
                 descripcio: editDescripcio,
+                imatgeUrl: editImatgeUrl,
                 contactName: editContactNom,
                 contactEmail: editContactEmail
               };
@@ -332,9 +387,15 @@ export default function AdminCentresTab({ initialCentres, poblacions }: AdminCen
                               fontWeight: 700,
                               fontSize: "14px",
                               border: "1.5px solid var(--verd-pallid)",
-                              flexShrink: 0
+                              flexShrink: 0,
+                              overflow: "hidden"
                             }}>
-                              {c.nom.charAt(0).toUpperCase()}
+                              {c.imatgeUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={c.imatgeUrl} alt={c.nom} style={{ width: "100%", height: "100%", objectFit: "contain", padding: "3px", boxSizing: "border-box" }} />
+                              ) : (
+                                c.nom.charAt(0).toUpperCase()
+                              )}
                             </div>
                             <div>
                               <div style={{ fontWeight: 600, color: "var(--verd-fosc)" }}>{c.nom}</div>
@@ -498,6 +559,79 @@ export default function AdminCentresTab({ initialCentres, poblacions }: AdminCen
           </div>
 
           <form onSubmit={handleUpdateCentreSubmit}>
+            {/* Logotip del Centre - Edició */}
+            <div style={{ marginBottom: "28px", padding: "20px", backgroundColor: "#f9fbf8", borderRadius: "12px", border: "1px solid var(--verd-pallid)" }}>
+              <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--verd-fosc)", marginTop: 0, marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
+                Logotip del Centre
+              </h3>
+              <div style={{ display: "flex", gap: "20px", alignItems: "center", flexWrap: "wrap" }}>
+                <div style={{
+                  width: "100px",
+                  height: "100px",
+                  borderRadius: "10px",
+                  border: "2px dashed var(--crema-fosca)",
+                  backgroundColor: "white",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  overflow: "hidden",
+                  position: "relative",
+                  flexShrink: 0
+                }}>
+                  {editImatgeUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={editImatgeUrl} alt="Logotip" style={{ width: "100%", height: "100%", objectFit: "contain", padding: "6px", boxSizing: "border-box" }} />
+                  ) : (
+                    <div style={{ textAlign: "center", color: "var(--muted)" }}>
+                      <Building size={28} style={{ opacity: 0.35 }} />
+                      <span style={{ fontSize: "10px", display: "block", marginTop: "4px" }}>Sense logo</span>
+                    </div>
+                  )}
+                  {isUploadingEdit && (
+                    <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(255,255,255,0.8)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <Loader2 size={20} className="spinner" style={{ color: "var(--verd)" }} />
+                    </div>
+                  )}
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <input type="file" ref={editFileInputRef} onChange={handleLogoUploadEdit} accept="image/*" style={{ display: "none" }} />
+                    <button
+                      type="button"
+                      onClick={() => editFileInputRef.current?.click()}
+                      disabled={isUploadingEdit}
+                      style={{
+                        display: "inline-flex", alignItems: "center", gap: "6px",
+                        padding: "8px 14px", borderRadius: "7px",
+                        border: "1px solid var(--verd)", backgroundColor: "transparent",
+                        color: "var(--verd)", fontSize: "13px", fontWeight: 600, cursor: "pointer"
+                      }}
+                    >
+                      <Upload size={14} /> Pujar logotip
+                    </button>
+                    {editImatgeUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setEditImatgeUrl("")}
+                        disabled={isUploadingEdit}
+                        style={{
+                          display: "inline-flex", alignItems: "center", gap: "6px",
+                          padding: "8px 14px", borderRadius: "7px",
+                          border: "1px solid #dc2626", backgroundColor: "transparent",
+                          color: "#dc2626", fontSize: "13px", fontWeight: 600, cursor: "pointer"
+                        }}
+                      >
+                        <Trash2 size={14} /> Eliminar
+                      </button>
+                    )}
+                  </div>
+                  <p style={{ fontSize: "11px", color: "var(--muted)", margin: 0 }}>
+                    Format quadrat preferible (PNG, JPG). Mida màxima: 4MB.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginBottom: "24px" }} className="af-row-2">
               {/* DADES GENERALS */}
               <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
@@ -900,6 +1034,69 @@ export default function AdminCentresTab({ initialCentres, poblacions }: AdminCen
                   <div>
                     <label style={modalLabelStyle}>Pàgina web</label>
                     <input type="text" value={newWeb} onChange={e => setNewWeb(e.target.value)} style={inputStyle} placeholder="https://www.centre.com" />
+                  </div>
+
+                  {/* Logotip */}
+                  <h4 style={{ fontSize: "14px", fontWeight: 700, color: "var(--verd-fosc)", margin: "8px 0 4px" }}>Logotip del Centre</h4>
+                  <div style={{ display: "flex", gap: "14px", alignItems: "center" }}>
+                    <div style={{
+                      width: "72px",
+                      height: "72px",
+                      borderRadius: "8px",
+                      border: "2px dashed var(--crema-fosca)",
+                      backgroundColor: "#fcfdfc",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      overflow: "hidden",
+                      position: "relative",
+                      flexShrink: 0
+                    }}>
+                      {newImatgeUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={newImatgeUrl} alt="Logo" style={{ width: "100%", height: "100%", objectFit: "contain", padding: "4px", boxSizing: "border-box" }} />
+                      ) : (
+                        <Building size={22} style={{ color: "var(--muted)", opacity: 0.4 }} />
+                      )}
+                      {isUploadingNew && (
+                        <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(255,255,255,0.8)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <Loader2 size={16} className="spinner" style={{ color: "var(--verd)" }} />
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      <div style={{ display: "flex", gap: "6px" }}>
+                        <input type="file" ref={newFileInputRef} onChange={handleLogoUploadNew} accept="image/*" style={{ display: "none" }} />
+                        <button
+                          type="button"
+                          onClick={() => newFileInputRef.current?.click()}
+                          disabled={isUploadingNew}
+                          style={{
+                            display: "inline-flex", alignItems: "center", gap: "5px",
+                            padding: "6px 10px", borderRadius: "6px",
+                            border: "1px solid var(--verd)", backgroundColor: "transparent",
+                            color: "var(--verd)", fontSize: "12px", fontWeight: 600, cursor: "pointer"
+                          }}
+                        >
+                          <Upload size={12} /> Pujar
+                        </button>
+                        {newImatgeUrl && (
+                          <button
+                            type="button"
+                            onClick={() => setNewImatgeUrl("")}
+                            style={{
+                              display: "inline-flex", alignItems: "center", gap: "5px",
+                              padding: "6px 10px", borderRadius: "6px",
+                              border: "1px solid #dc2626", backgroundColor: "transparent",
+                              color: "#dc2626", fontSize: "12px", fontWeight: 600, cursor: "pointer"
+                            }}
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        )}
+                      </div>
+                      <span style={{ fontSize: "10px", color: "var(--muted)" }}>PNG/JPG, màx. 4MB</span>
+                    </div>
                   </div>
 
                   <h4 style={{ fontSize: "14px", fontWeight: 700, color: "var(--verd-fosc)", margin: "8px 0 4px" }}>Persona Responsable (Intern)</h4>
