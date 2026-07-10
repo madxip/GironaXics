@@ -22,10 +22,19 @@ export function parseTallerDates(dies: string): Date[] {
   if (!dies) return [];
   const lower = dies.toLowerCase();
 
-  // Tallers recurrents no tenen dates concretes al primer tros
+  // Tallers recurrents periòdics no tenen dates concretes
   if (lower.startsWith("cada")) return [];
 
-  // Si no hi ha cap nom de mes → és un patró sense dates fixes
+  // Format numèric: "6/7/2025", "06/07/2025", "6/7/2025, 28/8/2025 i 15/9/2025"
+  const numericPattern = /\b(\d{1,2})\/(\d{1,2})\/(\d{4})\b/g;
+  const numericMatches = Array.from(dies.matchAll(numericPattern));
+  if (numericMatches.length > 0) {
+    return numericMatches
+      .map(m => new Date(parseInt(m[3]), parseInt(m[2]) - 1, parseInt(m[1])))
+      .filter(d => !isNaN(d.getTime()));
+  }
+
+  // Si no hi ha cap nom de mes català → no podem parsejar dates
   if (!CATALAN_MONTHS.some(m => lower.includes(m))) return [];
 
   const results: Date[] = [];

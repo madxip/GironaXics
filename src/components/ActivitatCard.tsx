@@ -29,7 +29,25 @@ const WEEKDAYS = [
 const parseTallerDates = (text: string): ParsedDate[] => {
   if (!text) return [];
   const normalized = text.toLowerCase();
-  
+
+  // Format numèric: "6/7/2025", "06/07/2025", "6/7/2025, 28/8/2025 i 15/9/2025"
+  // Parsegem i retornem només les dates futures (o avui), ordenades ascendent
+  const numericPattern = /\b(\d{1,2})\/(\d{1,2})\/(\d{4})\b/g;
+  const numericMatches = Array.from(text.matchAll(numericPattern));
+  if (numericMatches.length > 0) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return numericMatches
+      .map(m => ({
+        date: new Date(parseInt(m[3]), parseInt(m[2]) - 1, parseInt(m[1])),
+        day: String(parseInt(m[1])),
+        month: MONTH_ABBR_CAT[parseInt(m[2]) - 1] || '',
+      }))
+      .filter(d => !isNaN(d.date.getTime()) && d.date >= today)
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
+      .map(({ day, month }) => ({ day, month }));
+  }
+
   const months = [
     { name: "gener", abbr: "GEN" },
     { name: "febrer", abbr: "FEB" },
@@ -211,7 +229,8 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
                 )}
               </div>
             ) : parsedDates.length > 0 ? (
-              parsedDates.slice(0, 3).map((d, index) => (
+              // Mostra només la pròxima data (o les 2 primeres si hi ha més d'una)
+              parsedDates.slice(0, 2).map((d, index) => (
                 <div key={index} className="taller-card-calendar">
                   <span className="taller-card-calendar-day">{d.day}</span>
                   <span className="taller-card-calendar-month">{d.month}</span>
@@ -223,9 +242,9 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
                 <span className="taller-card-calendar-month">OCI</span>
               </div>
             )}
-            {!inVacation && parsedDates.length > 3 && (
+            {!inVacation && parsedDates.length > 2 && (
               <span className="taller-card-more-dates-badge">
-                +{parsedDates.length - 3}
+                +{parsedDates.length - 2}
               </span>
             )}
           </div>
