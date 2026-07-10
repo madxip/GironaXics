@@ -439,12 +439,23 @@ export default function Filtres({
 
   const grouped = useMemo(() => {
     return filtered.reduce((acc, a) => {
-      const cat = a.categoria || 'Altres';
-      if (!acc[cat]) acc[cat] = [];
-      acc[cat].push(a);
+      // Si hi ha un filtre de categoria actiu, agrupem sota aquella categoria.
+      // Sinó, fem servir totes les categories de l'activitat (o la categoria legacy).
+      let cats: string[];
+      if (selectedCategoria !== 'Totes') {
+        cats = [selectedCategoria];
+      } else {
+        cats = a.categories && a.categories.length > 0
+          ? a.categories
+          : [a.categoria || 'Altres'];
+      }
+      cats.forEach(cat => {
+        if (!acc[cat]) acc[cat] = [];
+        acc[cat].push(a);
+      });
       return acc;
     }, {} as Record<string, Activitat[]>);
-  }, [filtered]);
+  }, [filtered, selectedCategoria]);
 
   const activeSponsor = useMemo(() => {
     if (!sponsors || sponsors.length === 0 || selectedCategoria === 'Totes') return null;
