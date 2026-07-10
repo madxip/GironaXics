@@ -580,8 +580,8 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
   const [qui_imparteix, setQuiImparteix] = useState(initialData?.qui_imparteix || "");
   
   // Imatges states i refs
-  const [imatgeUrl, setImatgeUrl] = useState(initialData?.imatgeUrl || "");
-  const [galeria, setGaleria] = useState<string[]>(initialData?.galeria || []);
+  const [imatgeUrl, setImatgeUrl] = useState(initialData?.rawImatgeUrl || initialData?.imatgeUrl || "");
+  const [galeria, setGaleria] = useState<string[]>(initialData?.rawGaleria || initialData?.galeria || []);
   const [isUploadingFeatured, setIsUploadingFeatured] = useState(false);
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
 
