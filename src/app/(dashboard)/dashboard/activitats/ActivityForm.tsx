@@ -475,10 +475,40 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
     (initialData.dies || "").toLowerCase().startsWith("cada")
   );
 
-  const [tallerMode, setTallerMode] = useState<"puntual" | "recurrent">(isRecurringTaller ? "recurrent" : "puntual");
+  // Detecta si el taller recurrent utilitza dates concretes (no periòdic setmanal).
+  // Format: "6/7/2025, 28/8/2025 i 15/9/2025" → 2+ coincidències de D/M/YYYY
+  const _specificDatesMatches = (initialData?.dies || "").match(/\d{1,2}\/\d{1,2}\/\d{4}/g);
+  const isSpecificDatesTaller = !!(
+    initialData?.tipus?.toLowerCase().includes("taller") &&
+    !isRecurringTaller &&
+    _specificDatesMatches && _specificDatesMatches.length > 1
+  );
+
+  const [tallerMode, setTallerMode] = useState<"puntual" | "recurrent">(
+    (isRecurringTaller || isSpecificDatesTaller) ? "recurrent" : "puntual"
+  );
+
+  // Sub-mode del taller recurrent: dies de la setmana fixos o dates concretes
+  const [recurrentSubMode, setRecurrentSubMode] = useState<"periodic" | "specific">(
+    isSpecificDatesTaller ? "specific" : "periodic"
+  );
+
+  // Dates concretes per al sub-mode "specific"
+  const [specificDates, setSpecificDates] = useState<string[]>(() => {
+    if (isSpecificDatesTaller && _specificDatesMatches) {
+      return _specificDatesMatches.map(d => {
+        const parts = d.split('/');
+        const day = parts[0].padStart(2, '0');
+        const month = parts[1].padStart(2, '0');
+        const year = parts[2];
+        return `${year}-${month}-${day}`;
+      });
+    }
+    return [""];
+  });
   
   const [singleDate, setSingleDate] = useState(() => {
-    if (initialData?.tipus?.toLowerCase().includes("taller") && !isRecurringTaller) {
+    if (initialData?.tipus?.toLowerCase().includes("taller") && !isRecurringTaller && !isSpecificDatesTaller) {
       return parseSingleDate(initialData.dies || "");
     }
     return "";
@@ -501,7 +531,7 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
     return [];
   });
 
-  // Dates d'inici i fi per al mode recurrent
+  // Dates d'inici i fi per al mode recurrent periòdic
   const [recurrentStart, setRecurrentStart] = useState(() =>
     isRecurringTaller ? parseRecurrentRange(initialData?.dies || '').start : ''
   );
@@ -563,12 +593,28 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
     return `Cada ${joined.toLowerCase()}`;
   };
 
-  // Construeix el text complet del camp `dies` per a tallers recurrents
+  // Construeix el text complet del camp `dies` per a tallers recurrents periòdics
   const buildRecurrentDies = (weekdays: string[], start: string, end: string) => {
     const weekdayText = formatRecurringTaller(weekdays);
     if (!weekdayText) return weekdayText;
     const rangeText = formatDateRange(start, end);
     return rangeText ? `${weekdayText}. ${rangeText}` : weekdayText;
+  };
+
+  // Construeix el text del camp `dies` per a tallers amb dates concretes.
+  // Format: "6/7/2025, 28/8/2025 i 15/9/2025"
+  const buildSpecificDies = (dates: string[]): string => {
+    const valid = [...dates]
+      .filter(Boolean)
+      .sort()
+      .map(d => {
+        const [year, month, day] = d.split('-');
+        return `${parseInt(day)}/${parseInt(month)}/${year}`;
+      });
+    if (valid.length === 0) return "";
+    if (valid.length === 1) return valid[0];
+    if (valid.length === 2) return `${valid[0]} i ${valid[1]}`;
+    return `${valid.slice(0, -1).join(", ")} i ${valid[valid.length - 1]}`;
   };
   const [descripcio, setDescripcio] = useState(initialData?.descripcio || "");
   const [durada, setDurada] = useState(initialData?.durada || "");
@@ -1283,19 +1329,29 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
                 {/* Taller: puntual o recurrent */}
                 {(tipus === "Taller" || tipus === "Taller / Oci") && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                    {/* Botons principals: puntual vs recurrent */}
                     <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                      {[["puntual","Taller puntual (Dia \u00fanic)"],["recurrent","Taller recurrent (Peri\u00f2dic)"]].map(([mode, label]) => (
+                      {([["puntual","Taller puntual (Dia únic)"],["recurrent","Taller recurrent (Periòdic)"]] as [string,string][]).map(([mode, label]) => (
                         <button key={mode} type="button"
                           onClick={() => {
                             setTallerMode(mode as "puntual" | "recurrent");
-                            setDies(mode === "puntual" ? formatSingleDate(singleDate) : buildRecurrentDies(selectedTallerWeekdays, recurrentStart, recurrentEnd));
+                            if (mode === "puntual") {
+                              setDies(formatSingleDate(singleDate));
+                            } else {
+                              setDies(recurrentSubMode === "specific"
+                                ? buildSpecificDies(specificDates)
+                                : buildRecurrentDies(selectedTallerWeekdays, recurrentStart, recurrentEnd)
+                              );
+                            }
                           }}
                           style={{ padding: "8px 16px", borderRadius: "8px", border: tallerMode === mode ? "2px solid var(--verd)" : "1px solid var(--crema-fosca)", backgroundColor: tallerMode === mode ? "rgba(26,107,58,0.05)" : "white", color: "var(--verd-fosc)", fontWeight: 700, fontSize: "13px", cursor: "pointer" }}>
                           {label}
                         </button>
                       ))}
                     </div>
+
                     {tallerMode === "puntual" ? (
+                      /* Puntual: selector d'una sola data */
                       <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxWidth: "240px" }}>
                         <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)" }}>DATA DEL TALLER</span>
                         <input type="date" value={singleDate} onChange={e => { setSingleDate(e.target.value); const f = formatSingleDate(e.target.value); setDies(f); if (f.trim()) setValidationErrors(p => ({ ...p, dies: false })); }}
@@ -1303,33 +1359,93 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
                       </div>
                     ) : (
                       <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
-                          {["Dilluns","Dimarts","Dimecres","Dijous","Divendres","Dissabte","Diumenge"].map(day => {
-                            const sel = selectedTallerWeekdays.includes(day);
-                            return (
-                              <button key={day} type="button"
-                                className={`af-day-btn${sel ? " active" : ""}`}
-                                onClick={() => {
-                                  const newDays = sel ? selectedTallerWeekdays.filter(d => d !== day) : [...selectedTallerWeekdays, day];
-                                  setSelectedTallerWeekdays(newDays);
-                                  const f = buildRecurrentDies(newDays, recurrentStart, recurrentEnd);
-                                  setDies(f); if (f.trim()) setValidationErrors(p => ({ ...p, dies: false }));
-                                }}>{day}</button>
-                            );
-                          })}
+                        {/* Sub-botons: periòdic setmanal vs dates concretes */}
+                        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                          {([["periodic","Periòdic (dies fixos)"],["specific","Dates concretes"]] as [string,string][]).map(([subMode, subLabel]) => (
+                            <button key={subMode} type="button"
+                              onClick={() => {
+                                setRecurrentSubMode(subMode as "periodic" | "specific");
+                                setDies(subMode === "specific"
+                                  ? buildSpecificDies(specificDates)
+                                  : buildRecurrentDies(selectedTallerWeekdays, recurrentStart, recurrentEnd)
+                                );
+                              }}
+                              style={{ padding: "5px 13px", borderRadius: "6px", border: recurrentSubMode === subMode ? "2px solid var(--verd)" : "1px solid var(--crema-fosca)", backgroundColor: recurrentSubMode === subMode ? "rgba(26,107,58,0.08)" : "white", color: "var(--verd-fosc)", fontWeight: recurrentSubMode === subMode ? 700 : 500, fontSize: "12px", cursor: "pointer" }}>
+                              {subLabel}
+                            </button>
+                          ))}
                         </div>
-                        <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
-                          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                            <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)" }}>DATA D&apos;INICI (opcional)</span>
-                            <input type="date" value={recurrentStart} onChange={e => { setRecurrentStart(e.target.value); setDies(buildRecurrentDies(selectedTallerWeekdays, e.target.value, recurrentEnd)); }}
-                              style={{ padding: "10px 12px", border: "1px solid rgba(26,107,58,0.2)", borderRadius: "8px", fontSize: "14px", color: "var(--fosc)", outline: "none" }} />
+
+                        {recurrentSubMode === "periodic" ? (
+                          /* Periòdic: dies de la setmana + inici/fi */
+                          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+                              {["Dilluns","Dimarts","Dimecres","Dijous","Divendres","Dissabte","Diumenge"].map(day => {
+                                const sel = selectedTallerWeekdays.includes(day);
+                                return (
+                                  <button key={day} type="button"
+                                    className={`af-day-btn${sel ? " active" : ""}`}
+                                    onClick={() => {
+                                      const newDays = sel ? selectedTallerWeekdays.filter(d => d !== day) : [...selectedTallerWeekdays, day];
+                                      setSelectedTallerWeekdays(newDays);
+                                      const f = buildRecurrentDies(newDays, recurrentStart, recurrentEnd);
+                                      setDies(f); if (f.trim()) setValidationErrors(p => ({ ...p, dies: false }));
+                                    }}>{day}</button>
+                                );
+                              })}
+                            </div>
+                            <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
+                              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                                <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)" }}>DATA D&apos;INICI (opcional)</span>
+                                <input type="date" value={recurrentStart} onChange={e => { setRecurrentStart(e.target.value); setDies(buildRecurrentDies(selectedTallerWeekdays, e.target.value, recurrentEnd)); }}
+                                  style={{ padding: "10px 12px", border: "1px solid rgba(26,107,58,0.2)", borderRadius: "8px", fontSize: "14px", color: "var(--fosc)", outline: "none" }} />
+                              </div>
+                              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                                <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)" }}>DATA DE FI (opcional)</span>
+                                <input type="date" value={recurrentEnd} onChange={e => { setRecurrentEnd(e.target.value); setDies(buildRecurrentDies(selectedTallerWeekdays, recurrentStart, e.target.value)); }}
+                                  style={{ padding: "10px 12px", border: "1px solid rgba(26,107,58,0.2)", borderRadius: "8px", fontSize: "14px", color: "var(--fosc)", outline: "none" }} />
+                              </div>
+                            </div>
                           </div>
-                          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                            <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)" }}>DATA DE FI (opcional)</span>
-                            <input type="date" value={recurrentEnd} onChange={e => { setRecurrentEnd(e.target.value); setDies(buildRecurrentDies(selectedTallerWeekdays, recurrentStart, e.target.value)); }}
-                              style={{ padding: "10px 12px", border: "1px solid rgba(26,107,58,0.2)", borderRadius: "8px", fontSize: "14px", color: "var(--fosc)", outline: "none" }} />
+                        ) : (
+                          /* Dates concretes: llista de selectors de data individuals */
+                          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                            <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)" }}>DATES DE LES SESSIONS</span>
+                            {specificDates.map((date, idx) => (
+                              <div key={idx} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <input
+                                  type="date"
+                                  value={date}
+                                  onChange={e => {
+                                    const newDates = specificDates.map((d, i) => i === idx ? e.target.value : d);
+                                    setSpecificDates(newDates);
+                                    const f = buildSpecificDies(newDates);
+                                    setDies(f);
+                                    if (f.trim()) setValidationErrors(p => ({ ...p, dies: false }));
+                                  }}
+                                  style={{ padding: "10px 12px", border: "1px solid rgba(26,107,58,0.2)", borderRadius: "8px", fontSize: "14px", color: "var(--fosc)", outline: "none" }}
+                                />
+                                {specificDates.length > 1 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const newDates = specificDates.filter((_, i) => i !== idx);
+                                      setSpecificDates(newDates);
+                                      setDies(buildSpecificDies(newDates));
+                                    }}
+                                    style={{ background: "none", border: "none", color: "#e53e3e", cursor: "pointer", fontSize: "20px", lineHeight: 1, padding: "2px 6px", borderRadius: "4px" }}
+                                    title="Eliminar data"
+                                  >&times;</button>
+                                )}
+                              </div>
+                            ))}
+                            <button
+                              type="button"
+                              onClick={() => setSpecificDates([...specificDates, ""])}
+                              style={{ alignSelf: "flex-start", padding: "7px 14px", borderRadius: "8px", border: "1px dashed var(--verd)", background: "none", color: "var(--verd)", fontWeight: 600, fontSize: "13px", cursor: "pointer" }}
+                            >+ Afegir data</button>
                           </div>
-                        </div>
+                        )}
                       </div>
                     )}
                   </div>
