@@ -164,8 +164,8 @@ export async function getCentresWithContacts(): Promise<CRMCentre[]> {
     const formattedCentres: CRMCentre[] = centresRecords.map(c => {
       const contact = userByCentreMap.get(c.id);
       // Attachment field: Airtable returns an array of objects with a 'url' property
-      // Try both capitalizations since the field is named 'Imatge' in Airtable
-      const imatgeAttachments = (c.fields.Imatge || c.fields.imatge) as Array<{ url: string }> | undefined;
+      // Try both capitalizations since the field is named 'Logo' in Airtable
+      const imatgeAttachments = (c.fields.Logo || c.fields.logo) as Array<{ url: string }> | undefined;
       const imatgeUrl = Array.isArray(imatgeAttachments) && imatgeAttachments.length > 0
         ? imatgeAttachments[0].url
         : '';
@@ -222,7 +222,7 @@ export async function updateCentreAndContact(
     if (centreData.descripcio !== undefined) centreFields.descripcio = centreData.descripcio;
     // Airtable attachment fields require an array of objects with a 'url' property
     if (centreData.imatgeUrl !== undefined) {
-      centreFields.Imatge = centreData.imatgeUrl ? [{ url: centreData.imatgeUrl }] : [];
+      centreFields.Logo = centreData.imatgeUrl ? [{ url: centreData.imatgeUrl }] : [];
     }
 
     if (Object.keys(centreFields).length > 0) {
@@ -367,7 +367,7 @@ export async function createCentreWithContact(
       descripcio: centreData.descripcio || '',
     };
     if (centreData.imatgeUrl) {
-      fields.Imatge = [{ url: centreData.imatgeUrl }];
+      fields.Logo = [{ url: centreData.imatgeUrl }];
     }
 
     const res = (await fetchFromAirtable('Centres', {
