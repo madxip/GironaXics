@@ -708,15 +708,23 @@ export default function AdminCentresTab({ initialCentres, poblacions }: AdminCen
                   Persona de Contacte (Gestió Interna)
                 </h3>
 
-                <div>
-                  <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "var(--fosc)", marginBottom: "6px" }}>Nom de la persona de contacte</label>
-                  <input type="text" value={editContactNom} onChange={e => setEditContactNom(e.target.value)} style={inputStyle} />
-                </div>
+                {editingCentre && editingCentre.contactUserId ? (
+                  <>
+                    <div>
+                      <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "var(--fosc)", marginBottom: "6px" }}>Nom de la persona de contacte</label>
+                      <input type="text" value={editContactNom} onChange={e => setEditContactNom(e.target.value)} style={inputStyle} />
+                    </div>
 
-                <div>
-                  <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "var(--fosc)", marginBottom: "6px" }}>Email d&apos;accés / gestió (Intern)</label>
-                  <input type="email" value={editContactEmail} onChange={e => setEditContactEmail(e.target.value)} style={inputStyle} placeholder="Email de login" />
-                </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "var(--fosc)", marginBottom: "6px" }}>Email d&apos;accés / gestió (Intern)</label>
+                      <input type="email" value={editContactEmail} onChange={e => setEditContactEmail(e.target.value)} style={inputStyle} placeholder="Email de login" />
+                    </div>
+                  </>
+                ) : (
+                  <div style={{ backgroundColor: "#fef3c7", color: "#92400e", padding: "12px", borderRadius: "6px", fontSize: "13px", border: "1px solid #fde68a" }}>
+                    Aquest centre no té cap usuari de la web vinculat (va ser creat directament des d&apos;aquest panell d&apos;administració).
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1099,17 +1107,6 @@ export default function AdminCentresTab({ initialCentres, poblacions }: AdminCen
                     </div>
                   </div>
 
-                  <h4 style={{ fontSize: "14px", fontWeight: 700, color: "var(--verd-fosc)", margin: "8px 0 4px" }}>Persona Responsable (Intern)</h4>
-
-                  <div>
-                    <label style={modalLabelStyle}>Nom de la persona de contacte</label>
-                    <input type="text" value={newContactNom} onChange={e => setNewContactNom(e.target.value)} style={inputStyle} placeholder="Ex: Maria Garcia" />
-                  </div>
-
-                  <div>
-                    <label style={modalLabelStyle}>Email d&apos;accés (Login)</label>
-                    <input type="email" value={newContactEmail} onChange={e => setNewContactEmail(e.target.value)} style={inputStyle} placeholder="usuari@gironaxics.cat" />
-                  </div>
                 </div>
 
               </div>

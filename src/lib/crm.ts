@@ -1,6 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-import bcrypt from 'bcryptjs';
 import { getPoblacioRecordIdByName } from './airtable';
 
 export interface AirtableRawRecord {
@@ -252,24 +251,8 @@ export async function updateCentreAndContact(
             records: [{ id: userId, fields: userFields }]
           })
         });
-      } else {
-        // Create new contact user record (with random placeholder password)
-        const salt = bcrypt.genSaltSync(10);
-        const placeholderPasswordHash = bcrypt.hashSync('GironaXicsCRM_' + Math.random().toString(36).substring(2, 10), salt);
-
-        const newUserFields = {
-          Nom: contactData.nom || 'Persona de Contacte',
-          Email: (contactData.email || '').toLowerCase().trim(),
-          PasswordHash: placeholderPasswordHash,
-          Centre: [centreId],
-          Aprovat: true
-        };
-
-        await fetchFromAirtable('Usuaris_Centres', {
-          method: 'POST',
-          body: JSON.stringify({ fields: newUserFields })
-        });
       }
+      // If users.length === 0, we do not create a record in Usuaris_Centres.
     }
 
     return true;
@@ -342,9 +325,10 @@ export async function getActivitiesByCentre(centreId: string, centreNom: string)
 export async function createCentreWithContact(
   nom: string,
   centreData: { adreca?: string; telefon?: string; email?: string; web?: string; barri?: string; descripcio?: string; imatgeUrl?: string },
-  contactData: { nom?: string; email?: string }
+  _contactData: { nom?: string; email?: string }
 ): Promise<CRMCentre | null> {
   if (!API_KEY || !BASE_ID) return null;
+  void _contactData;
 
   try {
     // 1. Create Centre in Airtable
@@ -379,29 +363,8 @@ export async function createCentreWithContact(
 
     const newCentreId = res.id;
 
-    // 2. Create linked User contact record
-    let contactUserId = undefined;
-    if (contactData.nom || contactData.email) {
-      const salt = bcrypt.genSaltSync(10);
-      const placeholderPasswordHash = bcrypt.hashSync('GironaXicsCRM_' + Math.random().toString(36).substring(2, 10), salt);
-
-      const newUserFields = {
-        Nom: contactData.nom || 'Persona de Contacte',
-        Email: (contactData.email || '').toLowerCase().trim(),
-        PasswordHash: placeholderPasswordHash,
-        Centre: [newCentreId],
-        Aprovat: true
-      };
-
-      const userRes = (await fetchFromAirtable('Usuaris_Centres', {
-        method: 'POST',
-        body: JSON.stringify({ fields: newUserFields })
-      })) as { id: string };
-      if (userRes) {
-        contactUserId = userRes.id;
-      }
-    }
-
+    // 2. Do NOT create linked User contact record from Admin panel
+    // Keep return structure matching CRMCentre interface
     return {
       id: newCentreId,
       nom,
@@ -412,9 +375,9 @@ export async function createCentreWithContact(
       barri: centreData.barri || '',
       descripcio: centreData.descripcio || '',
       imatgeUrl: centreData.imatgeUrl || '',
-      contactName: contactData.nom || '',
-      contactEmail: contactData.email || '',
-      contactUserId,
+      contactName: '',
+      contactEmail: '',
+      contactUserId: undefined,
       activityCount: 0
     };
   } catch (err) {

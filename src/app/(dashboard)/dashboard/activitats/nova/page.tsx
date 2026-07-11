@@ -12,7 +12,6 @@ const DEFAULT_CATEGORIES = [
   "Cuina",
   "Dansa",
   "En Família",
-  "Escacs",
   "Esports",
   "Idiomes",
   "Ioga",

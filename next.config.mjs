@@ -69,6 +69,16 @@ const nextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      // Escacs ha passat a ser subcategoria d'Esports
+      {
+        source: '/activitats/escacs/:slug*',
+        destination: '/activitats/esports/:slug*',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
