@@ -50,6 +50,7 @@ interface ImageCropModalProps {
 
 const ASPECT_OPTIONS: { label: string; value: number | null }[] = [
   { label: "Lliure", value: null },
+  { label: "16:5", value: 16 / 5 },
   { label: "4:3", value: 4 / 3 },
   { label: "16:9", value: 16 / 9 },
   { label: "1:1", value: 1 },
