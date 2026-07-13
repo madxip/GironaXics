@@ -18,7 +18,10 @@ import {
   X,
   Power,
   Upload,
-  Trash2
+  Trash2,
+  BarChart2,
+  Eye,
+  TrendingUp
 } from "lucide-react";
 import { CRMCentre, CRMActivity } from "@/lib/crm";
 import { 
@@ -46,7 +49,19 @@ export default function AdminCentresTab({ initialCentres, poblacions, initialCen
   const [editingCentre, setEditingCentre] = useState<CRMCentre | null>(null);
   const [managingActivitiesCentre, setManagingActivitiesCentre] = useState<CRMCentre | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  
+
+  // Stats per centre
+  type CentreStats = {
+    totalViews: number; totalPhone: number; totalEmail: number; totalContacts: number;
+    topActivitats: { label: string; views: number; phone: number; email: number }[];
+    byDevice: { mobile: number; desktop: number };
+    activitatCount: number; days: number;
+  };
+  const [centreStatsModal, setCentreStatsModal] = useState<CRMCentre | null>(null);
+  const [centreStatsData, setCentreStatsData] = useState<CentreStats | null>(null);
+  const [centreStatsLoading, setCentreStatsLoading] = useState(false);
+  const [centreStatsDays, setCentreStatsDays] = useState(90);
+
   // Transitions
   const [isPending, startTransition] = useTransition();
   const [loadingActivities, setLoadingActivities] = useState(false);
@@ -105,6 +120,22 @@ export default function AdminCentresTab({ initialCentres, poblacions, initialCen
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+
+  // Mostrar estadistiques d'un centre
+  const handleShowStats = async (centre: CRMCentre, days = centreStatsDays) => {
+    setCentreStatsModal(centre);
+    setCentreStatsData(null);
+    setCentreStatsLoading(true);
+    try {
+      const res = await fetch(`/api/admin/centre-stats?centreId=${centre.id}&days=${days}`);
+      const data = await res.json();
+      setCentreStatsData(data);
+    } catch {
+      setToast({ type: "error", message: "No s'han pogut carregar les estadistiques." });
+    } finally {
+      setCentreStatsLoading(false);
+    }
+  };
 
   // Load activities for a specific centre
   const handleManageActivities = async (centre: CRMCentre) => {
@@ -541,6 +572,28 @@ export default function AdminCentresTab({ initialCentres, poblacions, initialCen
                             >
                               <Activity size={13} />
                               <span>Activitats</span>
+                            </button>
+                            <button
+                              onClick={() => handleShowStats(c)}
+                              title="Estadistiques"
+                              className="dashboard-action-btn"
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                backgroundColor: "#6366f1",
+                                color: "white",
+                                border: "none",
+                                padding: "8px 12px",
+                                borderRadius: "6px",
+                                cursor: "pointer",
+                                fontSize: "13px",
+                                fontWeight: 500,
+                                transition: "all 0.2s"
+                              }}
+                            >
+                              <BarChart2 size={13} />
+                              <span>Stats</span>
                             </button>
                           </div>
                         </td>
@@ -1160,6 +1213,122 @@ export default function AdminCentresTab({ initialCentres, poblacions, initialCen
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {/* PANEL D'ESTADÍSTIQUES DEL CENTRE */}
+      {centreStatsModal && (
+        <div style={{ backgroundColor: "white", borderRadius: "16px", border: "1px solid var(--verd-pallid)", padding: "30px", boxShadow: "0 4px 20px rgba(26,107,58,0.02)", marginTop: "24px" }}>
+          {/* Capçalera */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "28px", borderBottom: "1px solid var(--crema-fosca)", paddingBottom: "16px", flexWrap: "wrap", gap: "12px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <button onClick={() => { setCentreStatsModal(null); setCentreStatsData(null); }} style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", padding: "6px" }}>
+                <ArrowLeft size={20} />
+              </button>
+              <div>
+                <h2 style={{ margin: 0, fontSize: "22px", fontFamily: "var(--font-serif)", fontStyle: "italic", color: "var(--verd-fosc)", display: "flex", alignItems: "center", gap: "10px" }}>
+                  <BarChart2 size={20} /> Estadístiques: {centreStatsModal.nom}
+                </h2>
+                <p style={{ margin: "4px 0 0", fontSize: "13px", color: "var(--muted)" }}>
+                  Dades dels últims {centreStatsDays} dies
+                </p>
+              </div>
+            </div>
+            {/* Filtre de dies */}
+            <div style={{ display: "flex", gap: "6px" }}>
+              {[30, 90, 180, 365].map(d => (
+                <button key={d} onClick={() => { setCentreStatsDays(d); handleShowStats(centreStatsModal, d); }}
+                  style={{ padding: "6px 12px", borderRadius: "20px", border: "1.5px solid", fontSize: "12px", fontWeight: 600, cursor: "pointer", transition: "all 0.15s",
+                    borderColor: centreStatsDays === d ? "#6366f1" : "var(--crema-fosca)",
+                    backgroundColor: centreStatsDays === d ? "#6366f1" : "transparent",
+                    color: centreStatsDays === d ? "white" : "var(--muted)" }}>
+                  {d}d
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {centreStatsLoading ? (
+            <div style={{ textAlign: "center", padding: "40px", color: "var(--muted)" }}>
+              <Loader2 size={32} className="spinner" style={{ margin: "0 auto 12px" }} />
+              <p>Carregant estadístiques...</p>
+            </div>
+          ) : centreStatsData ? (
+            <>
+              {/* KPIs principals */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "16px", marginBottom: "28px" }}>
+                {[
+                  { label: "Visites a fitxes", value: centreStatsData.totalViews, icon: <Eye size={20} />, color: "#6366f1", bg: "#eef2ff" },
+                  { label: "Clics a telèfon", value: centreStatsData.totalPhone, icon: <Phone size={20} />, color: "#059669", bg: "#d1fae5" },
+                  { label: "Clics a email", value: centreStatsData.totalEmail, icon: <Mail size={20} />, color: "#d97706", bg: "#fef3c7" },
+                  { label: "Total contactes", value: centreStatsData.totalContacts, icon: <TrendingUp size={20} />, color: "#dc2626", bg: "#fee2e2" },
+                ].map(kpi => (
+                  <div key={kpi.label} style={{ backgroundColor: kpi.bg, borderRadius: "12px", padding: "18px", textAlign: "center" }}>
+                    <div style={{ color: kpi.color, marginBottom: "8px", display: "flex", justifyContent: "center" }}>{kpi.icon}</div>
+                    <div style={{ fontSize: "28px", fontWeight: 800, color: kpi.color, lineHeight: 1 }}>{kpi.value}</div>
+                    <div style={{ fontSize: "11px", color: kpi.color, marginTop: "4px", fontWeight: 600, opacity: 0.8 }}>{kpi.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Dispositius i activitats */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "20px" }}>
+                {/* Dispositius */}
+                <div style={{ backgroundColor: "var(--crema)", borderRadius: "12px", padding: "20px" }}>
+                  <h3 style={{ margin: "0 0 16px", fontSize: "14px", fontWeight: 700, color: "var(--fosc)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Dispositius</h3>
+                  {[
+                    { label: "Mòbil 📱", value: centreStatsData.byDevice.mobile, total: centreStatsData.byDevice.mobile + centreStatsData.byDevice.desktop, color: "#6366f1" },
+                    { label: "Escriptori 🖥️", value: centreStatsData.byDevice.desktop, total: centreStatsData.byDevice.mobile + centreStatsData.byDevice.desktop, color: "#059669" },
+                  ].map(d => {
+                    const pct = d.total > 0 ? Math.round((d.value / d.total) * 100) : 0;
+                    return (
+                      <div key={d.label} style={{ marginBottom: "12px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", marginBottom: "4px" }}>
+                          <span>{d.label}</span><span style={{ fontWeight: 700 }}>{d.value} ({pct}%)</span>
+                        </div>
+                        <div style={{ backgroundColor: "white", borderRadius: "4px", height: "6px", overflow: "hidden" }}>
+                          <div style={{ width: `${pct}%`, height: "100%", backgroundColor: d.color, borderRadius: "4px", transition: "width 0.5s" }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div style={{ marginTop: "16px", fontSize: "12px", color: "var(--muted)", borderTop: "1px solid var(--crema-fosca)", paddingTop: "12px" }}>
+                    {centreStatsData.activitatCount} activitats registrades
+                  </div>
+                </div>
+
+                {/* Top activitats */}
+                <div style={{ backgroundColor: "var(--crema)", borderRadius: "12px", padding: "20px" }}>
+                  <h3 style={{ margin: "0 0 16px", fontSize: "14px", fontWeight: 700, color: "var(--fosc)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Top activitats per visites</h3>
+                  {centreStatsData.topActivitats.length === 0 ? (
+                    <p style={{ fontSize: "13px", color: "var(--muted)", textAlign: "center", padding: "20px 0" }}>
+                      Sense dades per al període seleccionat
+                    </p>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxHeight: "300px", overflowY: "auto" }}>
+                      {centreStatsData.topActivitats.map((a, i) => (
+                        <div key={i} style={{ display: "flex", alignItems: "center", gap: "10px", backgroundColor: "white", borderRadius: "8px", padding: "10px 12px" }}>
+                          <span style={{ fontWeight: 800, color: "var(--muted)", fontSize: "12px", minWidth: "20px" }}>#{i+1}</span>
+                          <span style={{ flex: 1, fontSize: "13px", fontWeight: 500, color: "var(--fosc)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={a.label}>{a.label}</span>
+                          <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
+                            <span title="Visites" style={{ display: "inline-flex", alignItems: "center", gap: "3px", fontSize: "12px", color: "#6366f1", fontWeight: 700 }}><Eye size={11} />{a.views}</span>
+                            {a.phone > 0 && <span title="Trucades" style={{ display: "inline-flex", alignItems: "center", gap: "3px", fontSize: "12px", color: "#059669", fontWeight: 700 }}><Phone size={11} />{a.phone}</span>}
+                            {a.email > 0 && <span title="Emails" style={{ display: "inline-flex", alignItems: "center", gap: "3px", fontSize: "12px", color: "#d97706", fontWeight: 700 }}><Mail size={11} />{a.email}</span>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {centreStatsData.totalViews === 0 && centreStatsData.totalContacts === 0 && (
+                <div style={{ textAlign: "center", padding: "12px", marginTop: "16px", fontSize: "13px", color: "var(--muted)", backgroundColor: "var(--crema)", borderRadius: "8px" }}>
+                  💡 Les estadístiques es generen quan usuaris visiten les fitxes d{"'"}activitat i fan clic als botons de contacte.
+                </div>
+              )}
+            </>
+          ) : null}
         </div>
       )}
 
