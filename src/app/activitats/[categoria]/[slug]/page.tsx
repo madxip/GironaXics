@@ -302,7 +302,7 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
       <CloseButton />
       <script type="application/ld+json" {...{ dangerouslySetInnerHTML: { __html: safeJsonLd(combinedJsonLd) } }} />
 
-      <main id="main-content" style={{ paddingBottom: '60px' }}>
+      <main id="main-content" style={{ paddingTop: 'var(--nav-height)', paddingBottom: '60px' }}>
         <div className="modal-hero" style={{ position: 'relative' }}>
           {/* Aprofitem la imatge pujada a Airtable, o deixem el placeholder de disseny si no n'hi ha cap */}
           <SafeImage src={activitat.imatgeUrl || "/placeholder-activitat.svg"} alt={activitat.nom} fill style={{ objectFit: 'cover' }} priority sizes="(max-width: 768px) 100vw, 60vw" />

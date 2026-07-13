@@ -35,6 +35,7 @@
             --font-sans: 'DM Sans', sans-serif;
 
             --grid-gap: 24px;
+            --nav-height: 76px;
         }
 
         /* Basic Reset & Typography */
