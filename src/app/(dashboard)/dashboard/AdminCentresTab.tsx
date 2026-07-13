@@ -34,9 +34,10 @@ import Link from "next/link";
 interface AdminCentresTabProps {
   initialCentres: CRMCentre[];
   poblacions: Record<string, string[]>;
+  initialCentreId?: string;
 }
 
-export default function AdminCentresTab({ initialCentres, poblacions }: AdminCentresTabProps) {
+export default function AdminCentresTab({ initialCentres, poblacions, initialCentreId }: AdminCentresTabProps) {
   const [centres, setCentres] = useState<CRMCentre[]>(initialCentres);
   const [searchQuery, setSearchQuery] = useState("");
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
@@ -93,6 +94,16 @@ export default function AdminCentresTab({ initialCentres, poblacions }: AdminCen
     );
   });
 
+  // Auto-obre el centre si ve des del formulari d'activitat
+  React.useEffect(() => {
+    if (initialCentreId && initialCentres.length > 0) {
+      const centre = initialCentres.find(c => c.id === initialCentreId);
+      if (centre) {
+        handleManageActivities(centre);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
 
   // Load activities for a specific centre

@@ -12,12 +12,14 @@ interface AdminDashboardTabsProps {
   initialCentres: CRMCentre[];
   activitats: Activitat[];
   poblacions: Record<string, string[]>;
+  initialCentreId?: string;
 }
 
 export default function AdminDashboardTabs({ 
   initialCentres, 
   activitats, 
-  poblacions 
+  poblacions,
+  initialCentreId
 }: AdminDashboardTabsProps) {
   const [activeTab, setActiveTab] = useState<"centres" | "activitats">("centres");
 
@@ -91,7 +93,8 @@ export default function AdminDashboardTabs({
       {activeTab === "centres" ? (
         <AdminCentresTab 
           initialCentres={initialCentres} 
-          poblacions={poblacions} 
+          poblacions={poblacions}
+          initialCentreId={initialCentreId}
         />
       ) : (
         <ActivitatsTable 

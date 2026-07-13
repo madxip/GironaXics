@@ -10,7 +10,7 @@ import AdminDashboardTabs from "./AdminDashboardTabs";
 
 export const dynamic = "force-dynamic";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ searchParams }: { searchParams: { centreId?: string; success?: string } }) {
   const session = await getServerSession(authOptions);
 
   if (!session || !session.user) {
@@ -95,6 +95,7 @@ export default async function DashboardPage() {
           initialCentres={initialCentresForAdmin}
           activitats={activitats}
           poblacions={poblacionsGrouped}
+          initialCentreId={searchParams.centreId}
         />
       ) : activitats.length === 0 ? (
         <div style={{ backgroundColor: "white", borderRadius: "16px", border: "1px solid var(--verd-pallid)", padding: "60px 40px", textAlign: "center", boxShadow: "0 10px 30px rgba(26,107,58,0.02)", maxWidth: "600px", margin: "40px auto 0" }}>

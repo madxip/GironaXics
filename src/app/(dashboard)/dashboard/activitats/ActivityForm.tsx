@@ -327,7 +327,12 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
   );
   const [centreSearch, setCentreSearch] = useState("");
 
-  // Per a la previsualitzaciÃ³: si l'admin tÃ© un centre seleccionat, usem aquell; sinÃ³ el centre del prop
+  // URL de retorn: si l'admin ve d'un centre concret, torna a aquell centre
+  const backUrl = (isAdmin && (initialCentreId || initialData?.centreId))
+    ? `/dashboard?centreId=${initialCentreId || initialData?.centreId}`
+    : "/dashboard";
+
+  // Per a la previsualització: si l'admin té un centre seleccionat, usem aquell; sinó el centre del prop
   const safeCentres = allCentres ?? [];
   const centrePreview = (isAdmin && safeCentres.length > 0 && selectedCentreId)
     ? safeCentres.find(c => c.id === selectedCentreId) ?? centre
@@ -807,7 +812,7 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
         setLoading(false);
       } else {
         const query = initialData?.id ? "success=updated" : "success=created";
-        router.push(`/dashboard?${query}`);
+        router.push(`${backUrl}${backUrl.includes('?') ? '&' : '?'}${query}`);
         router.refresh();
       }
     } catch (err) {
@@ -1018,7 +1023,7 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
       {/* ── Main layout ───────────────────────────────────────── */}
       <div className="af-outer">
         {/* Back link */}
-        <Link href="/dashboard" className="af-back-link">
+        <Link href={backUrl} className="af-back-link">
           <ArrowLeft size={16} />
           Tornar a les meves activitats
         </Link>
@@ -1657,7 +1662,7 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
 
             {/* BOTTOM ACTION BAR (position: fixed) */}
             <div className="af-bottom-bar">
-              <button type="button" className="af-btn-cancel" onClick={() => router.push("/dashboard")}>
+              <button type="button" className="af-btn-cancel" onClick={() => router.push(backUrl)}>
                 Cancel{"\u00b7"}lar
               </button>
               <button type="button" className="af-btn-preview" onClick={() => setShowPreview(true)} title="Previsualitzar fitxa">
