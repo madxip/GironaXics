@@ -114,6 +114,19 @@ export default function ImageCropModal({
         </button>
       </div>
 
+      {/* Hint */}
+      <div style={{
+        width: "100%", maxWidth: "800px",
+        padding: "8px 20px",
+        backgroundColor: "rgba(99,102,241,0.2)",
+        borderLeft: "3px solid #6366f1",
+        marginBottom: "8px",
+      }}>
+        <p style={{ margin: 0, fontSize: "12px", color: "rgba(255,255,255,0.85)" }}>
+          💡 <strong>Consell:</strong> Centra el contingut principal — es veurà igual a mòbil i escriptori.
+        </p>
+      </div>
+
       {/* Àrea de crop */}
       <div style={{
         position: "relative",

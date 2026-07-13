@@ -904,7 +904,7 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
         <ImageCropModal
           imageSrc={cropSrc}
           fileName={cropFileName}
-          aspect={cropTarget === "featured" ? 16 / 5 : null}
+          aspect={cropTarget === "featured" ? 16 / 9 : null}
           onConfirm={(blob, name) => uploadCroppedBlob(blob, name, cropTarget)}
           onCancel={() => { setCropSrc(null); setCropTarget(null); }}
         />

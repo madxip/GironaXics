@@ -1318,15 +1318,14 @@
         .modal-hero {
             position: relative;
             width: 100%;
-            aspect-ratio: 16/5;
+            aspect-ratio: 16/9;
             background-color: var(--verd-fosc);
             overflow: hidden;
         }
 
         @media (max-width: 900px) {
             .modal-hero {
-                aspect-ratio: 4/3;
-                min-height: 260px;
+                min-height: 200px;
             }
         }
 
