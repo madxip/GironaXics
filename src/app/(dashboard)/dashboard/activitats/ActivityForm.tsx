@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Save, Loader2, Upload, Trash2, Image as ImageIcon, Plus, Eye, X } from "lucide-react";
@@ -9,6 +9,7 @@ import { mapAirtableError } from "@/lib/utils";
 import Toast from "@/components/Toast";
 import RichTextEditor from "@/components/RichTextEditor";
 import MultiDatePicker from "@/components/MultiDatePicker";
+import ImageCropModal from "@/components/ImageCropModal";
 
 
 
@@ -636,6 +637,11 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
   const [isUploadingFeatured, setIsUploadingFeatured] = useState(false);
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
 
+  // Crop modal
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [cropFileName, setCropFileName] = useState<string>("imatge.jpg");
+  const [cropTarget, setCropTarget] = useState<"featured" | "gallery" | null>(null);
+
   const featuredInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
@@ -643,48 +649,68 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
 
 
 
-  const handleFeaturedUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsUploadingFeatured(true);
-    setToast(null);
+  // Upload d'un Blob ja cropejat
+  const uploadCroppedBlob = useCallback(async (blob: Blob, fileName: string, target: "featured" | "gallery") => {
+    if (target === "featured") setIsUploadingFeatured(true);
+    else setIsUploadingGallery(true);
+    setCropSrc(null);
+    setCropTarget(null);
 
     const formData = new FormData();
-    formData.append("file", file);
-
+    formData.append("file", blob, fileName);
     try {
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) {
-        throw new Error("Error en pujar la imatge.");
-      }
-
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      if (!res.ok) throw new Error("Error en pujar la imatge.");
       const data = await res.json();
-      if (data.url) {
+      if (!data.url) throw new Error(data.error || "No s'ha obtingut cap URL.");
+      if (target === "featured") {
         setImatgeUrl(data.url);
       } else {
-        throw new Error(data.error || "No s'ha obtingut cap URL.");
+        setGaleria(prev => [...prev, data.url]);
       }
     } catch (err) {
       console.error(err);
-      setToast({
-        type: "error",
-        message: "No s'ha pogut pujar la imatge destacada. Intenta-ho de nou."
-      });
+      setToast({ type: "error", message: "No s'ha pogut pujar la imatge. Intenta-ho de nou." });
     } finally {
-      setIsUploadingFeatured(false);
-      if (featuredInputRef.current) featuredInputRef.current.value = "";
+      if (target === "featured") setIsUploadingFeatured(false);
+      else setIsUploadingGallery(false);
     }
+  }, []);
+
+  const handleFeaturedUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (featuredInputRef.current) featuredInputRef.current.value = "";
+
+    // Mostrar modal de crop
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropSrc(reader.result as string);
+      setCropFileName(file.name);
+      setCropTarget("featured");
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
+    if (galleryInputRef.current) galleryInputRef.current.value = "";
 
+    // Cada imatge de galeria passa pel crop una a una
+    if (files.length === 1) {
+      const file = files[0];
+      const reader = new FileReader();
+      reader.onload = () => {
+        setCropSrc(reader.result as string);
+        setCropFileName(file.name);
+        setCropTarget("gallery");
+      };
+      reader.readAsDataURL(file);
+      return;
+    }
+
+    // Si en selecciona múltiples, puja directament sense crop
     setIsUploadingGallery(true);
     setToast(null);
 
@@ -871,6 +897,17 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
         <div className="af-toast-wrap">
           <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />
         </div>
+      )}
+
+      {/* Crop modal */}
+      {cropSrc && cropTarget && (
+        <ImageCropModal
+          imageSrc={cropSrc}
+          fileName={cropFileName}
+          aspect={cropTarget === "featured" ? 4 / 3 : null}
+          onConfirm={(blob, name) => uploadCroppedBlob(blob, name, cropTarget)}
+          onCancel={() => { setCropSrc(null); setCropTarget(null); }}
+        />
       )}
 
       {/* Preview modal */}

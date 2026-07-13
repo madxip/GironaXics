@@ -33,6 +33,7 @@ import {
 } from "@/app/actions/crm";
 import Toast from "@/components/Toast";
 import Link from "next/link";
+import ImageCropModal from "@/components/ImageCropModal";
 
 interface AdminCentresTabProps {
   initialCentres: CRMCentre[];
@@ -81,6 +82,11 @@ export default function AdminCentresTab({ initialCentres, poblacions, initialCen
   const [newImatgeUrl, setNewImatgeUrl] = useState("");
   const [isUploadingNew, setIsUploadingNew] = useState(false);
   const newFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Crop modal per logos de centres
+  const [centreCropSrc, setCentreCropSrc] = useState<string | null>(null);
+  const [centreCropFileName, setCentreCropFileName] = useState("logo.jpg");
+  const [centreCropTarget, setCentreCropTarget] = useState<"new" | "edit" | null>(null);
 
   // Edit Centre Form States
   const [editNom, setEditNom] = useState("");
@@ -152,44 +158,41 @@ export default function AdminCentresTab({ initialCentres, poblacions, initialCen
   };
 
   // Logo upload handler for Add modal
-  const handleLogoUploadNew = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUploadNew = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setIsUploadingNew(true);
-    const formData = new FormData();
-    formData.append("file", file);
-    try {
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      if (!res.ok) throw new Error("Error en pujar el fitxer.");
-      const data = await res.json();
-      if (data.url) setNewImatgeUrl(data.url);
-      else throw new Error(data.error || "No s'ha obtingut cap URL.");
-    } catch {
-      setToast({ type: "error", message: "No s'ha pogut pujar el logotip. Intenta-ho de nou." });
-    } finally {
-      setIsUploadingNew(false);
-      if (newFileInputRef.current) newFileInputRef.current.value = "";
-    }
+    if (newFileInputRef.current) newFileInputRef.current.value = "";
+    const reader = new FileReader();
+    reader.onload = () => { setCentreCropSrc(reader.result as string); setCentreCropFileName(file.name); setCentreCropTarget("new"); };
+    reader.readAsDataURL(file);
   };
 
   // Logo upload handler for Edit form
-  const handleLogoUploadEdit = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUploadEdit = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setIsUploadingEdit(true);
+    if (editFileInputRef.current) editFileInputRef.current.value = "";
+    const reader = new FileReader();
+    reader.onload = () => { setCentreCropSrc(reader.result as string); setCentreCropFileName(file.name); setCentreCropTarget("edit"); };
+    reader.readAsDataURL(file);
+  };
+
+  // Upload d'un logo ja cropejat
+  const uploadCroppedLogo = async (blob: Blob, fileName: string, target: "new" | "edit") => {
+    if (target === "new") setIsUploadingNew(true); else setIsUploadingEdit(true);
+    setCentreCropSrc(null); setCentreCropTarget(null);
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", blob, fileName);
     try {
       const res = await fetch("/api/upload", { method: "POST", body: formData });
       if (!res.ok) throw new Error("Error en pujar el fitxer.");
       const data = await res.json();
-      if (data.url) setEditImatgeUrl(data.url);
+      if (data.url) { if (target === "new") setNewImatgeUrl(data.url); else setEditImatgeUrl(data.url); }
       else throw new Error(data.error || "No s'ha obtingut cap URL.");
     } catch {
       setToast({ type: "error", message: "No s'ha pogut pujar el logotip. Intenta-ho de nou." });
     } finally {
-      setIsUploadingEdit(false);
-      if (editFileInputRef.current) editFileInputRef.current.value = "";
+      if (target === "new") setIsUploadingNew(false); else setIsUploadingEdit(false);
     }
   };
 
@@ -1330,6 +1333,17 @@ export default function AdminCentresTab({ initialCentres, poblacions, initialCen
             </>
           ) : null}
         </div>
+      )}
+
+      {/* Crop modal per logos de centres */}
+      {centreCropSrc && centreCropTarget && (
+        <ImageCropModal
+          imageSrc={centreCropSrc}
+          fileName={centreCropFileName}
+          aspect={1}
+          onConfirm={(blob, name) => uploadCroppedLogo(blob, name, centreCropTarget)}
+          onCancel={() => { setCentreCropSrc(null); setCentreCropTarget(null); }}
+        />
       )}
 
       {/* ESTILS DE LA TAULA I MÒBIL */}
