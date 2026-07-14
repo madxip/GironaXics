@@ -3,7 +3,7 @@
 import React, { useState, useCallback } from "react";
 import Cropper from "react-easy-crop";
 import type { Area, Point } from "react-easy-crop";
-import { X, Check, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
+import { X, Check, ZoomIn, ZoomOut } from "lucide-react";
 
 // ── Helper: Canvas crop ──────────────────────────────────────────────────────
 async function getCroppedImg(imageSrc: string, pixelCrop: Area): Promise<Blob> {
@@ -45,17 +45,8 @@ interface ImageCropModalProps {
   fileName?: string;
   onConfirm: (croppedBlob: Blob, fileName: string) => void;
   onCancel: () => void;
-  aspect?: number | null; // null = lliure
+  aspect?: number; // proporció fixa (p.ex. 16/9, 1/1)
 }
-
-const ASPECT_OPTIONS: { label: string; value: number | null }[] = [
-  { label: "Lliure", value: null },
-  { label: "16:5", value: 16 / 5 },
-  { label: "4:3", value: 4 / 3 },
-  { label: "16:9", value: 16 / 9 },
-  { label: "1:1", value: 1 },
-  { label: "3:4", value: 3 / 4 },
-];
 
 // ── Component ────────────────────────────────────────────────────────────────
 export default function ImageCropModal({
@@ -63,12 +54,11 @@ export default function ImageCropModal({
   fileName = "imatge.jpg",
   onConfirm,
   onCancel,
-  aspect: initialAspect = 4 / 3,
+  aspect = 16 / 9,
 }: ImageCropModalProps) {
   const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
-  const [aspect, setAspect] = useState<number | null>(initialAspect);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const onCropComplete = useCallback((_: Area, croppedPixels: Area) => {
@@ -103,10 +93,10 @@ export default function ImageCropModal({
       }}>
         <div>
           <h2 style={{ margin: 0, fontSize: "18px", fontFamily: "var(--font-serif)", fontStyle: "italic" }}>
-            ✂️ Retallar imatge
+            ✂️ Retallar imatge destacada
           </h2>
           <p style={{ margin: "2px 0 0", fontSize: "12px", color: "rgba(255,255,255,0.6)" }}>
-            Arrossega per moure · Roda per fer zoom
+            Arrossega per moure · Roda el ratolí per fer zoom
           </p>
         </div>
         <button onClick={onCancel} style={{ background: "none", border: "none", color: "white", cursor: "pointer", padding: "8px" }}>
@@ -131,7 +121,7 @@ export default function ImageCropModal({
       <div style={{
         position: "relative",
         width: "100%", maxWidth: "800px",
-        height: "420px",
+        height: "380px",
         backgroundColor: "#111",
         borderRadius: "12px",
         overflow: "hidden",
@@ -140,7 +130,7 @@ export default function ImageCropModal({
           image={imageSrc}
           crop={crop}
           zoom={zoom}
-          aspect={aspect ?? undefined}
+          aspect={aspect}
           onCropChange={setCrop}
           onZoomChange={setZoom}
           onCropComplete={onCropComplete}
@@ -155,7 +145,7 @@ export default function ImageCropModal({
       <div style={{
         width: "100%", maxWidth: "800px",
         padding: "16px 20px",
-        display: "flex", flexDirection: "column", gap: "16px",
+        display: "flex", flexDirection: "column", gap: "12px",
       }}>
         {/* Zoom */}
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -178,59 +168,35 @@ export default function ImageCropModal({
           </span>
         </div>
 
-        {/* Proporció + Botons */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
-          {/* Selector de proporció */}
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <Maximize2 size={14} color="rgba(255,255,255,0.5)" />
-            <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "12px" }}>Proporció:</span>
-            {ASPECT_OPTIONS.map(opt => (
-              <button
-                key={opt.label}
-                onClick={() => setAspect(opt.value)}
-                style={{
-                  padding: "5px 10px", borderRadius: "16px", border: "1.5px solid",
-                  fontSize: "12px", fontWeight: 600, cursor: "pointer", transition: "all 0.15s",
-                  borderColor: aspect === opt.value ? "var(--verd)" : "rgba(255,255,255,0.2)",
-                  backgroundColor: aspect === opt.value ? "var(--verd)" : "transparent",
-                  color: "white",
-                }}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Botons d'acció */}
-          <div style={{ display: "flex", gap: "10px" }}>
-            <button
-              onClick={onCancel}
-              style={{
-                padding: "10px 20px", borderRadius: "8px",
-                border: "1px solid rgba(255,255,255,0.2)",
-                background: "transparent", color: "white",
-                cursor: "pointer", fontSize: "14px", fontWeight: 500,
-              }}
-            >
-              Cancel·lar
-            </button>
-            <button
-              onClick={handleConfirm}
-              disabled={isProcessing}
-              style={{
-                padding: "10px 24px", borderRadius: "8px",
-                border: "none",
-                background: "var(--verd)", color: "white",
-                cursor: isProcessing ? "wait" : "pointer",
-                fontSize: "14px", fontWeight: 700,
-                display: "inline-flex", alignItems: "center", gap: "8px",
-                opacity: isProcessing ? 0.7 : 1,
-              }}
-            >
-              <Check size={16} />
-              {isProcessing ? "Processant..." : "Aplicar retall"}
-            </button>
-          </div>
+        {/* Botons d'acció */}
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+          <button
+            onClick={onCancel}
+            style={{
+              padding: "10px 20px", borderRadius: "8px",
+              border: "1px solid rgba(255,255,255,0.2)",
+              background: "transparent", color: "white",
+              cursor: "pointer", fontSize: "14px", fontWeight: 500,
+            }}
+          >
+            Cancel·lar
+          </button>
+          <button
+            onClick={handleConfirm}
+            disabled={isProcessing}
+            style={{
+              padding: "10px 24px", borderRadius: "8px",
+              border: "none",
+              background: "var(--verd)", color: "white",
+              cursor: isProcessing ? "wait" : "pointer",
+              fontSize: "14px", fontWeight: 700,
+              display: "inline-flex", alignItems: "center", gap: "8px",
+              opacity: isProcessing ? 0.7 : 1,
+            }}
+          >
+            <Check size={16} />
+            {isProcessing ? "Processant..." : "Aplicar retall"}
+          </button>
         </div>
       </div>
     </div>

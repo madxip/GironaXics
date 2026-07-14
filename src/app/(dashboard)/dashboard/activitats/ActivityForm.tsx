@@ -697,20 +697,7 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
     if (!files || files.length === 0) return;
     if (galleryInputRef.current) galleryInputRef.current.value = "";
 
-    // Cada imatge de galeria passa pel crop una a una
-    if (files.length === 1) {
-      const file = files[0];
-      const reader = new FileReader();
-      reader.onload = () => {
-        setCropSrc(reader.result as string);
-        setCropFileName(file.name);
-        setCropTarget("gallery");
-      };
-      reader.readAsDataURL(file);
-      return;
-    }
-
-    // Si en selecciona múltiples, puja directament sense crop
+    // Les imatges de galeria es pugen directament sense crop
     setIsUploadingGallery(true);
     setToast(null);
 
@@ -742,7 +729,6 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
       });
     } finally {
       setIsUploadingGallery(false);
-      if (galleryInputRef.current) galleryInputRef.current.value = "";
     }
   };
 
@@ -899,13 +885,13 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
         </div>
       )}
 
-      {/* Crop modal */}
-      {cropSrc && cropTarget && (
+      {/* Crop modal — només per la imatge destacada */}
+      {cropSrc && cropTarget === "featured" && (
         <ImageCropModal
           imageSrc={cropSrc}
           fileName={cropFileName}
-          aspect={cropTarget === "featured" ? 16 / 9 : null}
-          onConfirm={(blob, name) => uploadCroppedBlob(blob, name, cropTarget)}
+          aspect={16 / 9}
+          onConfirm={(blob, name) => uploadCroppedBlob(blob, name, "featured")}
           onCancel={() => { setCropSrc(null); setCropTarget(null); }}
         />
       )}
