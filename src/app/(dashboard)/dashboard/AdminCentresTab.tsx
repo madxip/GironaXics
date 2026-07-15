@@ -33,7 +33,9 @@ import {
 } from "@/app/actions/crm";
 import Toast from "@/components/Toast";
 import Link from "next/link";
-import ImageCropModal from "@/components/ImageCropModal";
+import dynamic from "next/dynamic";
+
+const ImageCropModal = dynamic(() => import("@/components/ImageCropModal"), { ssr: false });
 
 interface AdminCentresTabProps {
   initialCentres: CRMCentre[];

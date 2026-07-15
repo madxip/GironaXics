@@ -9,7 +9,9 @@ import { mapAirtableError } from "@/lib/utils";
 import Toast from "@/components/Toast";
 import RichTextEditor from "@/components/RichTextEditor";
 import MultiDatePicker from "@/components/MultiDatePicker";
-import ImageCropModal from "@/components/ImageCropModal";
+import dynamic from "next/dynamic";
+
+const ImageCropModal = dynamic(() => import("@/components/ImageCropModal"), { ssr: false });
 
 
 

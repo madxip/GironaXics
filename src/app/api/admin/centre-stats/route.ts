@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { getActivitatsByCentreId } from '@/lib/airtable';
 
+export const dynamic = 'force-dynamic';
+
 const API_KEY = process.env.AIRTABLE_API_KEY;
 const BASE_ID = process.env.AIRTABLE_BASE_ID;
 
