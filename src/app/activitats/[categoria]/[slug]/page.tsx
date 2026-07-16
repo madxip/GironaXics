@@ -319,23 +319,20 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
             sizes="100vw"
             aria-hidden={true}
           />
-          {/* Capa 1 — imatge principal sense retallar (contain), laterals difuminats */}
-          <div style={{
-            position: 'absolute',
-            inset: 0,
-            zIndex: 1,
-            maskImage: 'linear-gradient(to right, transparent 0%, black 12%, black 88%, transparent 100%)',
-            WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 12%, black 88%, transparent 100%)',
-          }}>
-            <SafeImage
-              src={activitat.imatgeUrl || "/placeholder-activitat.svg"}
-              alt={activitat.nom}
-              fill
-              style={{ objectFit: 'contain' }}
-              priority
-              sizes="(max-width: 768px) 100vw, 1200px"
-            />
-          </div>
+          {/* Capa 1 — imatge principal, sense retallar, laterals difuminats amb mask directa a l'img */}
+          <SafeImage
+            src={activitat.imatgeUrl || "/placeholder-activitat.svg"}
+            alt={activitat.nom}
+            fill
+            style={{
+              objectFit: 'contain',
+              zIndex: 1,
+              maskImage: 'linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%)',
+              WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%)',
+            }}
+            priority
+            sizes="(max-width: 768px) 100vw, 1200px"
+          />
           <div className="modal-hero-gradient">
             <h1 className="modal-hero-title">{activitat.nom}</h1>
           </div>
