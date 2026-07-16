@@ -304,8 +304,30 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
 
       <main id="main-content" style={{ paddingTop: 'var(--nav-height)', paddingBottom: '60px' }}>
         <div className="modal-hero" style={{ position: 'relative' }}>
-          {/* Aprofitem la imatge pujada a Airtable, o deixem el placeholder de disseny si no n'hi ha cap */}
-          <SafeImage src={activitat.imatgeUrl || "/placeholder-activitat.svg"} alt={activitat.nom} fill style={{ objectFit: 'cover' }} priority sizes="(max-width: 768px) 100vw, 60vw" />
+          {/* Capa 0 — fons difuminat: mateixa imatge estirada i blurred */}
+          <SafeImage
+            src={activitat.imatgeUrl || "/placeholder-activitat.svg"}
+            alt=""
+            fill
+            style={{
+              objectFit: 'cover',
+              filter: 'blur(22px) saturate(1.3) brightness(0.6)',
+              transform: 'scale(1.1)',
+              zIndex: 0,
+            }}
+            priority
+            sizes="100vw"
+            aria-hidden={true}
+          />
+          {/* Capa 1 — imatge principal sense retallar (contain) */}
+          <SafeImage
+            src={activitat.imatgeUrl || "/placeholder-activitat.svg"}
+            alt={activitat.nom}
+            fill
+            style={{ objectFit: 'contain', zIndex: 1 }}
+            priority
+            sizes="(max-width: 768px) 100vw, 1200px"
+          />
           <div className="modal-hero-gradient">
             <h1 className="modal-hero-title">{activitat.nom}</h1>
           </div>
