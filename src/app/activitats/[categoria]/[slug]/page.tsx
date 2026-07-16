@@ -4,6 +4,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import SafeImage from '@/components/SafeImage';
+import HeroImage from '@/components/HeroImage';
 import { getActivitatBySlug, getActivitats, getCentres } from '@/lib/airtable';
 import { normalizeSlug, safeJsonLd, formatPreu } from '@/lib/utils';
 import { isTallerExpiredOrEnded } from '@/lib/tallerDates';
@@ -304,34 +305,9 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
 
       <main id="main-content" style={{ paddingTop: 'var(--nav-height)', paddingBottom: '60px' }}>
         <div className="modal-hero" style={{ position: 'relative' }}>
-          {/* Capa 0 — fons difuminat: mateixa imatge estirada i blurred */}
-          <SafeImage
-            src={activitat.imatgeUrl || "/placeholder-activitat.svg"}
-            alt=""
-            fill
-            style={{
-              objectFit: 'cover',
-              filter: 'blur(22px) saturate(1.3) brightness(0.6)',
-              transform: 'scale(1.1)',
-              zIndex: 0,
-            }}
-            priority
-            sizes="100vw"
-            aria-hidden={true}
-          />
-          {/* Capa 1 — imatge principal, sense retallar, laterals difuminats amb mask directa a l'img */}
-          <SafeImage
+          <HeroImage
             src={activitat.imatgeUrl || "/placeholder-activitat.svg"}
             alt={activitat.nom}
-            fill
-            style={{
-              objectFit: 'contain',
-              zIndex: 1,
-              maskImage: 'linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%)',
-              WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%)',
-            }}
-            priority
-            sizes="(max-width: 768px) 100vw, 1200px"
           />
           <div className="modal-hero-gradient">
             <h1 className="modal-hero-title">{activitat.nom}</h1>
