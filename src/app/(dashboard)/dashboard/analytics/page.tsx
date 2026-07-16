@@ -13,6 +13,8 @@ import {
   Users,
   RefreshCw,
   Building2,
+  X,
+  ChevronRight,
 } from "lucide-react";
 
 // ─── Tipus ───────────────────────────────────────────────────────────────────
@@ -28,6 +30,8 @@ interface StatsData {
     filterUses: number;
   };
   topActivitats: { label: string; views: number; contacts: number; ratio: number }[];
+  topPhoneActivitats: { label: string; count: number }[];
+  topEmailActivitats: { label: string; count: number }[];
   topCentres: { label: string; views: number; contacts: number; ratio: number }[];
   topCategories: { label: string; count: number }[];
   topBarris: { label: string; count: number }[];
@@ -35,6 +39,8 @@ interface StatsData {
   topSponsors: { label: string; count: number }[];
   devices: { mobile: number; desktop: number };
 }
+
+type DetailType = "phone" | "email" | null;
 
 const PERIOD_OPTIONS = [
   { label: "Avui", value: 1 },
@@ -44,11 +50,32 @@ const PERIOD_OPTIONS = [
 ];
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
-function KpiCard({ icon: Icon, label, value, color = "#1a6b3a", sub }: {
-  icon: React.ElementType; label: string; value: number | string; color?: string; sub?: string;
+function KpiCard({
+  icon: Icon, label, value, color = "#1a6b3a", sub, onClick, active,
+}: {
+  icon: React.ElementType; label: string; value: number | string;
+  color?: string; sub?: string; onClick?: () => void; active?: boolean;
 }) {
+  const isClickable = !!onClick;
   return (
-    <div style={{ backgroundColor: "white", borderRadius: "16px", border: "1px solid rgba(26,107,58,0.1)", padding: "24px", boxShadow: "0 4px 20px rgba(26,107,58,0.04)", display: "flex", flexDirection: "column", gap: "12px" }}>
+    <div
+      onClick={onClick}
+      style={{
+        backgroundColor: active ? `${color}0f` : "white",
+        borderRadius: "16px",
+        border: `1px solid ${active ? color : "rgba(26,107,58,0.1)"}`,
+        padding: "24px",
+        boxShadow: active
+          ? `0 4px 20px ${color}22`
+          : "0 4px 20px rgba(26,107,58,0.04)",
+        display: "flex",
+        flexDirection: "column",
+        gap: "12px",
+        cursor: isClickable ? "pointer" : "default",
+        transition: "all 0.2s ease",
+        position: "relative",
+      }}
+    >
       <div style={{ width: "44px", height: "44px", borderRadius: "12px", backgroundColor: `${color}14`, display: "flex", alignItems: "center", justifyContent: "center", color }}>
         <Icon size={22} />
       </div>
@@ -57,6 +84,16 @@ function KpiCard({ icon: Icon, label, value, color = "#1a6b3a", sub }: {
         <div style={{ fontSize: "13px", color: "var(--muted)", marginTop: "6px", fontWeight: 500 }}>{label}</div>
         {sub && <div style={{ fontSize: "11px", color, fontWeight: 600, marginTop: "4px" }}>{sub}</div>}
       </div>
+      {isClickable && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: "4px",
+          fontSize: "12px", fontWeight: 700, color,
+          marginTop: "auto",
+        }}>
+          {active ? "Tancar detall" : "Veure per activitat"}
+          {active ? <X size={12} /> : <ChevronRight size={12} />}
+        </div>
+      )}
     </div>
   );
 }
@@ -96,6 +133,78 @@ function EmptyState({ isAdmin }: { isAdmin: boolean }) {
   );
 }
 
+// ─── Panell de detall de contactes per activitat ─────────────────────────────
+function ContactDetailPanel({
+  type, items, onClose,
+}: {
+  type: "phone" | "email";
+  items: { label: string; count: number }[];
+  onClose: () => void;
+}) {
+  const isPhone = type === "phone";
+  const color = isPhone ? "#2563eb" : "#7c3aed";
+  const Icon = isPhone ? Phone : Mail;
+  const title = isPhone ? "Clics al telèfon per activitat" : "Correus enviats per activitat";
+  const max = items[0]?.count ?? 1;
+
+  return (
+    <div style={{
+      backgroundColor: "white",
+      borderRadius: "16px",
+      border: `1px solid ${color}33`,
+      padding: "28px",
+      boxShadow: `0 8px 32px ${color}18`,
+      marginBottom: "24px",
+      animation: "fadeSlideDown 0.25s ease",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px", paddingBottom: "16px", borderBottom: `1px solid ${color}18` }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div style={{ width: "32px", height: "32px", borderRadius: "8px", backgroundColor: `${color}14`, display: "flex", alignItems: "center", justifyContent: "center", color }}>
+            <Icon size={16} />
+          </div>
+          <h2 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "var(--verd-fosc)" }}>{title}</h2>
+        </div>
+        <button
+          onClick={onClose}
+          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", padding: "4px", borderRadius: "6px", display: "flex" }}
+        >
+          <X size={18} />
+        </button>
+      </div>
+
+      {items.length === 0 ? (
+        <p style={{ color: "var(--muted)", fontSize: "14px", textAlign: "center", padding: "20px 0" }}>
+          Cap {isPhone ? "clic al telèfon" : "correu enviat"} en aquest període
+        </p>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+          {items.map((item, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <div style={{
+                flex: "0 0 24px", width: "24px", height: "24px",
+                borderRadius: "6px", backgroundColor: `${color}14`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: "11px", fontWeight: 700, color,
+              }}>
+                {i + 1}
+              </div>
+              <div style={{ flex: "0 0 180px", fontSize: "13px", fontWeight: 600, color: "var(--fosc)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={item.label}>
+                {item.label}
+              </div>
+              <div style={{ flex: 1, height: "8px", backgroundColor: `${color}14`, borderRadius: "99px", overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${Math.round((item.count / max) * 100)}%`, backgroundColor: color, borderRadius: "99px", transition: "width 0.6s cubic-bezier(0.4,0,0.2,1)" }} />
+              </div>
+              <div style={{ flex: "0 0 40px", fontSize: "14px", fontWeight: 800, color, textAlign: "right" }}>
+                {item.count}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Component principal ──────────────────────────────────────────────────────
 export default function AnalyticsDashboard() {
   const [data, setData] = useState<StatsData | null>(null);
@@ -103,6 +212,7 @@ export default function AnalyticsDashboard() {
   const [error, setError] = useState(false);
   const [days, setDays] = useState(30);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [detail, setDetail] = useState<DetailType>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -126,6 +236,10 @@ export default function AnalyticsDashboard() {
   const mobilePct = totalDevices > 0 ? Math.round((data!.devices.mobile / totalDevices) * 100) : 0;
   const isAdmin = data?.isAdmin ?? false;
 
+  const toggleDetail = (type: "phone" | "email") => {
+    setDetail(prev => prev === type ? null : type);
+  };
+
   return (
     <div>
       <style>{`
@@ -140,6 +254,10 @@ export default function AnalyticsDashboard() {
         .analytics-activity-row { display: grid; grid-template-columns: 1fr 64px 72px 64px; gap: 8px; padding: 12px 0; border-bottom: 1px solid rgba(26,107,58,0.05); align-items: center; font-size: 13px; }
         .analytics-activity-row:last-child { border-bottom: none; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes fadeSlideDown {
+          from { opacity: 0; transform: translateY(-8px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
         @media (min-width: 768px) {
           .analytics-kpi-grid { grid-template-columns: repeat(4, 1fr); }
           .analytics-section-grid { grid-template-columns: repeat(2, 1fr); }
@@ -194,13 +312,43 @@ export default function AnalyticsDashboard() {
           {/* KPI Cards */}
           <div className="analytics-kpi-grid">
             <KpiCard icon={TrendingUp} label="Visites a activitats" value={data.totals.activityViews} color="#1a6b3a" />
-            <KpiCard icon={Phone} label="Clics telèfon" value={data.totals.contactPhone} color="#2563eb" />
-            <KpiCard icon={Mail} label="Correus enviats" value={data.totals.contactEmail} color="#7c3aed" />
+            <KpiCard
+              icon={Phone}
+              label="Clics telèfon"
+              value={data.totals.contactPhone}
+              color="#2563eb"
+              onClick={() => toggleDetail("phone")}
+              active={detail === "phone"}
+            />
+            <KpiCard
+              icon={Mail}
+              label="Correus enviats"
+              value={data.totals.contactEmail}
+              color="#7c3aed"
+              onClick={() => toggleDetail("email")}
+              active={detail === "email"}
+            />
             {isAdmin
               ? <KpiCard icon={MousePointerClick} label="Clics sponsors" value={data.totals.sponsorClicks} color="#d97706" sub={data.totals.casalsBannerClicks > 0 ? `+ ${data.totals.casalsBannerClicks} al banner casals` : undefined} />
               : <KpiCard icon={MousePointerClick} label="Total contactes" value={data.totals.totalContacts} color="#16a34a" />
             }
           </div>
+
+          {/* Panell de detall (telèfon o email) */}
+          {detail === "phone" && (
+            <ContactDetailPanel
+              type="phone"
+              items={data.topPhoneActivitats ?? []}
+              onClose={() => setDetail(null)}
+            />
+          )}
+          {detail === "email" && (
+            <ContactDetailPanel
+              type="email"
+              items={data.topEmailActivitats ?? []}
+              onClose={() => setDetail(null)}
+            />
+          )}
 
           {/* Seccions */}
           <div className="analytics-section-grid">

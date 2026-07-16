@@ -193,6 +193,30 @@ export async function GET(req: NextRequest) {
         ratio: a.views > 0 ? Math.round((a.contacts / a.views) * 100) : 0,
       }));
 
+    // Top activitats per telèfon
+    const phoneMap: Record<string, { label: string; count: number }> = {};
+    for (const r of contactPhoneAll) {
+      const id = r.fields.activitat_id ?? r.fields.event_label ?? 'desconegut';
+      const label = r.fields.event_label ?? id;
+      if (!phoneMap[id]) phoneMap[id] = { label, count: 0 };
+      phoneMap[id].count++;
+    }
+    const topPhoneActivitats = Object.values(phoneMap)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+
+    // Top activitats per email
+    const emailMap: Record<string, { label: string; count: number }> = {};
+    for (const r of contactEmailAll) {
+      const id = r.fields.activitat_id ?? r.fields.event_label ?? 'desconegut';
+      const label = r.fields.event_label ?? id;
+      if (!emailMap[id]) emailMap[id] = { label, count: 0 };
+      emailMap[id].count++;
+    }
+    const topEmailActivitats = Object.values(emailMap)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+
     // Devices (només dels events filtrats)
     const allFiltered = isAdmin ? all : [...activityViewsAll, ...contactPhoneAll, ...contactEmailAll];
     const allWithDevice = allFiltered.filter(r => r.fields.device && r.fields.device !== 'server');
@@ -242,6 +266,8 @@ export async function GET(req: NextRequest) {
         filterUses:         isAdmin ? filterCategoria.length + filterBarri.length + filterEdat.length : 0,
       },
       topActivitats,
+      topPhoneActivitats,
+      topEmailActivitats,
       topCentres,
       // Seccions globals: buides si no és admin
       topCategories:  isAdmin ? countBy(filterCategoria, 'event_label').slice(0, 8) : [],
