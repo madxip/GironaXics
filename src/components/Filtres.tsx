@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Activitat, Sponsor, CasalsBanner } from '@/lib/types';
@@ -214,6 +214,19 @@ export default function Filtres({
     }
   }, []);
 
+  // Detecta si els resultats ja són visibles a pantalla (per amagar el botó flotant)
+  const [resultsInView, setResultsInView] = useState(false);
+  useEffect(() => {
+    const el = document.getElementById('results-container');
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setResultsInView(entry.isIntersecting),
+      { threshold: 0.05 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   const selectedTipus = searchParams.get('tipus') || 'Extraescolars';
   const selectedCategoria = searchParams.get('categoria') || 'Totes';
   const selectedSubcategoria = searchParams.get('subcategoria') || 'Totes';
@@ -232,16 +245,17 @@ export default function Filtres({
     }
     router.replace(`?${params.toString()}`, { scroll: false });
 
-    // Scroll automàtic cap als resultats quan canvia qualsevol filtre
-    // (evita que l'usuari es quedi abaix de la pàgina quan els resultats es redueixen)
-    setTimeout(() => {
-      const el = document.getElementById('results-container');
-      if (el) {
-        const offset = window.innerWidth <= 768 ? 70 : 110;
-        const y = el.getBoundingClientRect().top + window.scrollY - offset;
-        window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
-      }
-    }, 50);
+    // Scroll automàtic cap als resultats només en desktop
+    if (typeof window !== 'undefined' && window.innerWidth > 768) {
+      setTimeout(() => {
+        const el = document.getElementById('results-container');
+        if (el) {
+          const offset = 110;
+          const y = el.getBoundingClientRect().top + window.scrollY - offset;
+          window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+        }
+      }, 50);
+    }
 
     // Tracking analytics
     if (value !== 'Totes') {
@@ -464,6 +478,7 @@ export default function Filtres({
   }, [sponsors, selectedCategoria]);
 
   return (
+    <>
     <section className="map-section grid-12" style={{ paddingBottom: '80px' }}>
         {/* 0. Top Full-Width Page Segment Navigation (Select first, then filter!) */}
         <div style={{ gridColumn: 'span 12', paddingBottom: '16px' }}>
@@ -1139,5 +1154,60 @@ export default function Filtres({
             </div>
         </div>
     </section>
+
+      {/* Botó flotant mòbil "Veure X resultats" */}
+      <style>{`
+        @keyframes slideUpBtn {
+          from { opacity: 0; transform: translateX(-50%) translateY(16px); }
+          to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        .mobile-results-btn-wrap {
+          display: none;
+        }
+        @media (max-width: 768px) {
+          .mobile-results-btn-wrap {
+            display: block;
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 998;
+            pointer-events: auto;
+            animation: slideUpBtn 0.3s ease;
+          }
+        }
+      `}</style>
+      {!resultsInView && (
+        <div className="mobile-results-btn-wrap">
+          <button
+            onClick={() => {
+              const el = document.getElementById('results-container');
+              if (el) {
+                const y = el.getBoundingClientRect().top + window.scrollY - 76;
+                window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+              }
+            }}
+            style={{
+              backgroundColor: 'var(--verd)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '100px',
+              padding: '15px 28px',
+              fontFamily: 'var(--font-sans)',
+              fontSize: '15px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              boxShadow: '0 8px 28px rgba(26, 107, 58, 0.45)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Veure {filtered.length} resultat{filtered.length !== 1 ? 's' : ''} →
+          </button>
+        </div>
+      )}
+    </>
   );
 }
