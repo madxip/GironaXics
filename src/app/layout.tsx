@@ -51,6 +51,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ca" className={`${dmSans.variable} ${playfair.variable}`}>
+      <head>
+        {/* Proposta 5: preconnect Airtable CDN per reduir latència de connexió */}
+        <link rel="preconnect" href="https://v5.airtableusercontent.com" />
+        <link rel="dns-prefetch" href="https://v5.airtableusercontent.com" />
+      </head>
       <body>
         {children}
         <AnalyticsTracker />
