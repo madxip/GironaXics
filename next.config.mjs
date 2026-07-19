@@ -1,5 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    // Inline CSS crític al HTML → elimina el CSS render-blocking (estalvi ~130ms FCP)
+    optimizeCss: true,
+    // Usa browserslist del package.json per a SWC → elimina polyfills innecessaris (~12 KiB)
+    browsersListForSwc: true,
+  },
   images: {
     remotePatterns: [
       {
