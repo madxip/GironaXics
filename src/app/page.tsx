@@ -59,7 +59,57 @@ export default async function Home() {
         <div className="sep-num">01 · FILTRES</div>
         <div className="sep-line"></div>
       </div>
-      <Suspense fallback={<div style={{ padding: '0 5vw 80px' }}>Carregant filtres...</div>}>
+      <Suspense fallback={
+        <div style={{
+          padding: '0 5vw 80px',
+          minHeight: '800px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '24px',
+          opacity: 0.6
+        }}>
+          <style>{`
+            .grid-placeholder {
+              display: grid;
+              grid-template-columns: repeat(12, 1fr);
+              gap: 32px;
+            }
+            @media (max-width: 768px) {
+              .grid-placeholder {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 20px;
+              }
+            }
+          `}</style>
+          
+          {/* Tabs Placeholder */}
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+            <div style={{ width: '180px', height: '45px', backgroundColor: '#e2dfd5', borderRadius: '30px' }}></div>
+            <div style={{ width: '180px', height: '45px', backgroundColor: '#eae6df', borderRadius: '30px' }}></div>
+          </div>
+          
+          {/* Main Grid Placeholder */}
+          <div className="grid-placeholder">
+            {/* Sidebar Placeholder */}
+            <div style={{ gridColumn: 'span 4', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div style={{ width: '150px', height: '24px', backgroundColor: '#e2dfd5', borderRadius: '4px' }}></div>
+              <div style={{ height: '45px', backgroundColor: '#eae6df', borderRadius: '4px' }}></div>
+              <div style={{ height: '45px', backgroundColor: '#eae6df', borderRadius: '4px' }}></div>
+              <div style={{ height: '45px', backgroundColor: '#eae6df', borderRadius: '4px' }}></div>
+            </div>
+            
+            {/* Results Placeholder */}
+            <div style={{ gridColumn: 'span 8', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ width: '250px', height: '28px', backgroundColor: '#e2dfd5', borderRadius: '4px', marginBottom: '16px' }}></div>
+              <div style={{ height: '50px', backgroundColor: '#eae6df', borderRadius: '8px' }}></div>
+              <div style={{ height: '50px', backgroundColor: '#eae6df', borderRadius: '8px' }}></div>
+              <div style={{ height: '50px', backgroundColor: '#eae6df', borderRadius: '8px' }}></div>
+              <div style={{ height: '50px', backgroundColor: '#eae6df', borderRadius: '8px' }}></div>
+            </div>
+          </div>
+        </div>
+      }>
         <Filtres activitats={activitats} sponsors={sponsors} casalsBanner={casalsBanner} />
       </Suspense>
       

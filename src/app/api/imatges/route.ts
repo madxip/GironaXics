@@ -27,7 +27,26 @@ export async function GET(req: NextRequest) {
   const slug      = searchParams.get('slug');
   const id        = searchParams.get('id');
   const index     = parseInt(searchParams.get('index') ?? '0', 10);
-  const reqWidth  = searchParams.get('w') ? parseInt(searchParams.get('w')!, 10) : null;
+  const wStr = searchParams.get('w');
+  let reqWidth = wStr ? parseInt(wStr, 10) : null;
+
+  // Optimització: si no es demana una amplada explícita, assignem una amplada per defecte
+  // segons el tipus d'imatge per evitar servir fitxers 4K/originals d'Airtable.
+  if (!reqWidth) {
+    if (type === 'activitat-thumb') {
+      reqWidth = 200; // Targeta petita (80px rendered)
+    } else if (type === 'centre') {
+      reqWidth = 160; // Logo centre (64px rendered)
+    } else if (type === 'sponsor-logo') {
+      reqWidth = 120; // Logo patrocinador
+    } else if (type === 'activitat-galeria') {
+      reqWidth = 800; // Galeria de fitxa
+    } else if (type === 'activitat') {
+      reqWidth = 1000; // Hero fitxa
+    } else if (type === 'sponsor-bg') {
+      reqWidth = 1200; // Fons patrocinador premium
+    }
+  }
 
   let targetUrl = '';
 
