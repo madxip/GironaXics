@@ -1,10 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    // optimizeCss DESACTIVAT: causava CLS 0.173 (el CSS diferit desplaçava el layout)
-    // Usa browserslist del package.json per a SWC → elimina polyfills innecessaris (~12 KiB)
-    browsersListForSwc: true,
-  },
   images: {
     remotePatterns: [
       {

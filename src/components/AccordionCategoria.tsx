@@ -4,9 +4,6 @@ import { useState, useEffect } from 'react';
 import { Activitat } from '@/lib/types';
 import ActivitatCard from './ActivitatCard';
 
-// Nombre de targetes visibles per defecte per acordió
-const PAGE_SIZE = 24;
-
 export default function AccordionCategoria({ 
   categoria, 
   activitats, 
@@ -22,12 +19,6 @@ export default function AccordionCategoria({
   // filtrada (el cas "categoria seleccionada") i obre directament sense consultar
   // la sessionStorage.
   const [isOpen, setIsOpen] = useState(forceOpen);
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-
-  // Quan canvien els filtres (activitats) reinicia la paginació al principi
-  useEffect(() => {
-    setVisibleCount(PAGE_SIZE);
-  }, [activitats]);
 
   useEffect(() => {
     if (forceOpen) {
@@ -50,15 +41,6 @@ export default function AccordionCategoria({
       sessionStorage.setItem(`accordion-open-${categoria}`, String(nextState));
     }
   };
-
-  const isGridGroup = activitats.some(a => 
-    a.tipus?.toLowerCase().includes('casal') || 
-    a.tipus?.toLowerCase().includes('taller') || 
-    a.tipus?.toLowerCase().includes('oci')
-  );
-
-  const visible   = activitats.slice(0, visibleCount);
-  const remaining = activitats.length - visibleCount;
 
   return (
     <div className="result-item" style={{ marginBottom: '16px' }}>
@@ -97,50 +79,29 @@ export default function AccordionCategoria({
         </span>
       </button>
       
-      {/* Renderització condicional: el contingut NOMÉS existeix al DOM quan l'acordió
-          és obert. Anteriorment s'usava display:none i totes les ~400 targetes eren
-          presents a l'HTML inicial (↑ 658 KiB). Ara l'HTML inicial és buit fins que
-          l'usuari clica, reduint el pes inicial dràsticament. */}
-      {isOpen && (
-        <div 
-          id={`accordion-content-${categoria.replace(/\s+/g, '-')}`} 
-          className={isGridGroup ? `casals-responsive-grid ${hasSponsor ? 'single-column' : 'two-columns'}` : 'accordion-content'} 
-          style={{ 
-            padding: '16px 0',
-            display: isGridGroup ? 'grid' : 'flex',
-            flexDirection: isGridGroup ? undefined : 'column', 
-            gap: isGridGroup ? undefined : '16px',
-          }}
-        >
-          {visible.map(a => (
-            <ActivitatCard key={a.slug} activitat={a} />
-          ))}
-
-          {/* Paginació: "Veure'n X més" si hi ha més targetes del PAGE_SIZE */}
-          {remaining > 0 && (
-            <button
-              type="button"
-              onClick={() => setVisibleCount(c => c + PAGE_SIZE)}
-              style={{
-                gridColumn: isGridGroup ? '1 / -1' : undefined,
-                marginTop: '16px',
-                padding: '12px 32px',
-                background: 'none',
-                border: '2px solid var(--verd)',
-                borderRadius: '24px',
-                color: 'var(--verd-fosc)',
-                fontFamily: 'var(--font-sans)',
-                fontWeight: 600,
-                fontSize: '15px',
-                cursor: 'pointer',
-                alignSelf: 'center',
-              }}
-            >
-              Veure&apos;n {Math.min(remaining, PAGE_SIZE)} més
-            </button>
-          )}
-        </div>
-      )}
+      {(() => {
+        const isGridGroup = activitats.some(a => 
+          a.tipus?.toLowerCase().includes('casal') || 
+          a.tipus?.toLowerCase().includes('taller') || 
+          a.tipus?.toLowerCase().includes('oci')
+        );
+        return (
+          <div 
+            id={`accordion-content-${categoria.replace(/\s+/g, '-')}`} 
+            className={isGridGroup ? `casals-responsive-grid ${hasSponsor ? 'single-column' : 'two-columns'}` : 'accordion-content'} 
+            style={{ 
+              padding: isOpen ? '16px 0' : '0', 
+              display: isOpen ? (isGridGroup ? 'grid' : 'flex') : 'none', 
+              flexDirection: isGridGroup ? undefined : 'column', 
+              gap: isGridGroup ? undefined : '16px' 
+            }}
+          >
+            {activitats.map(a => (
+              <ActivitatCard key={a.slug} activitat={a} />
+            ))}
+          </div>
+        );
+      })()}
     </div>
   );
 }
