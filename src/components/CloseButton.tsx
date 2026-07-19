@@ -9,7 +9,7 @@ export default function CloseButton() {
     <button 
       onClick={() => router.back()} 
       className="modal-close hoverable" 
-      style={{ position: 'fixed', top: '24px', right: '5vw', zIndex: 20010, cursor: 'none' }}
+      style={{ position: 'fixed', top: '24px', right: '5vw', zIndex: 20010, cursor: 'pointer' }}
     >
       ✕
     </button>

@@ -1348,6 +1348,7 @@
             display: flex;
             align-items: flex-end;
             padding: 40px 5vw;
+            z-index: 2;
         }
 
         .modal-hero-title {
@@ -1370,6 +1371,7 @@
             font-weight: 500;
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            z-index: 2;
         }
 
         .modal-body {

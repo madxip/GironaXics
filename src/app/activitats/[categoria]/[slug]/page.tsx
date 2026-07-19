@@ -4,6 +4,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import SafeImage from '@/components/SafeImage';
+import HeroImage from '@/components/HeroImage';
 import { getActivitatBySlug, getActivitats, getCentres } from '@/lib/airtable';
 import { normalizeSlug, safeJsonLd, formatPreu } from '@/lib/utils';
 import { isTallerExpiredOrEnded } from '@/lib/tallerDates';
@@ -304,8 +305,10 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
 
       <main id="main-content" style={{ paddingTop: 'var(--nav-height)', paddingBottom: '60px' }}>
         <div className="modal-hero" style={{ position: 'relative' }}>
-          {/* Aprofitem la imatge pujada a Airtable, o deixem el placeholder de disseny si no n'hi ha cap */}
-          <SafeImage src={activitat.imatgeUrl || "/placeholder-activitat.svg"} alt={activitat.nom} fill style={{ objectFit: 'cover' }} priority sizes="(max-width: 768px) 100vw, 60vw" />
+          <HeroImage
+            src={activitat.imatgeUrl || "/placeholder-activitat.svg"}
+            alt={activitat.nom}
+          />
           <div className="modal-hero-gradient">
             <h1 className="modal-hero-title">{activitat.nom}</h1>
           </div>
