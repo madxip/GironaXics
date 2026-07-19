@@ -1316,61 +1316,54 @@
             overflow-x: hidden;
         }
 
-        /* ── Hero Opció C: layout asimètric ─────────────────────────────────── */
         .modal-hero {
+            position: relative;
             width: 100%;
-            display: flex;
-            height: clamp(320px, 42vw, 520px);
-            overflow: hidden;
+            aspect-ratio: 16/9;
+            max-height: 500px;
             background-color: var(--verd-fosc);
-        }
-
-        /* Panell esquerra: fons verd fosc, badge + títol */
-        .modal-hero-left {
-            width: 38%;
-            min-width: 280px;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            padding: 40px 48px;
-            position: relative;
-            z-index: 2;
-            background-color: var(--verd-fosc);
-        }
-
-        /* Panell dreta: imatge */
-        .modal-hero-image {
-            flex: 1;
-            position: relative;
             overflow: hidden;
         }
 
-        .modal-hero-image img {
-            position: absolute;
-            inset: 0;
+        @media (max-width: 900px) {
+            .modal-hero {
+                max-height: none;
+                min-height: 200px;
+            }
+        }
+
+        .modal-hero img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        /* Gradient que fusiona el panell dreta amb el panell esquerra */
-        .modal-hero-image-fade {
+        .modal-hero-gradient {
             position: absolute;
-            left: 0;
-            top: 0;
             bottom: 0;
-            width: 100px;
-            background: linear-gradient(to right, var(--verd-fosc), transparent);
-            z-index: 1;
-            pointer-events: none;
+            left: 0;
+            width: 100%;
+            height: 60%;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+            display: flex;
+            align-items: flex-end;
+            padding: 40px 5vw;
+            z-index: 2;
         }
 
-        /* Badge (dins del panell esquerra) */
+        .modal-hero-title {
+            font-family: var(--font-serif);
+            font-style: italic;
+            font-size: clamp(32px, 5vw, 52px);
+            color: white;
+            line-height: 1.1;
+        }
+
         .modal-badge {
             position: absolute;
-            top: 32px;
-            left: 48px;
-            background-color: rgba(255,255,255,0.15);
+            top: 24px;
+            left: 5vw;
+            background-color: var(--verd);
             color: white;
             padding: 6px 16px;
             border-radius: 20px;
@@ -1378,40 +1371,7 @@
             font-weight: 500;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            border: 1px solid rgba(255,255,255,0.25);
             z-index: 2;
-        }
-
-        .modal-hero-title {
-            font-family: var(--font-serif);
-            font-style: italic;
-            font-size: clamp(28px, 3.5vw, 52px);
-            color: white;
-            line-height: 1.1;
-            margin: 0;
-        }
-
-        /* Mobile: imatge a dalt, text a baix */
-        @media (max-width: 900px) {
-            .modal-hero {
-                flex-direction: column-reverse;
-                height: auto;
-            }
-            .modal-hero-left {
-                width: 100%;
-                min-width: unset;
-                padding: 28px 5vw 32px;
-            }
-            .modal-badge {
-                top: 24px;
-                left: 5vw;
-            }
-            .modal-hero-image {
-                height: 260px;
-            }
-            .modal-hero-image-fade {
-                display: none;
-            }
         }
 
         .modal-body {

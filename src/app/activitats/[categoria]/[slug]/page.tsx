@@ -4,6 +4,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import SafeImage from '@/components/SafeImage';
+import HeroImage from '@/components/HeroImage';
 import { getActivitatBySlug, getActivitats, getCentres } from '@/lib/airtable';
 import { normalizeSlug, safeJsonLd, formatPreu } from '@/lib/utils';
 import { isTallerExpiredOrEnded } from '@/lib/tallerDates';
@@ -303,29 +304,17 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
       <script type="application/ld+json" {...{ dangerouslySetInnerHTML: { __html: safeJsonLd(combinedJsonLd) } }} />
 
       <main id="main-content" style={{ paddingTop: 'var(--nav-height)', paddingBottom: '60px' }}>
-        <div className="modal-hero">
-
-          {/* ── Panell esquerra: fons verd + badge + títol ── */}
-          <div className="modal-hero-left">
-            <div className="modal-badge">
-              {activitat.subcategoria
-                ? `${activitat.categoria} · ${activitat.subcategoria}`
-                : activitat.categoria}
-            </div>
+        <div className="modal-hero" style={{ position: 'relative' }}>
+          <HeroImage
+            src={activitat.imatgeUrl || "/placeholder-activitat.svg"}
+            alt={activitat.nom}
+          />
+          <div className="modal-hero-gradient">
             <h1 className="modal-hero-title">{activitat.nom}</h1>
           </div>
-
-          {/* ── Panell dreta: imatge ── */}
-          <div className="modal-hero-image">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={activitat.imatgeUrl || '/placeholder-activitat.svg'}
-              alt={activitat.nom}
-            />
-            {/* Gradient que fusiona amb el panell esquerra */}
-            <div className="modal-hero-image-fade" />
+          <div className="modal-badge">
+            {activitat.subcategoria ? `${activitat.categoria} · ${activitat.subcategoria}` : activitat.categoria}
           </div>
-
         </div>
 
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 20px 0' }}>
