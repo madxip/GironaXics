@@ -48,7 +48,16 @@ const getCoordinates = (centre: Centre, index: number): [number, number] => {
     return [centre.lat, centre.lng];
   }
   
-  const barriNormalized = (centre.barri || "").toLowerCase().trim();
+  let barriStr = "";
+  if (centre.barri) {
+    if (Array.isArray(centre.barri)) {
+      barriStr = (centre.barri[0] || "").toString();
+    } else {
+      barriStr = centre.barri.toString();
+    }
+  }
+  
+  const barriNormalized = barriStr.toLowerCase().trim();
   const coords = NEIGHBORHOOD_COORDS[barriNormalized] || NEIGHBORHOOD_COORDS["girona"];
   
   // Afegim un jitter determinista basat en l'índex per evitar superposició exacta dels pins
@@ -139,7 +148,7 @@ export default function Map({ centres, filteredActivitats }: MapProps) {
           }
           <div class="map-popup-content">
             <h4 class="map-popup-title">${centre.nom}</h4>
-            <span class="map-popup-barri">📍 ${centre.barri} · ${centre.adreca || ""}</span>
+            <span class="map-popup-barri">📍 ${Array.isArray(centre.barri) ? (centre.barri[0] || "") : (centre.barri || "")} · ${centre.adreca || ""}</span>
             <div class="map-popup-activities">
               <p class="map-popup-section-title">Activitats disponibles:</p>
               <ul class="map-popup-list">
