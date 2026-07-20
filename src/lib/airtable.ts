@@ -557,6 +557,81 @@ export async function getActivitatsDestacades(): Promise<Activitat[]> {
   });
 }
 
+async function geocodeAddress(adreca: string, barri: string): Promise<{ lat: number; lng: number } | null> {
+  if (!adreca) return null;
+  try {
+    // Netegem l'adreça per evitar problemes amb salts de línia
+    const cleanAdreca = adreca.replace(/[\r\n]/g, ' ').trim();
+    const queryParts = [cleanAdreca];
+    if (barri) queryParts.push(barri);
+    queryParts.push("Girona", "Catalunya", "Espanya");
+    
+    const query = queryParts.join(", ");
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`;
+    
+    console.log(`[Airtable Geocoding] Cercant coordenades per a: "${query}" ...`);
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'GironaXicsGeocoding/1.0 (hola@gironaxics.cat)'
+      }
+    });
+    
+    if (!res.ok) {
+      console.warn(`[Airtable Geocoding] Error de connexió amb Nominatim: ${res.status}`);
+      return null;
+    }
+    
+    const data = await res.json();
+    if (Array.isArray(data) && data.length > 0) {
+      const lat = parseFloat(data[0].lat);
+      const lng = parseFloat(data[0].lon);
+      if (!isNaN(lat) && !isNaN(lng)) {
+        console.log(`[Airtable Geocoding] Coordenades trobades: lat=${lat}, lng=${lng}`);
+        return { lat, lng };
+      }
+    }
+    console.warn(`[Airtable Geocoding] No s'han trobat coordenades per a: "${cleanAdreca}"`);
+    return null;
+  } catch (err) {
+    console.error(`[Airtable Geocoding] Error en geolocalització:`, err);
+    return null;
+  }
+}
+
+async function updateCentreCoordinatesInAirtable(recordId: string, lat: number, lng: number): Promise<boolean> {
+  if (!API_KEY || !BASE_ID || !recordId) return false;
+  try {
+    const url = `https://api.airtable.com/v0/${BASE_ID}/Centres/${recordId}`;
+    
+    const res = await fetch(url, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        fields: {
+          lat: lat,
+          lng: lng
+        }
+      }),
+      cache: 'no-store'
+    });
+    
+    if (res.ok) {
+      console.log(`[Airtable Geocoding] S'han desat les coordenades per al registre ${recordId} a Airtable.`);
+      return true;
+    } else {
+      const errText = await res.text();
+      console.error(`[Airtable Geocoding] No s'ha pogut actualitzar Airtable per al registre ${recordId}. Resposta: ${res.status} ${errText}. (Assegura't d'haver creat les columnes 'lat' i 'lng' de tipus Number a la taula Centres)`);
+      return false;
+    }
+  } catch (err) {
+    console.error(`[Airtable Geocoding] Error de connexió intentant actualitzar Airtable:`, err);
+    return false;
+  }
+}
+
 async function _doFetchCentres(): Promise<Centre[]> {
   const records = await fetchAllRecords('Centres');
   const anyActiu = records.some(r => r.fields.actiu === true || r.fields.Actiu === true);
@@ -564,7 +639,7 @@ async function _doFetchCentres(): Promise<Centre[]> {
     ? records.filter(r => r.fields.actiu === true || r.fields.Actiu === true)
     : records;
 
-  return recordsToShow.map((r: { id: string; fields: Record<string, unknown> }) => {
+  const centresMapped = recordsToShow.map((r: { id: string; fields: Record<string, unknown> }) => {
     const f = { ...r.fields } as unknown as Centre;
     f.id = r.id;
     f.adreca = (r.fields.adreça || r.fields.adreca || "") as string;
@@ -581,12 +656,57 @@ async function _doFetchCentres(): Promise<Centre[]> {
     
     f.interessat = !!(r.fields.interessat || r.fields.Interessat || r.fields['col·laborador'] || r.fields['Col·laborador'] || r.fields.partner || r.fields.Partner);
     f.vacances = (r.fields.vacances || r.fields.Vacances) as string | undefined;
+    
     const rawLat = r.fields.lat || r.fields.Lat || r.fields.latitud || r.fields.Latitud;
     const rawLng = r.fields.lng || r.fields.Lng || r.fields.longitud || r.fields.Longitud;
     f.lat = typeof rawLat === 'number' ? rawLat : undefined;
     f.lng = typeof rawLng === 'number' ? rawLng : undefined;
+    
+    const rawBarri = r.fields.barri || r.fields.Barri;
+    f.barri = Array.isArray(rawBarri) ? (rawBarri[0] as string) || '' : (rawBarri as string) || '';
+    
     return f;
   });
+
+  // Evitem la geolocalització automàtica durant el procés de build de Next.js
+  // per evitar bloquejos (errors 429) per concurrència de workers
+  const isBuilding = process.env.NEXT_PHASE === 'phase-production-build' ||
+                     (typeof process !== 'undefined' && process.argv && process.argv.some(arg => arg.includes('build')));
+
+  if (isBuilding) {
+    console.log(`[Airtable Geocoding] Geolocalització en segon pla desactivada durant el 'next build' per evitar errors 429.`);
+    return centresMapped;
+  }
+
+  // Cerca automàtica de coordenades per a centres que no en tenen (limitat a max 4 peticions per execució per evitar rate limits)
+  let geocodedCount = 0;
+  for (const c of centresMapped) {
+    if (c.adreca && (c.lat === undefined || c.lng === undefined)) {
+      if (geocodedCount >= 4) {
+        console.log(`[Airtable Geocoding] S'ha assolit el límit de geolocalitzacions en aquesta crida. La resta de centres es geolocalitzaran a la següent càrrega.`);
+        break;
+      }
+      
+      if (geocodedCount > 0) {
+        await sleep(1500); // 1.5s delay
+      }
+      
+      const coords = await geocodeAddress(c.adreca, c.barri);
+      if (coords) {
+        c.lat = coords.lat;
+        c.lng = coords.lng;
+        if (c.id) {
+          // Desem a Airtable en segon pla (sense retardar el thread principal de resposta)
+          updateCentreCoordinatesInAirtable(c.id, coords.lat, coords.lng).catch(err => {
+            console.error(`[Airtable Geocoding] Error desant coordenades en segon pla:`, err);
+          });
+        }
+        geocodedCount++;
+      }
+    }
+  }
+
+  return centresMapped;
 }
 
 const _getCachedCentres = unstable_cache(
