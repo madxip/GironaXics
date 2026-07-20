@@ -110,7 +110,7 @@ export default async function Home() {
           </div>
         </div>
       }>
-        <Filtres activitats={activitats} sponsors={sponsors} casalsBanner={casalsBanner} />
+        <Filtres activitats={activitats} centres={centres} sponsors={sponsors} casalsBanner={casalsBanner} />
       </Suspense>
       
       <div className="editorial-sep">

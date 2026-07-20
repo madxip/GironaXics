@@ -3,11 +3,34 @@
 import { useMemo, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Activitat, Sponsor, CasalsBanner } from '@/lib/types';
+import { Activitat, Sponsor, CasalsBanner, Centre } from '@/lib/types';
 import AccordionCategoria from './AccordionCategoria';
 import { normalizeSlug } from '@/lib/utils';
 import { trackEvent } from '@/lib/trackEvent';
 import { isTallerExpiredOrEnded, getNextTallerDate } from '@/lib/tallerDates';
+import dynamic from 'next/dynamic';
+
+const Map = dynamic(() => import('./Map'), {
+  ssr: false,
+  loading: () => (
+    <div style={{
+      width: '100%',
+      height: '100%',
+      minHeight: '560px',
+      backgroundColor: '#eae6df',
+      borderRadius: '16px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontFamily: 'var(--font-sans)',
+      color: 'var(--verd-fosc)',
+      fontWeight: 'bold',
+      opacity: 0.7
+    }}>
+      Carregant el mapa...
+    </div>
+  )
+});
 
 const renderBannerTitle = (title: string) => {
   if (!title) return null;
@@ -185,13 +208,16 @@ function matchEdatGroup(edatStr: string | undefined, group: string): boolean {
 
 export default function Filtres({ 
   activitats, 
+  centres = [],
   sponsors = [],
   casalsBanner = null
 }: { 
   activitats: Activitat[], 
+  centres?: Centre[],
   sponsors?: Sponsor[],
   casalsBanner?: CasalsBanner | null
 }) {
+  const [viewMode, setViewMode] = useState<'llista' | 'mapa'>('llista');
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -795,15 +821,59 @@ export default function Filtres({
         
         {/* 4. Results Column */}
         <div className="map-results" style={{ gridColumn: 'span 8', paddingLeft: '0' }}>
-            <h2 aria-live="polite" style={{ fontSize: '24px', marginTop: '0', marginBottom: '24px', fontFamily: 'var(--font-serif)', fontStyle: 'italic', color: 'var(--verd-fosc)' }}>
-              {selectedTipus === 'Casals' 
-                ? `Casals de Temporada (${filtered.length})` 
-                : selectedTipus === 'Tallers' || selectedTipus === 'Tallers i Oci'
-                  ? `Activitats i Tallers (${filtered.length})`
-                  : `Extraescolars Setmanals (${filtered.length})`}
-            </h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+              <h2 aria-live="polite" style={{ fontSize: '24px', margin: 0, fontFamily: 'var(--font-serif)', fontStyle: 'italic', color: 'var(--verd-fosc)' }}>
+                {selectedTipus === 'Casals' 
+                  ? `Casals de Temporada (${filtered.length})` 
+                  : selectedTipus === 'Tallers' || selectedTipus === 'Tallers i Oci'
+                    ? `Activitats i Tallers (${filtered.length})`
+                    : `Extraescolars Setmanals (${filtered.length})`}
+              </h2>
+              
+              {/* Llista / Mapa View Toggle */}
+              <div style={{ display: 'flex', backgroundColor: 'rgba(26, 107, 58, 0.06)', borderRadius: '30px', padding: '4px' }}>
+                <button
+                  onClick={() => setViewMode('llista')}
+                  style={{
+                    border: 'none',
+                    backgroundColor: viewMode === 'llista' ? 'var(--verd-fosc)' : 'transparent',
+                    color: viewMode === 'llista' ? 'white' : 'var(--verd-fosc)',
+                    padding: '8px 18px',
+                    borderRadius: '30px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    fontFamily: 'var(--font-sans)'
+                  }}
+                >
+                  📄 Llista
+                </button>
+                <button
+                  onClick={() => setViewMode('mapa')}
+                  style={{
+                    border: 'none',
+                    backgroundColor: viewMode === 'mapa' ? 'var(--verd-fosc)' : 'transparent',
+                    color: viewMode === 'mapa' ? 'white' : 'var(--verd-fosc)',
+                    padding: '8px 18px',
+                    borderRadius: '30px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    fontFamily: 'var(--font-sans)'
+                  }}
+                >
+                  🗺️ Mapa
+                </button>
+              </div>
+            </div>
             <div id="results-container">
-                {filtered.length === 0 ? (
+                {viewMode === 'mapa' ? (
+                    <div style={{ animation: 'fadeIn 0.3s ease', minHeight: '560px' }}>
+                        <Map centres={centres} filteredActivitats={filtered} />
+                    </div>
+                ) : filtered.length === 0 ? (
                     <div className="results-empty">No s&apos;han trobat activitats amb aquests filtres.</div>
                 ) : (
                     <div className="results-split-grid has-sponsor">

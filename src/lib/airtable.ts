@@ -581,6 +581,10 @@ async function _doFetchCentres(): Promise<Centre[]> {
     
     f.interessat = !!(r.fields.interessat || r.fields.Interessat || r.fields['col·laborador'] || r.fields['Col·laborador'] || r.fields.partner || r.fields.Partner);
     f.vacances = (r.fields.vacances || r.fields.Vacances) as string | undefined;
+    const rawLat = r.fields.lat || r.fields.Lat || r.fields.latitud || r.fields.Latitud;
+    const rawLng = r.fields.lng || r.fields.Lng || r.fields.longitud || r.fields.Longitud;
+    f.lat = typeof rawLat === 'number' ? rawLat : undefined;
+    f.lng = typeof rawLng === 'number' ? rawLng : undefined;
     return f;
   });
 }
@@ -649,6 +653,10 @@ export async function getCentreByIdDirect(id: string): Promise<Centre | null> {
     f.slug = customSlug ? normalizeSlug(customSlug) : (r.fields.nom ? normalizeSlug(r.fields.nom as string) : r.id);
     f.interessat = !!(r.fields.interessat || r.fields.Interessat || r.fields['col\u00b7laborador'] || r.fields['Col\u00b7laborador'] || r.fields.partner || r.fields.Partner);
     f.vacances = (r.fields.vacances || r.fields.Vacances) as string | undefined;
+    const rawLat = r.fields.lat || r.fields.Lat || r.fields.latitud || r.fields.Latitud;
+    const rawLng = r.fields.lng || r.fields.Lng || r.fields.longitud || r.fields.Longitud;
+    f.lat = typeof rawLat === 'number' ? rawLat : undefined;
+    f.lng = typeof rawLng === 'number' ? rawLng : undefined;
     return f;
   } catch (error) {
     console.error('[Airtable API] Error en getCentreByIdDirect:', error);
