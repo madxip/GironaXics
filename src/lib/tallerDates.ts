@@ -301,8 +301,8 @@ export function getNextValidTallerDate(dies: string, vacances: VacanceRange[]): 
     }
     if (weekdayIdx === -1) return null;
 
-    // Data d'inici del rang recurrent (si n'hi ha)
-    const { start: recStart } = parseTallerRecurrentRange(dies);
+    // Data d'inici i fi del rang recurrent (si n'hi ha)
+    const { start: recStart, end: recEnd } = parseTallerRecurrentRange(dies);
     let candidate = new Date();
     candidate.setHours(0, 0, 0, 0);
     if (recStart && recStart > candidate) {
@@ -311,6 +311,12 @@ export function getNextValidTallerDate(dies: string, vacances: VacanceRange[]): 
 
     // Troba la propera ocurrència del dia de la setmana des de candidate
     candidate = getNextWeekdayAfterDate(candidate, weekdayIdx);
+
+    // Si la propera ocurrència supera la data de fi, ja no és vàlida
+    if (recEnd && candidate > recEnd) {
+      return null;
+    }
+
     // Si és en vacances, salta fins sortir-ne i torna a trobar el dia
     let maxIter = 60;
     while (maxIter-- > 0 && isInVacances(candidate, vacances)) {

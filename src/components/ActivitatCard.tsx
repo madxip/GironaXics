@@ -187,7 +187,7 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
   }
 
   if (isTaller) {
-    const parsedDates = parseTallerDates(activitat.dies || '');
+    const isRecurrent = (activitat.dies || '').toLowerCase().trim().startsWith('cada');
 
     // ── Vacances logic ──────────────────────────────────────────
     const vacRanges = parseVacances(activitat.centreVacances || '');
@@ -207,6 +207,19 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
       }
     }
     // ────────────────────────────────────────────────────────────
+
+    let parsedDates: ParsedDate[] = [];
+    if (isRecurrent) {
+      const nextDate = getNextValidTallerDate(activitat.dies || '', vacRanges);
+      if (nextDate) {
+        parsedDates = [{
+          day: String(nextDate.getDate()),
+          month: MONTH_ABBR_CAT[nextDate.getMonth()] || '',
+        }];
+      }
+    } else {
+      parsedDates = parseTallerDates(activitat.dies || '');
+    }
 
     return (
       <Link href={href} className="taller-card-wrapper" onClick={saveScroll}>
