@@ -2,19 +2,19 @@
 
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { createActivitat, updateActivitat, deleteActivitat, getActivitatRawById } from "@/lib/airtable";
+import { createActivitat, updateActivitat, deleteActivitat, getActivitatRawById, clearAllCache } from "@/lib/airtable";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { normalizeSlug } from "@/lib/utils";
 
-// Helper: retorna centreId i si Ã©s admin
+// Helper: retorna centreId i si és admin
 async function getAuthInfo() {
   const session = await getServerSession(authOptions);
   if (!session || !session.user) {
-    throw new Error("SessiÃ³ no autoritzada.");
+    throw new Error("Sessió no autoritzada.");
   }
   const isAdmin = !!session.user.isAdmin;
   if (!isAdmin && !session.user.centreId) {
-    throw new Error("SessiÃ³ no autoritzada.");
+    throw new Error("Sessió no autoritzada.");
   }
   return { centreId: session.user.centreId || "", isAdmin };
 }
@@ -222,6 +222,9 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
     if (!success) {
       return { success: false, error: "No s'ha pogut actualitzar l'activitat a Airtable." };
     }
+
+    // Netejar la memòria cau interna i Next.js Data Cache
+    clearAllCache(revalidateTag);
 
     // On-demand revalidation
     try {

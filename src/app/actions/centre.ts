@@ -2,8 +2,8 @@
 
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { updateCentre, getCentres } from "@/lib/airtable";
-import { revalidatePath } from "next/cache";
+import { updateCentre, getCentres, clearAllCache } from "@/lib/airtable";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 async function getAuthenticatedCentreId(formData: FormData): Promise<string> {
   const session = await getServerSession(authOptions);
@@ -63,7 +63,10 @@ export async function updateCentreAction(prevState: unknown, formData: FormData)
       return { success: false, error: "No s'ha pogut actualitzar el perfil del centre a Airtable." };
     }
 
-    // Get current slug to purge the specific center path cache
+    // 1. Netejar la memòria cau interna d'Airtable i Next.js Data Cache
+    clearAllCache(revalidateTag);
+
+    // 2. On-demand revalidation per a totes les pàgines afectades
     const centres = await getCentres();
     const currentCentre = centres.find(c => c.id === centreId);
     if (currentCentre) {
