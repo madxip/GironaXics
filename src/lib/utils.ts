@@ -68,6 +68,76 @@ export function formatPreu(preu: number | string | undefined): string {
   return preuStr;
 }
 
+export interface MultiPreuItem {
+  type: 'header' | 'option';
+  text: string;
+  concept?: string;
+  price?: string;
+}
+
+/**
+ * Parseja un text de preu multi-opció (amb | o salts de línia \n) en una llista d'ítems estructurats.
+ */
+export function parseMultiPreu(preuStr: string): MultiPreuItem[] {
+  if (!preuStr) return [];
+  const rawParts = preuStr.split(/[|\n]/).map(p => p.trim()).filter(Boolean);
+  const items: MultiPreuItem[] = [];
+
+  for (const part of rawParts) {
+    // Si és una capçalera de secció (acaba amb : o conté paraules clau sense número/€)
+    const isHeader = part.endsWith(':') || 
+      (!part.includes('€') && !/\d/.test(part) && (
+        part.toLowerCase().includes('quota') || 
+        part.toLowerCase().includes('matricula') || 
+        part.toLowerCase().includes('tarifa')
+      ));
+
+    if (isHeader) {
+      items.push({
+        type: 'header',
+        text: part.replace(/:$/, '').trim(),
+      });
+      continue;
+    }
+
+    // Si conté dos punts separant concepte i preu (ex: "1 dia per setmana: 45 €")
+    if (part.includes(':')) {
+      const colonIdx = part.indexOf(':');
+      const left = part.substring(0, colonIdx).trim();
+      const right = part.substring(colonIdx + 1).trim();
+      if (right.includes('€') || /\d/.test(right)) {
+        items.push({
+          type: 'option',
+          text: part,
+          concept: left,
+          price: right,
+        });
+        continue;
+      }
+    }
+
+    // Cerca d'un preu al final del text (ex: "1d/set (1.5h) 55 €/mes" o "1d/set (1.5h) 55 €")
+    const priceMatch = part.match(/^(.*?)(?:\s+)?(\b\d+(?:[.,]\d+)?\s*(?:€|\/mes|\/trimestre|\/any|€\/[a-z\u00C0-\u024F]+)(?:\/[a-z\u00C0-\u024F]+)?)$/i);
+    if (priceMatch && priceMatch[1].trim()) {
+      items.push({
+        type: 'option',
+        text: part,
+        concept: priceMatch[1].trim(),
+        price: priceMatch[2].trim(),
+      });
+    } else {
+      items.push({
+        type: 'option',
+        text: part,
+        concept: part,
+        price: '',
+      });
+    }
+  }
+
+  return items;
+}
+
 /**
  * Mapeja errors tècnics o codis de resposta d'Airtable/xarxa a missatges clars i entenedors en català.
  */

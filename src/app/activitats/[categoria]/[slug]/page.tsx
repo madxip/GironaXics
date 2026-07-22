@@ -6,7 +6,7 @@ import Link from 'next/link';
 import SafeImage from '@/components/SafeImage';
 import HeroImage from '@/components/HeroImage';
 import { getActivitatBySlug, getActivitats, getCentres } from '@/lib/airtable';
-import { normalizeSlug, safeJsonLd, formatPreu } from '@/lib/utils';
+import { normalizeSlug, safeJsonLd, formatPreu, parseMultiPreu } from '@/lib/utils';
 import { isTallerExpiredOrEnded } from '@/lib/tallerDates';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
@@ -373,16 +373,48 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
                   <strong style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', opacity: 0.5, marginBottom: '6px', letterSpacing: '0.05em', fontWeight: 700, color: 'var(--muted)' }}>{TXT_PREU}</strong>
                   {(() => {
                     const formatted = formatPreu(activitat.preu);
-                    // Si conté | és un preu multi-opció (ex: "33 € un dia | 60 € dos dies")
-                    if (formatted.includes('|')) {
-                      const opcions = formatted.split('|').map(o => o.trim());
+                    // Si conté | o salts de línia \n és un preu multi-opció
+                    if (formatted.includes('|') || formatted.includes('\n')) {
+                      const items = parseMultiPreu(formatted);
                       return (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          {opcions.map((opcio, i) => (
-                            <span key={i} style={{ fontSize: '20px', fontWeight: 700, color: 'var(--verd-fosc)' }}>
-                              {opcio}
-                            </span>
-                          ))}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
+                          {items.map((item, i) => {
+                            if (item.type === 'header') {
+                              return (
+                                <div key={i} style={{ 
+                                  fontSize: '12px', 
+                                  fontWeight: 800, 
+                                  textTransform: 'uppercase', 
+                                  letterSpacing: '0.08em', 
+                                  color: 'var(--verd)', 
+                                  marginTop: i > 0 ? '12px' : '0',
+                                  paddingBottom: '4px',
+                                  borderBottom: '1.5px solid rgba(12, 34, 20, 0.15)'
+                                }}>
+                                  {item.text}
+                                </div>
+                              );
+                            }
+                            return (
+                              <div key={i} style={{ 
+                                display: 'flex', 
+                                alignItems: 'baseline', 
+                                justifyContent: 'space-between', 
+                                gap: '12px',
+                                paddingBottom: '6px',
+                                borderBottom: '1px dashed rgba(0,0,0,0.08)'
+                              }}>
+                                <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--verd-fosc)' }}>
+                                  {item.concept}
+                                </span>
+                                {item.price && (
+                                  <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--verd-fosc)', whiteSpace: 'nowrap' }}>
+                                    {item.price}
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       );
                     }

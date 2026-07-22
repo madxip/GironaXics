@@ -379,13 +379,44 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
     ? safeGetSubcategories("Esports", subcategories)
     : (selectedCategories.includes("Idiomes") ? safeGetSubcategories("Idiomes", subcategories) : undefined);
   const [edat, setEdat] = useState(initialData?.edat || "");
+  // Helper to parse multi-option price strings into structured form rows
+  const parseInitialMultiRows = (rawPreu: string) => {
+    if (!rawPreu) return [{ id: '1', type: 'option' as const, title: '', concept: '', price: '' }];
+    const parts = rawPreu.split(/[|\n]/).map(p => p.trim()).filter(Boolean);
+    if (parts.length === 0) return [{ id: '1', type: 'option' as const, title: '', concept: '', price: '' }];
+
+    return parts.map((p, idx) => {
+      const isHeader = p.endsWith(':') || (!p.includes('€') && !/\d/.test(p) && (p.toLowerCase().includes('quota') || p.toLowerCase().includes('matricula')));
+      if (isHeader) {
+        return { id: String(idx + 1), type: 'header' as const, title: p.replace(/:$/, ''), concept: '', price: '' };
+      }
+      if (p.includes(':')) {
+        const colonIdx = p.indexOf(':');
+        const left = p.substring(0, colonIdx).trim();
+        const right = p.substring(colonIdx + 1).trim();
+        if (right.includes('€') || /\d/.test(right)) {
+          return { id: String(idx + 1), type: 'option' as const, title: '', concept: left, price: right };
+        }
+      }
+      const priceMatch = p.match(/^(.*?)(?:\s+)?(\b\d+(?:[.,]\d+)?\s*(?:€|\/mes|\/trimestre|\/any|€\/[a-z\u00C0-\u024F]+)(?:\/[a-z\u00C0-\u024F]+)?)$/i);
+      if (priceMatch && priceMatch[1].trim()) {
+        return { id: String(idx + 1), type: 'option' as const, title: '', concept: priceMatch[1].trim(), price: priceMatch[2].trim() };
+      }
+      return { id: String(idx + 1), type: 'option' as const, title: '', concept: p, price: '' };
+    });
+  };
+
   // Parse the initial price for unit dropdown and inputs
   const getInitialPriceState = () => {
     const rawPreu = initialData?.preu !== undefined ? String(initialData.preu).trim() : "";
     if (!rawPreu) return { val: "", unit: "/mes", custom: "" };
 
+    if (rawPreu.includes('|') || rawPreu.includes('\n')) {
+      return { val: "", unit: "multi", custom: rawPreu };
+    }
+
     const lower = rawPreu.toLowerCase();
-    if (lower === "gratuÃ¯t" || lower === "gratuit") {
+    if (lower === "gratuït" || lower === "gratuit") {
       return { val: "", unit: "gratuit", custom: "" };
     }
 
@@ -395,7 +426,7 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
     }
 
     // Check if it matches "X/unit" (e.g. "120/trimestre" or "120/any")
-    const clean = rawPreu.replace(/â‚¬/g, '').trim();
+    const clean = rawPreu.replace(/€/g, '').trim();
     if (clean.includes('/')) {
       const parts = clean.split('/');
       const cleanVal = parts[0].trim();
@@ -420,6 +451,7 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
   const [priceVal, setPriceVal] = useState(initialPriceState.val);
   const [priceUnit, setPriceUnit] = useState(initialPriceState.unit);
   const [customPrice, setCustomPrice] = useState(initialPriceState.custom);
+  const [multiRows, setMultiRows] = useState(() => parseInitialMultiRows(initialData?.preu ? String(initialData.preu) : ''));
   const TIPUS_VALIDS = ["Extraescolar", "Casal", "Taller"];
   const [tipus, setTipus] = useState(
     TIPUS_VALIDS.includes(initialData?.tipus || "") ? (initialData?.tipus || "Extraescolar") : "Extraescolar"
@@ -792,9 +824,24 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
       } else if (priceUnit === "/any") {
         finalPreu = priceVal ? `${priceVal}/any` : "";
       } else if (priceUnit === "gratuit") {
-        finalPreu = "GratuÃ¯t";
+        finalPreu = "Gratuït";
       } else if (priceUnit === "personalitzat") {
         finalPreu = customPrice;
+      } else if (priceUnit === "multi") {
+        const parts = multiRows
+          .map(r => {
+            if (r.type === 'header') {
+              const t = r.title.trim();
+              return t ? (t.endsWith(':') ? t : `${t}:`) : '';
+            }
+            const c = r.concept.trim();
+            const p = r.price.trim();
+            if (!c && !p) return '';
+            if (c && p) return `${c} ${p}`;
+            return c || p;
+          })
+          .filter(Boolean);
+        finalPreu = parts.join(' | ');
       }
       formData.append("preu", finalPreu);
       formData.append("horari", horari);
@@ -1514,38 +1561,141 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
                 </div>
               </div>
 
-              {/* PREU I FACTURACI\u00d3 */}
+              {/* PREU I FACTURACIÓ */}
               <div style={fieldGroupStyle}>
-                <label style={labelStyle}>{"Preu i facturaci\u00f3"}</label>
+                <label style={labelStyle}>{"Preu i facturació"}</label>
                 <div className="af-preu-row">
                   <select value={priceUnit} onChange={e => setPriceUnit(e.target.value)} disabled={loading}
-                    style={{ ...fieldStyle(), cursor: "pointer", flex: "0 0 220px" }}>
+                    style={{ ...fieldStyle(), cursor: "pointer", flex: "0 0 240px" }}>
                     <option value="/mes">{TXT_MENSUAL}</option>
                     <option value="/trimestre">{TXT_TRIMESTRAL}</option>
                     <option value="/any">{TXT_ANUAL}</option>
                     <option value="gratuit">{TXT_GRATUIT}</option>
+                    <option value="multi">Múltiples tarifes / Taula de preus</option>
                     <option value="personalitzat">{TXT_ALTRES_TEXT}</option>
                   </select>
-                  {priceUnit !== "gratuit" && priceUnit !== "personalitzat" && (
+                  {priceUnit !== "gratuit" && priceUnit !== "personalitzat" && priceUnit !== "multi" && (
                     <>
                       <input type="number" min="0" step="0.01" value={priceVal}
                         onChange={e => setPriceVal(e.target.value)}
                         placeholder="Ex: 45" disabled={loading}
                         style={{ ...fieldStyle(), flex: "1 1 100px", minWidth: "80px" }} />
                       <span className="af-preu-unit">
-                        {priceUnit === "/mes" ? "\u20ac/mes" : priceUnit === "/trimestre" ? "\u20ac/trimestre" : "\u20ac/any"}
+                        {priceUnit === "/mes" ? "€/mes" : priceUnit === "/trimestre" ? "€/trimestre" : "€/any"}
                       </span>
                     </>
                   )}
                   {priceUnit === "personalitzat" && (
                     <input type="text" value={customPrice} onChange={e => setCustomPrice(e.target.value)}
-                      placeholder={"Ex: Consultar preus, Des de 40\u20ac..."}
+                      placeholder={"Ex: Consultar preus, Des de 40€..."}
                       disabled={loading} style={{ ...fieldStyle(), flex: 1 }} />
                   )}
                 </div>
+
+                {priceUnit === "multi" && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px', padding: '16px', backgroundColor: '#fcfbf7', borderRadius: '8px', border: '1px solid var(--crema-fosca)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--verd-fosc)' }}>Taula de tarifes (múltiples opcions)</span>
+                    </div>
+                    
+                    {multiRows.map((row) => (
+                      <div key={row.id} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        {row.type === 'header' ? (
+                          <input
+                            type="text"
+                            value={row.title}
+                            onChange={e => {
+                              const val = e.target.value;
+                              setMultiRows(prev => prev.map(r => r.id === row.id ? { ...r, title: val } : r));
+                            }}
+                            placeholder="Títol de secció (ex: Quota mensual:)"
+                            style={{ ...fieldStyle(), flex: 1, fontWeight: 700, color: 'var(--verd)' }}
+                          />
+                        ) : (
+                          <>
+                            <input
+                              type="text"
+                              value={row.concept}
+                              onChange={e => {
+                                const val = e.target.value;
+                                setMultiRows(prev => prev.map(r => r.id === row.id ? { ...r, concept: val } : r));
+                              }}
+                              placeholder="Concepte (ex: 1 dia/setmana (1h))"
+                              style={{ ...fieldStyle(), flex: 2 }}
+                            />
+                            <input
+                              type="text"
+                              value={row.price}
+                              onChange={e => {
+                                const val = e.target.value;
+                                setMultiRows(prev => prev.map(r => r.id === row.id ? { ...r, price: val } : r));
+                              }}
+                              placeholder="Preu (ex: 45 €/mes)"
+                              style={{ ...fieldStyle(), flex: 1 }}
+                            />
+                          </>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => setMultiRows(prev => prev.filter(r => r.id !== row.id))}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#d95738',
+                            cursor: 'pointer',
+                            fontSize: '16px',
+                            padding: '6px 8px',
+                          }}
+                          title="Eliminar línia"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+
+                    <div style={{ display: 'flex', gap: '12px', marginTop: '8px', flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        onClick={() => setMultiRows(prev => [...prev, { id: String(Date.now()), type: 'option', title: '', concept: '', price: '' }])}
+                        style={{
+                          padding: '8px 14px',
+                          borderRadius: '20px',
+                          border: '1px solid var(--verd)',
+                          backgroundColor: 'white',
+                          color: 'var(--verd-fosc)',
+                          fontFamily: 'var(--font-sans)',
+                          fontSize: '13px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        + Afegir línia de preu
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setMultiRows(prev => [...prev, { id: String(Date.now()), type: 'header', title: '', concept: '', price: '' }])}
+                        style={{
+                          padding: '8px 14px',
+                          borderRadius: '20px',
+                          border: '1px solid var(--verd-suau)',
+                          backgroundColor: 'var(--crema)',
+                          color: 'var(--verd-fosc)',
+                          fontFamily: 'var(--font-sans)',
+                          fontSize: '13px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        + Afegir títol de secció
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {priceUnit === "gratuit" && (
                   <p style={{ fontSize: "13px", color: "var(--verd)", fontWeight: 600, margin: 0 }}>
-                    {"\u2713"} {TXT_ACTIVITAT_GRATUITA}
+                    {"✓"} {TXT_ACTIVITAT_GRATUITA}
                   </p>
                 )}
               </div>
