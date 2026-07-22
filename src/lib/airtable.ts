@@ -674,6 +674,63 @@ export async function getRawActivityImage(slug: string, isThumb = false): Promis
   return null;
 }
 
+/**
+ * Quan s'aprova/valida un centre o usuari des de Usuaris_Centres:
+ * Aquesta funció cerca el centre a la taula Centres d'Airtable i marca automàticament
+ * els camps 'actiu' i 'interessat' com a true (1) i neteja la memòria cau per publicar-lo immediatament.
+ */
+export async function approveCentreAndActivate(centreIdentifier: string): Promise<boolean> {
+  if (!API_KEY || !BASE_ID || !centreIdentifier) return false;
+
+  try {
+    const targetSlug = normalizeSlug(decodeURIComponent(centreIdentifier));
+    const records = await fetchAllRecords('Centres');
+    
+    // Buscar el centre per ID, per Nom o per Slug
+    const match = records.find(r => {
+      if (r.id === centreIdentifier) return true;
+      const nom = (r.fields.nom || r.fields.Nom || '') as string;
+      const slug = (r.fields.slug || r.fields.Slug || '') as string;
+      return (nom && normalizeSlug(nom) === targetSlug) || (slug && normalizeSlug(slug) === targetSlug);
+    });
+
+    if (!match) {
+      console.warn(`[Airtable API] No s'ha trobat cap centre per activar amb l'identificador: ${centreIdentifier}`);
+      return false;
+    }
+
+    // Identificar els noms exactes de camp a Airtable
+    const fieldsToUpdate: Record<string, boolean> = {};
+    if ('Actiu' in match.fields) fieldsToUpdate.Actiu = true;
+    else fieldsToUpdate.actiu = true;
+
+    if ('Interessat' in match.fields) fieldsToUpdate.Interessat = true;
+    else fieldsToUpdate.interessat = true;
+
+    const url = `https://api.airtable.com/v0/${BASE_ID}/Centres/${match.id}`;
+    const res = await fetchWithRetry(url, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ fields: fieldsToUpdate }),
+    });
+
+    if (res.ok) {
+      console.log(`[Airtable API] Centre '${match.fields.nom || match.id}' activat (actiu=true) i marcat com a interessat (interessat=true) amb èxit.`);
+      clearAllCache();
+      return true;
+    } else {
+      console.error(`[Airtable API] Error en activar centre i marcar com a interessat: HTTP ${res.status}`);
+      return false;
+    }
+  } catch (error) {
+    console.error('[Airtable API] Error en approveCentreAndActivate:', error);
+    return false;
+  }
+}
+
 
 /**
  * Carrega un centre per ID directament des d'Airtable, sense el filtre actiu.
