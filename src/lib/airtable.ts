@@ -621,6 +621,61 @@ export async function getCentreBySlug(slug: string): Promise<Centre | null> {
 }
 
 /**
+ * Cerca directament a Airtable la URL de la imatge/logo d'un centre (bypassejant la memòria cau i el filtre d'actiu).
+ * Garanteix que els logos de centres nouvinguts o no actius es puguin carregar immediatament.
+ */
+export async function getRawCentreImage(slugOrId: string): Promise<string | null> {
+  if (!API_KEY || !BASE_ID || !slugOrId) return null;
+  try {
+    const targetSlug = normalizeSlug(decodeURIComponent(slugOrId));
+    const records = await fetchAllRecords('Centres');
+    for (const r of records) {
+      const customSlug = (r.fields.slug as string) || (r.fields.Slug as string);
+      const cSlug = customSlug ? normalizeSlug(customSlug) : (r.fields.nom ? normalizeSlug(r.fields.nom as string) : r.id);
+      if (r.id === slugOrId || cSlug === targetSlug || (r.fields.nom && normalizeSlug(r.fields.nom as string) === targetSlug)) {
+        const attachmentField = r.fields.Imatge || r.fields.imatge || r.fields.Logo || r.fields.logo || r.fields.Logotip || r.fields.logotip || r.fields.Foto || r.fields.foto;
+        if (Array.isArray(attachmentField) && attachmentField.length > 0) {
+          const att = attachmentField[0] as { url: string };
+          return att.url;
+        }
+      }
+    }
+  } catch (err) {
+    console.error('[Airtable API] Error fetching raw centre image:', err);
+  }
+  return null;
+}
+
+/**
+ * Cerca directament a Airtable la URL de la imatge d'una activitat si la memòria cau no l'ha trobat encara.
+ */
+export async function getRawActivityImage(slug: string, isThumb = false): Promise<string | null> {
+  if (!API_KEY || !BASE_ID || !slug) return null;
+  try {
+    const targetSlug = normalizeSlug(decodeURIComponent(slug));
+    const records = await fetchAllRecords('Activitats');
+    for (const r of records) {
+      const customSlug = (r.fields.slug as string) || (r.fields.Slug as string);
+      const actSlug = customSlug ? normalizeSlug(customSlug) : (r.fields.nom ? normalizeSlug(r.fields.nom as string) : r.id);
+      if (r.id === slug || actSlug === targetSlug) {
+        const attachmentField = r.fields.Imatge || r.fields.imatge || r.fields.Foto || r.fields.foto;
+        if (Array.isArray(attachmentField) && attachmentField.length > 0) {
+          const att = attachmentField[0] as { url: string; thumbnails?: { large?: { url: string } } };
+          if (isThumb && att.thumbnails?.large?.url) {
+            return att.thumbnails.large.url;
+          }
+          return att.url;
+        }
+      }
+    }
+  } catch (err) {
+    console.error('[Airtable API] Error fetching raw activity image:', err);
+  }
+  return null;
+}
+
+
+/**
  * Carrega un centre per ID directament des d'Airtable, sense el filtre actiu.
  * S'usa al dashboard per permetre que centres nous (no actius encara) puguin
  * editar les seves dades tot i que getCentres() els filtra del lloc públic.

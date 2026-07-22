@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getActivitats, getCentres, getSponsors } from '@/lib/airtable';
+import { getActivitats, getCentres, getSponsors, getRawCentreImage, getRawActivityImage } from '@/lib/airtable';
 import { normalizeSlug } from '@/lib/utils';
 import sharp from 'sharp';
 
@@ -54,25 +54,44 @@ export async function GET(req: NextRequest) {
     if (type === 'activitat' && slug) {
       const activitats = await getActivitats();
       const act = activitats.find(a => normalizeSlug(a.slug) === normalizeSlug(slug));
-      if (act?.rawImatgeUrl) targetUrl = act.rawImatgeUrl;
+      if (act?.rawImatgeUrl) {
+        targetUrl = act.rawImatgeUrl;
+      } else {
+        const rawUrl = await getRawActivityImage(slug, false);
+        if (rawUrl) targetUrl = rawUrl;
+      }
 
     } else if (type === 'activitat-thumb' && slug) {
       const activitats = await getActivitats();
       const act = activitats.find(a => normalizeSlug(a.slug) === normalizeSlug(slug));
-      if (act?.rawImatgeThumbnailUrl) targetUrl = act.rawImatgeThumbnailUrl;
+      if (act?.rawImatgeThumbnailUrl) {
+        targetUrl = act.rawImatgeThumbnailUrl;
+      } else {
+        const rawUrl = await getRawActivityImage(slug, true);
+        if (rawUrl) targetUrl = rawUrl;
+      }
 
     } else if (type === 'activitat-galeria' && slug) {
       const activitats = await getActivitats();
       const act = activitats.find(a => normalizeSlug(a.slug) === normalizeSlug(slug));
       if (act?.rawGaleria?.[index]) targetUrl = act.rawGaleria[index];
 
-    } else if (type === 'centre' && slug) {
+    } else if (type === 'centre' && (slug || id)) {
       const centres = await getCentres();
+      const searchKey = slug || id || '';
       const centre = centres.find(c =>
-        normalizeSlug(c.slug) === normalizeSlug(slug) ||
-        (c.nom && normalizeSlug(c.nom) === normalizeSlug(slug))
+        (id && c.id === id) ||
+        (slug && normalizeSlug(c.slug) === normalizeSlug(searchKey)) ||
+        (slug && c.nom && normalizeSlug(c.nom) === normalizeSlug(searchKey))
       );
-      if (centre?.rawImatgeUrl) targetUrl = centre.rawImatgeUrl;
+      if (centre?.rawImatgeUrl) {
+        targetUrl = centre.rawImatgeUrl;
+      } else {
+        // Fallback directe a Airtable: si el centre és nou o no està marcat com actiu encara,
+        // cerca la imatge directament a Airtable sense passar pel filtre d'actius ni per la caché.
+        const directUrl = await getRawCentreImage(searchKey);
+        if (directUrl) targetUrl = directUrl;
+      }
 
     } else if (type === 'sponsor-logo' && id) {
       const sponsors = await getSponsors();
