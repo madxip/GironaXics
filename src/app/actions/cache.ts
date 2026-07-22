@@ -2,7 +2,7 @@
 
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { clearAllCache } from "@/lib/airtable";
 
 /**
@@ -17,11 +17,11 @@ export async function refreshCacheAction(): Promise<{ success: boolean; error?: 
       return { success: false, error: "No autoritzat." };
     }
 
-    // 1. Netejar la memòria cau en memòria d'Airtable
-    clearAllCache();
+    // 1. Netejar la memòria cau en memòria d'Airtable i Next.js Data Cache
+    clearAllCache(revalidateTag);
 
-    // 2. Invalidar les pàgines estàtiques/ISR de Vercel
-    const paths = ["/", "/categories", "/barris"];
+    // 2. Invalidar les pàgines estàtiques/ISR de Vercel a nivell global
+    const paths = ["/", "/categories", "/barris", "/centres"];
     for (const path of paths) {
       try { revalidatePath(path); } catch { /* ignore */ }
     }
