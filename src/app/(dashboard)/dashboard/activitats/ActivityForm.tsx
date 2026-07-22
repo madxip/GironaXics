@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Save, Loader2, Upload, Trash2, Image as ImageIcon, Plus, Eye, X } from "lucide-react";
 import { Activitat, Centre } from "@/lib/types";
-import { mapAirtableError } from "@/lib/utils";
+import { mapAirtableError, parseMultiPreu } from "@/lib/utils";
 import Toast from "@/components/Toast";
 import RichTextEditor from "@/components/RichTextEditor";
 import MultiDatePicker from "@/components/MultiDatePicker";
@@ -1028,16 +1028,65 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
                     else if (priceUnit === "/any" && priceVal) preuText = `${priceVal} €/any`;
                     else if (priceUnit === "gratuit") preuText = "Gratuït";
                     else if (priceUnit === "personalitzat") preuText = customPrice || "A consultar";
-                    // Multi-opció amb |
-                    if (preuText.includes("|")) {
-                      const opcions = preuText.split("|").map(o => o.trim());
+                    else if (priceUnit === "multi") {
+                      const parts = multiRows
+                        .map(r => {
+                          if (r.type === 'header') {
+                            const t = r.title.trim();
+                            return t ? (t.endsWith(':') ? t : `${t}:`) : '';
+                          }
+                          const c = r.concept.trim();
+                          const p = r.price.trim();
+                          if (!c && !p) return '';
+                          if (c && p) return `${c} ${p}`;
+                          return c || p;
+                        })
+                        .filter(Boolean);
+                      preuText = parts.join(' | ') || "A consultar";
+                    }
+
+                    // Multi-opció amb | o salts de línia
+                    if (preuText.includes("|") || preuText.includes("\n")) {
+                      const items = parseMultiPreu(preuText);
                       return (
-                        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                          {opcions.map((opcio, i) => (
-                            <span key={i} style={{ fontSize: "20px", fontWeight: 700, color: "var(--verd-fosc)" }}>
-                              {opcio}
-                            </span>
-                          ))}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
+                          {items.map((item, i) => {
+                            if (item.type === 'header') {
+                              return (
+                                <div key={i} style={{ 
+                                  fontSize: '12px', 
+                                  fontWeight: 800, 
+                                  textTransform: 'uppercase', 
+                                  letterSpacing: '0.08em', 
+                                  color: 'var(--verd)', 
+                                  marginTop: i > 0 ? '12px' : '0',
+                                  paddingBottom: '4px',
+                                  borderBottom: '1.5px solid rgba(12, 34, 20, 0.15)'
+                                }}>
+                                  {item.text}
+                                </div>
+                              );
+                            }
+                            return (
+                              <div key={i} style={{ 
+                                display: 'flex', 
+                                alignItems: 'baseline', 
+                                justifyContent: 'space-between', 
+                                gap: '12px',
+                                paddingBottom: '6px',
+                                borderBottom: '1px dashed rgba(0,0,0,0.08)'
+                              }}>
+                                <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--verd-fosc)' }}>
+                                  {item.concept}
+                                </span>
+                                {item.price && (
+                                  <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--verd-fosc)', whiteSpace: 'nowrap' }}>
+                                    {item.price}
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       );
                     }
