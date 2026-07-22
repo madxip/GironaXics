@@ -428,27 +428,44 @@ export default function Filtres({
       return true;
     });
 
-    // Ordena: tallers per propera data (puntual) o data d'inici (recurrent)
-    // La resta: centres interessats primer
-    return filtered.sort((a, b) => {
-      const aIsTaller = a.tipus?.toLowerCase().includes('taller');
-      const bIsTaller = b.tipus?.toLowerCase().includes('taller');
-
-      if (aIsTaller && bIsTaller) {
-        const aNext = getNextTallerDate(a.dies || '');
-        const bNext = getNextTallerDate(b.dies || '');
-        // Sense data (recurrent sense inici) → al final
-        if (!aNext && !bNext) return 0;
-        if (!aNext) return 1;
-        if (!bNext) return -1;
-        return aNext.getTime() - bNext.getTime();
-      }
-
-      // No tallers: centres interessats primer
-      const aInt = a.centreInteressat ? 1 : 0;
-      const bInt = b.centreInteressat ? 1 : 0;
-      return bInt - aInt;
+    // Generem pesos aleatoris per a cada activitat (es mantenen constants durant la sessió de filtre)
+    const randomWeights: Record<string, number> = {};
+    activitats.forEach(a => {
+      randomWeights[a.id || a.slug] = Math.random();
     });
+
+    const tallers: typeof filtered = [];
+    const confirmats: typeof filtered = [];
+    const noConfirmats: typeof filtered = [];
+
+    filtered.forEach(a => {
+      const isTaller = a.tipus?.toLowerCase().includes('taller');
+      if (isTaller) {
+        tallers.push(a);
+      } else if (a.centreInteressat) {
+        confirmats.push(a);
+      } else {
+        noConfirmats.push(a);
+      }
+    });
+
+    // Tallers s'ordenen per data més immediata
+    tallers.sort((a, b) => {
+      const aNext = getNextTallerDate(a.dies || '');
+      const bNext = getNextTallerDate(b.dies || '');
+      if (!aNext && !bNext) return 0;
+      if (!aNext) return 1;
+      if (!bNext) return -1;
+      return aNext.getTime() - bNext.getTime();
+    });
+
+    // Extraescolars de centres confirmats: ordre aleatori a cada càrrega
+    confirmats.sort((a, b) => (randomWeights[a.id || a.slug] ?? 0.5) - (randomWeights[b.id || b.slug] ?? 0.5));
+
+    // Extraescolars de centres no confirmats: ordre aleatori a cada càrrega
+    noConfirmats.sort((a, b) => (randomWeights[a.id || a.slug] ?? 0.5) - (randomWeights[b.id || b.slug] ?? 0.5));
+
+    return [...tallers, ...confirmats, ...noConfirmats];
   }, [activitats, selectedTipus, selectedCategoria, selectedSubcategoria, selectedEdat, selectedBarri]);
 
   const grouped = useMemo(() => {
