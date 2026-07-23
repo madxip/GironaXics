@@ -276,6 +276,9 @@ function mapActivitatRecord(
 
   const rawPoblacioPropia = r.fields.nom_poblacio_propia || r.fields.nomPoblacioPropia;
   f.poblacio_propia = Array.isArray(rawPoblacioPropia) ? (rawPoblacioPropia[0] as string) || '' : (rawPoblacioPropia as string) || '';
+
+  const rawAdrecaPropia = r.fields.adreca_propia || r.fields['adreça_pròpia'] || r.fields['adreca_propia'] || r.fields.adrecaPropia;
+  f.adreca_propia = typeof rawAdrecaPropia === 'string' ? rawAdrecaPropia : Array.isArray(rawAdrecaPropia) ? (rawAdrecaPropia[0] as string) || '' : '';
   
   f.qui_imparteix = (r.fields.qui_imparteix as string) || (r.fields['Qui imparteix'] as string) || (r.fields['qui imparteix'] as string);
   f.tipus = (r.fields.tipus as string) || (r.fields.Tipus as string) || "Extraescolar";
@@ -1016,7 +1019,8 @@ export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'cen
       destacada: false,
       tipus: data.tipus || "Extraescolar",
       torns: data.torns || null,
-      poblacio_propia: poblacioId ? [poblacioId] : []
+      poblacio_propia: poblacioId ? [poblacioId] : [],
+      adreca_propia: data.adreca_propia || null
     };
 
     if (subcatId) {
@@ -1132,6 +1136,9 @@ export async function updateActivitat(id: string, data: Partial<Omit<Activitat, 
     if (data.poblacio_propia !== undefined) {
       const poblacioId = data.poblacio_propia ? await getPoblacioRecordIdByName(data.poblacio_propia) : null;
       fields.poblacio_propia = poblacioId ? [poblacioId] : [];
+    }
+    if (data.adreca_propia !== undefined) {
+      fields.adreca_propia = data.adreca_propia || null;
     }
 
     if (data.imatgeUrl !== undefined) {

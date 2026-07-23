@@ -476,11 +476,11 @@ export default async function ActivitatPage({ params }: { params: { categoria: s
                         activitat.centre
                       )}
                     </h3>
-                    {centre ? (
+                    {(centre || activitat.adreca_propia) ? (
                       <div style={{ fontSize: '14px', color: 'var(--muted)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        {centre.adreca && <div>{centre.adreca}</div>}
-                        {centre.telefon && <div>{centre.telefon}</div>}
-                        {centre.email && <div>{centre.email}</div>}
+                        {(activitat.adreca_propia || centre?.adreca) && <div>{activitat.adreca_propia || centre?.adreca}</div>}
+                        {centre?.telefon && <div>{centre.telefon}</div>}
+                        {centre?.email && <div>{centre.email}</div>}
                       </div>
                     ) : (
                       <div style={{ fontSize: '14px', color: 'var(--muted)' }}>{TXT_SENSE_CONTACTE}</div>

@@ -34,6 +34,7 @@ export interface Activitat {
   rawImatgeThumbnailUrl?: string;
   rawGaleria?: string[];
   poblacio_propia?: string;
+  adreca_propia?: string;
 }
 
 export interface Sponsor {

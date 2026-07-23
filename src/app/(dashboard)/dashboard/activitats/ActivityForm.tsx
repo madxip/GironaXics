@@ -309,9 +309,11 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
   
   // Localització personalitzada (override)
   const initialPoblacio = initialData?.poblacio_propia || "";
-  const [hasCustomLocation, setHasCustomLocation] = useState(!!initialPoblacio);
+  const initialAdrecaPropia = initialData?.adreca_propia || "";
+  const [hasCustomLocation, setHasCustomLocation] = useState(!!(initialPoblacio || initialAdrecaPropia));
   const [customComarca, setCustomComarca] = useState("");
   const [customPoblacio, setCustomPoblacio] = useState(initialPoblacio);
+  const [customAdreca, setCustomAdreca] = useState(initialAdrecaPropia);
 
   // Carrega la comarca a partir del barri/població inicial
   React.useEffect(() => {
@@ -786,6 +788,12 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
     if (!horari.trim()) errors.horari = true;
     if (!dies.trim()) errors.dies = true;
 
+    if (hasCustomLocation) {
+      if (!customComarca) errors["custom-comarca"] = true;
+      if (!customPoblacio) errors["custom-poblacio"] = true;
+      if (!customAdreca.trim()) errors["custom-adreca"] = true;
+    }
+
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
       setToast({
@@ -859,7 +867,9 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
       formData.append("torns", torns);
       
       const finalPoblacioPropia = hasCustomLocation ? customPoblacio : "";
+      const finalAdrecaPropia = hasCustomLocation ? customAdreca.trim() : "";
       formData.append("poblacio_propia", finalPoblacioPropia);
+      formData.append("adreca_propia", finalAdrecaPropia);
       // Admin: afegir el centre seleccionat al FormData (no llegit del hidden input perquÃ¨ construÃ¯m FormData manualment)
       if (isAdmin && selectedCentreId) {
         formData.append("centreId", selectedCentreId);
@@ -1122,11 +1132,13 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
                   )}
                   <div style={{ flexGrow: 1 }}>
                     <h4 style={{ margin: "0 0 8px 0", fontSize: "18px", fontWeight: 700 }}>{centrePreview?.nom || initialData?.centre || "Nom del Centre"}</h4>
-                    {centrePreview && (
+                    {(centrePreview || (hasCustomLocation && customAdreca)) && (
                       <div style={{ fontSize: "14px", color: "var(--muted)" }}>
-                        {centrePreview.adreca && <div>{centrePreview.adreca}</div>}
-                        {centrePreview.telefon && <div>{centrePreview.telefon}</div>}
-                        {centrePreview.email && <div>{centrePreview.email}</div>}
+                        {(hasCustomLocation && customAdreca ? customAdreca : centrePreview?.adreca) && (
+                          <div>{hasCustomLocation && customAdreca ? customAdreca : centrePreview?.adreca}</div>
+                        )}
+                        {centrePreview?.telefon && <div>{centrePreview.telefon}</div>}
+                        {centrePreview?.email && <div>{centrePreview.email}</div>}
                       </div>
                     )}
                   </div>
@@ -1324,6 +1336,7 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
                       if (!e.target.checked) {
                         setCustomComarca("");
                         setCustomPoblacio("");
+                        setCustomAdreca("");
                       }
                     }}
                     style={{
@@ -1339,45 +1352,64 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
                 </div>
 
                 {hasCustomLocation && poblacions && (
-                  <div className="af-row-2" style={{ marginTop: "16px", animation: "fadeIn 0.2s ease" }}>
-                    <div style={fieldGroupStyle}>
-                      <label htmlFor="custom-comarca" style={labelStyle}>Comarca de l&apos;activitat *</label>
-                      <select
-                        id="custom-comarca"
-                        value={customComarca}
-                        onChange={e => {
-                          setCustomComarca(e.target.value);
-                          setCustomPoblacio("");
-                        }}
-                        style={{ ...fieldStyle(), cursor: "pointer" }}
-                        required={hasCustomLocation}
-                      >
-                        <option value="">-- Tria una comarca --</option>
-                        {Object.keys(poblacions).sort().map(c => (
-                          <option key={c} value={c}>{c}</option>
-                        ))}
-                      </select>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "16px", animation: "fadeIn 0.2s ease" }}>
+                    <div className="af-row-2">
+                      <div style={fieldGroupStyle}>
+                        <label htmlFor="custom-comarca" style={labelStyle}>Comarca de l&apos;activitat *</label>
+                        <select
+                          id="custom-comarca"
+                          value={customComarca}
+                          onChange={e => {
+                            setCustomComarca(e.target.value);
+                            setCustomPoblacio("");
+                          }}
+                          style={{ ...fieldStyle(validationErrors["custom-comarca"]), cursor: "pointer" }}
+                          required={hasCustomLocation}
+                        >
+                          <option value="">-- Tria una comarca --</option>
+                          {Object.keys(poblacions).sort().map(c => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
+                        {validationErrors["custom-comarca"] && errMsg("* La comarca és obligatòria quan la localització és diferent del centre")}
+                      </div>
+
+                      <div style={fieldGroupStyle}>
+                        <label htmlFor="custom-poblacio" style={labelStyle}>Municipi o Barri de l&apos;activitat *</label>
+                        <select
+                          id="custom-poblacio"
+                          value={customPoblacio}
+                          onChange={e => setCustomPoblacio(e.target.value)}
+                          style={{
+                            ...fieldStyle(validationErrors["custom-poblacio"]),
+                            cursor: !customComarca ? "not-allowed" : "pointer",
+                            backgroundColor: !customComarca ? "#f9f9f9" : "white"
+                          }}
+                          disabled={!customComarca}
+                          required={hasCustomLocation}
+                        >
+                          <option value="">-- Tria un municipi o barri --</option>
+                          {(poblacions[customComarca] || []).map(p => (
+                            <option key={p} value={p}>{p}</option>
+                          ))}
+                        </select>
+                        {validationErrors["custom-poblacio"] && errMsg("* El municipi o barri és obligatori quan la localització és diferent del centre")}
+                      </div>
                     </div>
 
                     <div style={fieldGroupStyle}>
-                      <label htmlFor="custom-poblacio" style={labelStyle}>Municipi o Barri de l&apos;activitat *</label>
-                      <select
-                        id="custom-poblacio"
-                        value={customPoblacio}
-                        onChange={e => setCustomPoblacio(e.target.value)}
-                        style={{
-                          ...fieldStyle(),
-                          cursor: !customComarca ? "not-allowed" : "pointer",
-                          backgroundColor: !customComarca ? "#f9f9f9" : "white"
-                        }}
-                        disabled={!customComarca}
+                      <label htmlFor="custom-adreca" style={labelStyle}>Adreça de l&apos;activitat *</label>
+                      <input
+                        id="custom-adreca"
+                        type="text"
+                        value={customAdreca}
+                        onChange={e => setCustomAdreca(e.target.value)}
+                        placeholder="Ex: Carrer de la Creu, 12, 17001 Girona"
+                        disabled={loading}
+                        style={fieldStyle(validationErrors["custom-adreca"])}
                         required={hasCustomLocation}
-                      >
-                        <option value="">-- Tria un municipi o barri --</option>
-                        {(poblacions[customComarca] || []).map(p => (
-                          <option key={p} value={p}>{p}</option>
-                        ))}
-                      </select>
+                      />
+                      {validationErrors["custom-adreca"] && errMsg("* L'adreça de l'activitat és obligatòria quan la localització és diferent del centre")}
                     </div>
                   </div>
                 )}
