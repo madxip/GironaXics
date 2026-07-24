@@ -1034,30 +1034,53 @@ export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'cen
       fields.Galeria = data.galeria.map(url => ({ url }));
     }
 
-    const body = {
-      records: [
-        {
-          fields
+    const tryCreateRecord = async (currentFields: Record<string, unknown>): Promise<{ records?: { id: string; fields: Record<string, unknown> }[] }> => {
+      const body = {
+        records: [
+          {
+            fields: currentFields
+          }
+        ],
+        typecast: true
+      };
+
+      const res = await fetchWithRetry(url, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        if (text.includes("UNKNOWN_FIELD_NAME") && (text.includes("adreca_propia") || text.includes("adreça_pròpia") || text.includes("adreça"))) {
+          const nextFields = { ...currentFields };
+          if ('adreca_propia' in nextFields) {
+            const val = nextFields.adreca_propia;
+            delete nextFields.adreca_propia;
+            nextFields['adreça_pròpia'] = val;
+            return tryCreateRecord(nextFields);
+          } else if ('adreça_pròpia' in nextFields) {
+            const val = nextFields['adreça_pròpia'];
+            delete nextFields['adreça_pròpia'];
+            nextFields['adreça'] = val;
+            return tryCreateRecord(nextFields);
+          } else if ('adreça' in nextFields) {
+            delete nextFields['adreça'];
+            console.warn('[Airtable API] El camp d\'adreça pròpia no existeix a la taula Activitats d\'Airtable. S\'ha omès per permetre crear.');
+            return tryCreateRecord(nextFields);
+          }
         }
-      ],
-      typecast: true
+        throw new Error(`Failed to create activity: ${res.status} ${text}`);
+      }
+
+      return res.json();
     };
 
-    const res = await fetchWithRetry(url, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(body)
-    });
+    const resData = await tryCreateRecord(fields);
 
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`Failed to create activity: ${res.status} ${text}`);
-    }
-
-    const resData = await res.json();
     if (resData.records && resData.records.length > 0) {
       const r = resData.records[0];
       delete memoryCache.activitats;
@@ -1148,41 +1171,64 @@ export async function updateActivitat(id: string, data: Partial<Omit<Activitat, 
       fields.Galeria = Array.isArray(data.galeria) ? data.galeria.map(url => ({ url })) : [];
     }
 
-    const body = {
-      records: [
-        {
-          id,
-          fields
+    const tryUpdateRecord = async (currentFields: Record<string, unknown>): Promise<boolean> => {
+      const body = {
+        records: [
+          {
+            id,
+            fields: currentFields
+          }
+        ],
+        typecast: true
+      };
+
+      const res = await fetchWithRetry(url, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        if (text.includes("UNKNOWN_FIELD_NAME") && (text.includes("adreca_propia") || text.includes("adreça_pròpia") || text.includes("adreça"))) {
+          const nextFields = { ...currentFields };
+          if ('adreca_propia' in nextFields) {
+            const val = nextFields.adreca_propia;
+            delete nextFields.adreca_propia;
+            nextFields['adreça_pròpia'] = val;
+            return tryUpdateRecord(nextFields);
+          } else if ('adreça_pròpia' in nextFields) {
+            const val = nextFields['adreça_pròpia'];
+            delete nextFields['adreça_pròpia'];
+            nextFields['adreça'] = val;
+            return tryUpdateRecord(nextFields);
+          } else if ('adreça' in nextFields) {
+            delete nextFields['adreça'];
+            console.warn('[Airtable API] El camp d\'adreça pròpia no existeix a la taula Activitats d\'Airtable. S\'ha omès per permetre desar.');
+            return tryUpdateRecord(nextFields);
+          }
         }
-      ],
-      typecast: true
+        
+        try {
+          const errData = JSON.parse(text);
+          const errMsg = errData?.error?.message || errData?.error?.type || text;
+          throw new Error(`Airtable 422: ${errMsg}`);
+        } catch (e) {
+          if (e instanceof Error && e.message.startsWith('Airtable 422:')) throw e;
+          throw new Error(`Failed to update activity: ${res.status} ${text}`);
+        }
+      }
+
+      delete memoryCache.activitats;
+      delete memoryCache.allActivitats;
+
+      return true;
     };
 
-    const res = await fetchWithRetry(url, {
-      method: 'PATCH',
-      headers: {
-        Authorization: `Bearer ${API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(body)
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      // Intentar extreure el missatge d'error específic de l'Airtable
-      try {
-        const errData = JSON.parse(text);
-        const errMsg = errData?.error?.message || errData?.error?.type || text;
-        throw new Error(`Airtable 422: ${errMsg}`);
-      } catch {
-        throw new Error(`Failed to update activity: ${res.status} ${text}`);
-      }
-    }
-
-    delete memoryCache.activitats;
-    delete memoryCache.allActivitats;
-
-    return true;
+    return await tryUpdateRecord(fields);
   } catch (error) {
     console.error("[Airtable API] Error en updateActivitat:", error);
     throw error;
