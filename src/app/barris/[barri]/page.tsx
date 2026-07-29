@@ -1,4 +1,4 @@
-export const revalidate = 86400; // revalida cada 24h
+export const dynamic = 'force-dynamic';
 
 import { Metadata } from 'next';
 import { getActivitatsByBarri, getActivitats } from '@/lib/airtable';

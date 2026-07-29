@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 4. Fallback: Catbox.moe (permanent)
+    // 4. Fallback 1: Catbox.moe (permanent)
     try {
       const catboxForm = new FormData();
       catboxForm.append("reqtype", "fileupload");
@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
       const response = await fetch("https://catbox.moe/user/api.php", {
         method: "POST",
         body: catboxForm,
-        signal: AbortSignal.timeout(10000)
+        signal: AbortSignal.timeout(8000)
       });
 
       if (response.ok) {
@@ -95,33 +95,38 @@ export async function POST(req: NextRequest) {
         }
       }
     } catch (catboxErr) {
-      console.warn("[Upload API] Error amb Catbox, intentant fallback a Uguu.se:", catboxErr);
+      console.warn("[Upload API] Catbox no disponible, intentant fallback 2:", catboxErr);
     }
 
-    // 5. Fallback: Uguu.se (24h — només emergència)
+    // 5. Fallback 2: Litterbox / Catbox Temporary API (segur, mai bloquejat per antivirus)
     try {
-      const uguuForm = new FormData();
-      const uguuBlob = new Blob([buffer], { type: file.type });
-      uguuForm.append("files[]", uguuBlob, file.name);
+      const litterForm = new FormData();
+      litterForm.append("reqtype", "fileupload");
+      litterForm.append("time", "72h");
+      const litterBlob = new Blob([buffer], { type: file.type });
+      litterForm.append("fileToUpload", litterBlob, file.name);
 
-      const response = await fetch("https://uguu.se/upload.php", {
+      const response = await fetch("https://litterbox.catbox.moe/resources/internals/api.php", {
         method: "POST",
-        body: uguuForm,
-        signal: AbortSignal.timeout(10000)
+        body: litterForm,
+        signal: AbortSignal.timeout(8000)
       });
 
       if (response.ok) {
-        const resData = await response.json();
-        if (resData.success && resData.files?.[0]?.url) {
-          console.warn("[Upload API] AVÍS: Imatge pujada a Uguu.se (temporal 24h). Vercel Blob no disponible.");
-          return NextResponse.json({ url: resData.files[0].url });
+        const fileUrl = await response.text();
+        if (fileUrl.startsWith("http")) {
+          return NextResponse.json({ url: fileUrl.trim() });
         }
       }
-    } catch (uguuErr) {
-      console.error("[Upload API] Error amb Uguu.se:", uguuErr);
+    } catch (litterErr) {
+      console.warn("[Upload API] Litterbox no disponible, utilitzant Data URI 100% segur:", litterErr);
     }
 
-    return NextResponse.json({ error: "Tots els serveis de pujada d'imatges han fallat." }, { status: 500 });
+    // 6. Fallback 3 d'emergència: Data URI en Base64 (100% segur, zero peticions a dominis externs, mai bloquejat)
+    const base64Data = buffer.toString("base64");
+    const mimeType = file.type || "image/jpeg";
+    const dataUri = `data:${mimeType};base64,${base64Data}`;
+    return NextResponse.json({ url: dataUri });
   } catch (error) {
     console.error("[Upload API] Error general:", error);
     return NextResponse.json({ error: "S'ha produït un error al servidor." }, { status: 500 });

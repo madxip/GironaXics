@@ -1,4 +1,4 @@
-export const revalidate = 86400; // revalida cada 24h
+export const dynamic = 'force-dynamic';
 
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';

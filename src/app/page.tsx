@@ -1,4 +1,4 @@
-export const revalidate = 86400; // revalida cada 24h (les Server Actions fan revalidatePath quan hi ha canvis)
+export const dynamic = 'force-dynamic';
 
 import { Metadata } from 'next';
 import Nav from '@/components/Nav';

@@ -1,7 +1,6 @@
 import { Activitat, Centre, Sponsor, CasalsBanner, PoblacioRecord } from './types';
 import activitatsSeed from '../../seed/activitats-inicials.json';
 import { normalizeSlug } from './utils';
-import { unstable_cache } from 'next/cache';
 
 const API_KEY = process.env.AIRTABLE_API_KEY;
 const BASE_ID = process.env.AIRTABLE_BASE_ID;
@@ -108,25 +107,17 @@ async function fetchWithRetry(url: string, options: RequestInit, retries = 5, de
 async function fetchAllRecords(tableName: string, filterByFormula?: string): Promise<{ id: string; fields: Record<string, unknown> }[]> {
   let allRecords: { id: string; fields: Record<string, unknown> }[] = [];
   let offset: string | undefined;
-  const cb = Date.now().toString() + Math.random().toString().slice(2, 8);
 
   do {
     const params = new URLSearchParams();
     if (filterByFormula) params.append('filterByFormula', filterByFormula);
     if (offset) params.append('offset', offset);
-    
-    // Next.js overrides global fetch and caches responses by default, which breaks Airtable
-    // paginated queries when offset tokens expire on their server.
-    // Instead of using 'cache: no-store' (which forces the page to opt out of static generation
-    // with DYNAMIC_SERVER_USAGE), we append a unique request-level cache-busting query parameter.
-    // This allows Next.js to treat the page as fully static/ISR, while ensuring that each
-    // background revalidation or fresh compile fetches a brand-new page with a valid offset.
-    params.append('_cb', cb);
 
     const url = `https://api.airtable.com/v0/${BASE_ID}/${tableName}${params.toString() ? '?' + params.toString() : ''}`;
 
     const fetchOptions: RequestInit = {
       headers: { Authorization: `Bearer ${API_KEY}` },
+      cache: 'no-store',
     };
 
     const res = await fetchWithRetry(url, fetchOptions);
@@ -411,13 +402,6 @@ async function _doFetchActivitatsPublicades(): Promise<Activitat[]> {
   return records.map((r) => mapActivitatRecord(r, centreMap, centreImatgeMap, centreInteressatMap, centreVacancesMap));
 }
 
-// Versió cacheada per Next.js — compartida entre totes les instàncies (90 min TTL per URLs d'imatges Airtable)
-const _getCachedActivitats = unstable_cache(
-  _doFetchActivitatsPublicades,
-  ['gironaxics-activitats-publicades'],
-  { tags: ['activitats'], revalidate: 5400 } // 90 minuts
-);
-
 export async function getActivitats(): Promise<Activitat[]> {
   if (!API_KEY || !BASE_ID) {
     console.warn("Manca AIRTABLE_API_KEY o AIRTABLE_BASE_ID. Utilitzant dades de prova.");
@@ -440,7 +424,7 @@ export async function getActivitats(): Promise<Activitat[]> {
     });
   }
 
-  // 1. Memòria cau local (per instància, molt ràpid)
+  // 1. Memòria cau local en RAM (ultra ràpid, zero escrits a Vercel Data Cache)
   const cache = readCache();
   const now = Date.now();
   if (cache.activitats && (now - cache.activitats.timestamp < CACHE_TTL)) {
@@ -448,14 +432,11 @@ export async function getActivitats(): Promise<Activitat[]> {
   }
 
   try {
-    // 2. Caché Next.js (cross-instància, persistent entre cold starts)
-    const data = await _getCachedActivitats();
-    // Poblar la memòria local per a crides posteriors en la mateixa instància
+    const data = await _doFetchActivitatsPublicades();
     writeCache({ activitats: { timestamp: now, data } });
     return data;
   } catch (error) {
     console.error('[Airtable API] Error en getActivitats:', error);
-    // 3. Fallback d'emergència: retornar cache anterior si existeix
     if (cache.activitats) {
       console.warn('[Airtable Cache] Fallback activat. Retornant cache anterior per evitar errors.');
       return cache.activitats.data;
@@ -588,12 +569,6 @@ async function _doFetchCentres(): Promise<Centre[]> {
   });
 }
 
-const _getCachedCentres = unstable_cache(
-  _doFetchCentres,
-  ['gironaxics-centres'],
-  { tags: ['centres'], revalidate: 5400 } // 90 minuts
-);
-
 export async function getCentres(): Promise<Centre[]> {
   if (!API_KEY || !BASE_ID) return [];
 
@@ -604,7 +579,7 @@ export async function getCentres(): Promise<Centre[]> {
   }
 
   try {
-    const data = await _getCachedCentres();
+    const data = await _doFetchCentres();
     writeCache({ centres: { timestamp: now, data } });
     return data;
   } catch (error) {
@@ -631,16 +606,23 @@ export async function getRawCentreImage(slugOrId: string): Promise<string | null
   if (!API_KEY || !BASE_ID || !slugOrId) return null;
   try {
     const targetSlug = normalizeSlug(decodeURIComponent(slugOrId));
-    const records = await fetchAllRecords('Centres');
-    for (const r of records) {
-      const customSlug = (r.fields.slug as string) || (r.fields.Slug as string);
-      const cSlug = customSlug ? normalizeSlug(customSlug) : (r.fields.nom ? normalizeSlug(r.fields.nom as string) : r.id);
-      if (r.id === slugOrId || cSlug === targetSlug || (r.fields.nom && normalizeSlug(r.fields.nom as string) === targetSlug)) {
-        const attachmentField = r.fields.Imatge || r.fields.imatge || r.fields.Logo || r.fields.logo || r.fields.Logotip || r.fields.logotip || r.fields.Foto || r.fields.foto;
-        if (Array.isArray(attachmentField) && attachmentField.length > 0) {
-          const att = attachmentField[0] as { url: string };
-          return att.url;
-        }
+    // 1. Primer cerca en els centres ja carregats en memòria cau
+    const cachedCentres = await getCentres();
+    const match = cachedCentres.find(c =>
+      c.id === slugOrId ||
+      normalizeSlug(c.slug) === targetSlug ||
+      (c.nom && normalizeSlug(c.nom) === targetSlug)
+    );
+    if (match?.rawImatgeUrl) return match.rawImatgeUrl;
+
+    // 2. Si és un centre nou o no actiu, cerca només aquell registre a Airtable
+    const filter = `OR(RECORD_ID()="${slugOrId}", {slug}="${slugOrId}", {nom}="${slugOrId}")`;
+    const records = await fetchAllRecords('Centres', filter);
+    if (records.length > 0) {
+      const r = records[0];
+      const attachmentField = r.fields.Imatge || r.fields.imatge || r.fields.Logo || r.fields.logo || r.fields.Logotip || r.fields.logotip || r.fields.Foto || r.fields.foto;
+      if (Array.isArray(attachmentField) && attachmentField.length > 0) {
+        return (attachmentField[0] as { url: string }).url;
       }
     }
   } catch (err) {
@@ -656,19 +638,26 @@ export async function getRawActivityImage(slug: string, isThumb = false): Promis
   if (!API_KEY || !BASE_ID || !slug) return null;
   try {
     const targetSlug = normalizeSlug(decodeURIComponent(slug));
-    const records = await fetchAllRecords('Activitats');
-    for (const r of records) {
-      const customSlug = (r.fields.slug as string) || (r.fields.Slug as string);
-      const actSlug = customSlug ? normalizeSlug(customSlug) : (r.fields.nom ? normalizeSlug(r.fields.nom as string) : r.id);
-      if (r.id === slug || actSlug === targetSlug) {
-        const attachmentField = r.fields.Imatge || r.fields.imatge || r.fields.Foto || r.fields.foto;
-        if (Array.isArray(attachmentField) && attachmentField.length > 0) {
-          const att = attachmentField[0] as { url: string; thumbnails?: { large?: { url: string } } };
-          if (isThumb && att.thumbnails?.large?.url) {
-            return att.thumbnails.large.url;
-          }
-          return att.url;
+    // 1. Primer cerca en les activitats carregades en memòria cau
+    const cachedActivitats = await getActivitats();
+    const match = cachedActivitats.find(a => normalizeSlug(a.slug) === targetSlug || a.id === slug);
+    if (match) {
+      if (isThumb && match.rawImatgeThumbnailUrl) return match.rawImatgeThumbnailUrl;
+      if (match.rawImatgeUrl) return match.rawImatgeUrl;
+    }
+
+    // 2. Si no es troba a la memòria cau, cerca només aquesta activitat a Airtable
+    const filter = `OR(RECORD_ID()="${slug}", {slug}="${slug}")`;
+    const records = await fetchAllRecords('Activitats', filter);
+    if (records.length > 0) {
+      const r = records[0];
+      const attachmentField = r.fields.Imatge || r.fields.imatge || r.fields.Foto || r.fields.foto;
+      if (Array.isArray(attachmentField) && attachmentField.length > 0) {
+        const att = attachmentField[0] as { url: string; thumbnails?: { large?: { url: string } } };
+        if (isThumb && att.thumbnails?.large?.url) {
+          return att.thumbnails.large.url;
         }
+        return att.url;
       }
     }
   } catch (err) {
@@ -1499,18 +1488,6 @@ export async function getCasalsBanner(): Promise<CasalsBanner | null> {
   return null;
 }
 
-const _getCachedPoblacions = unstable_cache(
-  async () => {
-    const records = await fetchAllRecords('Poblacions');
-    return records.map(r => ({
-      nom: (r.fields.Nom || '') as string,
-      comarca: (r.fields.Comarca || '') as string
-    })).sort((a, b) => a.nom.localeCompare(b.nom));
-  },
-  ['gironaxics-poblacions-completes'],
-  { tags: ['poblacions'], revalidate: 86400 } // 24 hores
-);
-
 export async function getPoblacions(): Promise<PoblacioRecord[]> {
   if (!API_KEY || !BASE_ID) return [];
   
@@ -1521,7 +1498,12 @@ export async function getPoblacions(): Promise<PoblacioRecord[]> {
   }
   
   try {
-    const data = await _getCachedPoblacions();
+    const records = await fetchAllRecords('Poblacions');
+    const data = records.map(r => ({
+      nom: (r.fields.Nom || '') as string,
+      comarca: (r.fields.Comarca || '') as string
+    })).sort((a, b) => a.nom.localeCompare(b.nom));
+
     const updatedCache = readCache();
     updatedCache.poblacions = { timestamp: Date.now(), data };
     writeCache(updatedCache);

@@ -8,6 +8,8 @@ const ALLOWED_DOMAINS = [
   'dl.airtable.com',
   'images.unsplash.com',
   'files.catbox.moe',
+  'litter.catbox.moe',
+  'litterbox.catbox.moe',
   'tmpfiles.org'
 ];
 
