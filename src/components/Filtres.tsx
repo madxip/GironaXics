@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Activitat, Sponsor, CasalsBanner } from '@/lib/types';
