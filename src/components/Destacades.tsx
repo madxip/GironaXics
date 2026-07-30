@@ -54,7 +54,7 @@ export default function Destacades({ all }: Props) {
           const priceText = act.preu != null && act.preu !== '' 
             ? (String(act.preu).includes('€') ? act.preu : `Des de ${act.preu}€`) 
             : 'A consultar';
-          const locationText = act.barri || act.poblacio || 'Girona';
+          const locationText = act.barri || 'Girona';
           const imgSrc = act.imatgeThumbnailUrl || act.imatgeUrl || act.centreImatgeUrl || getMockImg(mockColors[i % mockColors.length]);
 
           return (
