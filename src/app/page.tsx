@@ -84,7 +84,7 @@ export default async function Home() {
 
         <div className="home-rest-wrap">
           <div className="editorial-sep">
-            <div className="sep-num">02 · ÚLTIMES NOVETATS</div>
+            <div className="sep-num">02 · ACTIVITATS DESTACADES</div>
             <div className="sep-line"></div>
           </div>
           <Destacades destacades={destacades} all={activitats} />

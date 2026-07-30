@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from './SafeImage';
 import { Activitat } from '@/lib/types';
 import { normalizeSlug } from '@/lib/utils';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 const saveScroll = () => {
   if (typeof window !== 'undefined') {
@@ -12,196 +12,237 @@ const saveScroll = () => {
   }
 };
 
+// Barreja un array de forma aleatòria (Fisher-Yates)
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/**
+ * Preu base promocional en €/mes per destacar una activitat (Fase 1 / Centres)
+ */
+const PROMO_PREU_MENSUAL: number = 10;
+
+function CardPromo() {
+  return (
+    <div
+      className="card card-normal hoverable"
+      style={{
+        background: 'linear-gradient(135deg, var(--verd-fosc) 0%, #1d5c3a 100%)',
+        cursor: 'default',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        textAlign: 'center',
+        padding: '24px',
+        gap: '12px',
+        textDecoration: 'none',
+        color: 'white',
+      }}
+    >
+      <div style={{
+        fontSize: '28px',
+        lineHeight: 1,
+        marginBottom: '4px',
+      }}>
+        ✦
+      </div>
+      <div style={{
+        fontFamily: 'var(--font-serif)',
+        fontStyle: 'italic',
+        fontSize: '20px',
+        lineHeight: 1.2,
+        color: 'white',
+      }}>
+        Destaca la teva activitat
+      </div>
+      <div style={{
+        fontSize: '13px',
+        opacity: 0.8,
+        lineHeight: 1.5,
+        maxWidth: '200px',
+      }}>
+        Apareix en aquest apartat i arriba a més famílies de Girona
+      </div>
+      <div style={{
+        marginTop: '8px',
+        background: 'rgba(255,255,255,0.15)',
+        border: '1px solid rgba(255,255,255,0.3)',
+        borderRadius: '20px',
+        padding: '6px 16px',
+        fontSize: '13px',
+        fontWeight: 700,
+        letterSpacing: '0.03em',
+        color: 'white',
+      }}>
+        Des de {PROMO_PREU_MENSUAL}€/mes
+      </div>
+      <Link
+        href="/per-a-centres"
+        style={{
+          marginTop: '4px',
+          fontSize: '12px',
+          color: 'rgba(255,255,255,0.7)',
+          textDecoration: 'underline',
+          textUnderlineOffset: '3px',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        Saber-ne més →
+      </Link>
+    </div>
+  );
+}
+
 interface Props {
-  destacades?: Activitat[];
+  destacades: Activitat[];
   all: Activitat[];
 }
 
-export default function Destacades({ all }: Props) {
-  // Seleccionem les 8 últimes activitats entrades a Airtable de 8 centres diferents
-  const cards = useMemo(() => {
-    const seenCentres = new Set<string>();
-    const result: Activitat[] = [];
-    const reversed = [...all].reverse();
+export default function Destacades({ destacades, all }: Props) {
+  const TOTAL_SLOTS = 5;
+  const [isMounted, setIsMounted] = useState(false);
 
-    for (const act of reversed) {
-      const c = (act.centre || '').trim().toLowerCase();
-      if (!c || seenCentres.has(c)) continue;
-      seenCentres.add(c);
-      result.push(act);
-      if (result.length >= 8) break;
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Calculem les targetes a mostrar. useMemo garanteix que l'aleatorietat
+  // és estable durant la sessió (no rebarreja en cada re-render).
+  const { cards, showPromo } = useMemo(() => {
+    const venudes = destacades.slice(); // destacades marcades a Airtable
+    const maxVenudes = TOTAL_SLOTS;
+
+    if (venudes.length >= maxVenudes) {
+      // 5 o més venudes → mostrem les 5 primeres, sense promo
+      return { cards: venudes.slice(0, TOTAL_SLOTS), showPromo: false };
     }
 
-    // Si no arribem a 8 centres diferents, completem amb les últimes entrades restants
-    if (result.length < 8) {
-      for (const act of reversed) {
-        if (!result.some(r => r.slug === act.slug)) {
-          result.push(act);
-          if (result.length >= 8) break;
-        }
-      }
-    }
+    // Activitats que no estan en les destacades venudes
+    const slugsVenduts = new Set(venudes.map(d => d.slug));
+    const pool = all.filter(a => !slugsVenduts.has(a.slug));
+    
+    // Evitem mismatch d'hidratació: només barregem aleatòriament a client un cop muntat.
+    // Durant el render de servidor i la primera hidratació a client fem servir l'ordre determinista original.
+    const poolForSelection = isMounted ? shuffle(pool) : pool;
 
-    return result;
-  }, [all]);
+    // Nombre de slots lliures (reservem l'últim per la promo)
+    const slotsLliures = TOTAL_SLOTS - 1 - venudes.length;
+    const farciment = poolForSelection.slice(0, slotsLliures);
+    const candidats = [...venudes, ...farciment];
+
+    // La card gran (posició 0) ha de tenir foto pròpia (imatgeUrl).
+    // Si la primera no en té, busquem la primera del pool que sí tingui.
+    const granIdx = candidats.findIndex(a => !!a.imatgeUrl);
+    if (granIdx > 0) {
+      // Posem la que té foto al capdavant, deixem la resta en ordre
+      const ambFoto = candidats[granIdx];
+      candidats.splice(granIdx, 1);
+      candidats.unshift(ambFoto);
+    }
+    // Si granIdx === -1 no hi ha cap amb foto → deixem l'ordre tal qual (fallback)
+
+    return {
+      cards: candidats,
+      showPromo: true,
+    };
+  }, [destacades, all, isMounted]);
 
   const getMockImg = (color: string) =>
     `data:image/svg+xml,%3Csvg viewBox='0 0 400 300' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%25' height='100%25' fill='%23${color}'/%3E%3C/svg%3E`;
 
-  const mockColors = ['1B3D2F', '0C2214', '1A6B3A', '062612', '1B3D2F'];
+  const mockColors = ['1A6B3A', 'F5A623', 'D4EDD9', '1A6B3A', 'F5A623'];
 
+  // Necessitem almenys la gran + suficients per emplenar (la promo compta com a slot)
   if (cards.length === 0) return null;
 
+  // Slot 0 → card gran, slots 1-3 → cards normals, slot 4 → promo o normal
+  const gran = cards[0];
+  const normals = cards.slice(1); // fins a 3 normals
+  const totalNormals = showPromo ? normals : cards.slice(1, 4);
+
   return (
-    <section className="destacades" style={{ paddingBottom: '60px' }}>
-      <div className="ultimes-novetats-grid">
-        {cards.map((act, i) => {
-          const categoryTag = (act.subcategoria || act.categoria || 'ACTIVITAT').toUpperCase();
-          const locationText = act.barri || 'Girona';
-          const imgSrc = act.imatgeThumbnailUrl || act.imatgeUrl || act.centreImatgeUrl || getMockImg(mockColors[i % mockColors.length]);
-          const catSlug = normalizeSlug(act.categoria) || 'general';
+    <section className="destacades">
+      <div className="masonry" id="destacades-grid">
 
-          return (
-            <Link
-              key={`${act.slug}-${i}`}
-              href={`/activitats/${catSlug}/${act.slug}`}
-              onClick={saveScroll}
-              className="novetat-card hoverable"
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                borderRadius: '20px',
-                backgroundColor: '#ffffff',
-                border: '1.5px solid rgba(27, 61, 47, 0.12)',
-                boxShadow: '0 4px 20px rgba(12, 34, 20, 0.05)',
-                overflow: 'hidden',
-                textDecoration: 'none',
-                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-              }}
-            >
-              {/* Part superior: Imatge Neta + Badge Categoria Verd Fosc GironaXics */}
-              <div style={{ position: 'relative', width: '100%', height: '200px', overflow: 'hidden' }}>
-                <Image
-                  src={imgSrc}
-                  alt={act.nom || 'Imatge activitat'}
-                  fill
-                  style={{ objectFit: 'cover' }}
-                />
+        {/* Card gran (posició 0) */}
+        <Link
+          href={`/activitats/${normalizeSlug(gran.categoria)}/${gran.slug}`}
+          onClick={saveScroll}
+          className="card card-large hoverable"
+          style={{ textDecoration: 'none' }}
+        >
+          <Image
+            src={gran.imatgeUrl || getMockImg(mockColors[0])}
+            alt={gran.nom || 'Imatge destacada'}
+            fill
+            style={{ objectFit: 'cover' }}
+          />
+          <div className="card-large-content">
+            <div className="card-large-title">{gran.nom}</div>
+            <div style={{ fontSize: '14px', opacity: 0.8 }}>{gran.centre} · {gran.barri}</div>
+          </div>
+        </Link>
 
-                {/* Badge de Categoria Verd Fosc GironaXics */}
-                <div style={{ position: 'absolute', top: '14px', left: '14px', zIndex: 2 }}>
-                  <span style={{
-                    backgroundColor: 'var(--verd-fosc, #0c2214)',
-                    color: '#ffffff',
-                    padding: '6px 14px',
-                    borderRadius: '30px',
-                    fontSize: '11px',
-                    fontWeight: 800,
-                    letterSpacing: '0.06em',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
-                  }}>
-                    {categoryTag}
-                  </span>
-                </div>
+        {/* Cards normals (posicions 1–3) */}
+        {totalNormals.map((a, i) => (
+          <Link
+            key={a.slug}
+            href={`/activitats/${normalizeSlug(a.categoria)}/${a.slug}`}
+            onClick={saveScroll}
+            className="card card-normal hoverable"
+            style={{ textDecoration: 'none' }}
+          >
+            <div className="card-normal-img" style={{ position: 'relative', width: '100%', height: '140px' }}>
+              <Image
+                src={a.imatgeUrl || getMockImg(mockColors[(i + 1) % mockColors.length])}
+                alt={a.nom || `Imatge destacada ${i + 2}`}
+                fill
+                style={{ objectFit: 'cover' }}
+              />
+            </div>
+            <div className="card-normal-content">
+              <div className="card-normal-title">{a.nom}</div>
+              <div className="card-normal-info">
+                {a.centre} · {a.edat} · {a.preu != null && a.preu !== '' ? `${a.preu}€` : 'A consultar'}
               </div>
+            </div>
+          </Link>
+        ))}
 
-              {/* Part inferior: Informació de l'activitat en Verd Fosc GironaXics, SENSE PREU */}
-              <div style={{
-                padding: '20px 20px 18px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
-                backgroundColor: '#ffffff',
-                flex: 1,
-                justifyContent: 'space-between'
-              }}>
-                <div>
-                  {/* Nom del Centre en Verd Fosc GironaXics */}
-                  <div style={{
-                    fontSize: '11px',
-                    fontWeight: 800,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.06em',
-                    color: 'var(--verd-fosc, #0c2214)',
-                    marginBottom: '4px'
-                  }}>
-                    {act.centre}
-                  </div>
-
-                  {/* Títol Activitat en Serifa Itàlica Verd Fosc GironaXics */}
-                  <h3 style={{
-                    fontFamily: 'var(--font-serif)',
-                    fontStyle: 'italic',
-                    fontSize: '22px',
-                    fontWeight: 700,
-                    color: 'var(--verd-fosc, #0c2214)',
-                    margin: 0,
-                    lineHeight: 1.25
-                  }}>
-                    {act.nom}
-                  </h3>
-                </div>
-
-                {/* Separador subtil */}
-                <div style={{ height: '1px', backgroundColor: 'rgba(12, 34, 20, 0.08)', margin: '2px 0' }} />
-
-                {/* Línia 1: Edat i Ubicació en Verd Fosc GironaXics */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--verd-fosc, #0c2214)', fontWeight: 600 }}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--verd-fosc, #0c2214)" strokeWidth="2" style={{ width: '16px', height: '16px', flexShrink: 0 }}>
-                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                      <line x1="16" y1="2" x2="16" y2="6"/>
-                      <line x1="8" y1="2" x2="8" y2="6"/>
-                      <line x1="3" y1="10" x2="21" y2="10"/>
-                    </svg>
-                    <span>{act.edat || 'Totes les edats'}</span>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--verd-fosc, #0c2214)', fontWeight: 600 }}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--verd-fosc, #0c2214)" strokeWidth="2" style={{ width: '16px', height: '16px', flexShrink: 0 }}>
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                      <circle cx="12" cy="10" r="3"/>
-                    </svg>
-                    <span>{locationText}</span>
-                  </div>
-                </div>
-
-                {/* Acció: Veure detalls → en Verd Fosc GironaXics */}
-                <div style={{
-                  fontSize: '13.5px',
-                  fontWeight: 800,
-                  color: 'var(--verd-fosc, #0c2214)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  marginTop: '2px'
-                }}>
-                  Veure detalls →
-                </div>
+        {/* Última posició: promo o 5a activitat */}
+        {showPromo ? (
+          <CardPromo />
+        ) : cards[4] ? (
+          <Link
+            href={`/activitats/${normalizeSlug(cards[4].categoria)}/${cards[4].slug}`}
+            onClick={saveScroll}
+            className="card card-normal hoverable"
+            style={{ textDecoration: 'none' }}
+          >
+            <div className="card-normal-img" style={{ position: 'relative', width: '100%', height: '140px' }}>
+              <Image
+                src={cards[4].imatgeUrl || getMockImg(mockColors[4])}
+                alt={cards[4].nom || 'Imatge destacada 5'}
+                fill
+                style={{ objectFit: 'cover' }}
+              />
+            </div>
+            <div className="card-normal-content">
+              <div className="card-normal-title">{cards[4].nom}</div>
+              <div className="card-normal-info">
+                {cards[4].centre} · {cards[4].edat} · {cards[4].preu != null && cards[4].preu !== '' ? `${cards[4].preu}€` : 'A consultar'}
               </div>
-            </Link>
-          );
-        })}
+            </div>
+          </Link>
+        ) : null}
+
       </div>
-
-      <style jsx>{`
-        .ultimes-novetats-grid {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 24px;
-        }
-        @media (max-width: 1200px) {
-          .ultimes-novetats-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-        }
-        @media (max-width: 768px) {
-          .ultimes-novetats-grid {
-            grid-template-columns: 1fr;
-            gap: 20px;
-          }
-        }
-      `}</style>
     </section>
   );
 }
