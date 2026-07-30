@@ -499,233 +499,30 @@ export default function Filtres({
     <section className="map-section grid-12" style={{ paddingBottom: '80px' }}>
         {/* 0. Top Full-Width Page Segment Navigation (Select first, then filter!) */}
         <div style={{ gridColumn: 'span 12', paddingBottom: '16px' }}>
-          <style>{`
-            /* Casals Banner Styles */
-            .casals-seasonal-banner {
-              display: flex;
-              width: 100%;
-              transition: transform 0.2s ease, border-color 0.2s ease;
-            }
-            .casals-seasonal-banner:hover {
-              transform: translateY(-2px);
-              border-color: #d95738 !important;
-            }
-            .casals-seasonal-banner:hover .casals-snowflake-svg {
-              opacity: 0.22 !important;
-              transform: translateY(-50%) rotate(15deg) !important;
-            }
-            .casals-banner-action-btn:hover {
-              background-color: #bd3f28 !important;
-              transform: scale(1.02);
-            }
-            
-            /* Tabs Navigation Styles */
-            .filter-tabs-container {
-              display: flex;
-              gap: 24px;
-              margin-bottom: 28px;
-              border-bottom: 1px solid rgba(12, 34, 20, 0.1);
-              padding-bottom: 2px;
-            }
-            .filter-tab-button {
-              font-family: var(--font-sans);
-              font-size: 13px;
-              font-weight: 800;
-              color: rgba(12, 34, 20, 0.4);
-              background: none;
-              border: none;
-              padding: 10px 4px;
-              cursor: pointer;
-              position: relative;
-              transition: all 0.3s ease;
-              text-transform: uppercase;
-              letter-spacing: 0.08em;
-              outline: none;
-            }
-            .filter-tab-button:hover {
-              color: var(--verd-fosc);
-            }
-            .filter-tab-button.active {
-              color: var(--verd-fosc);
-            }
-            .filter-tab-button.active::after {
-              content: '';
-              position: absolute;
-              bottom: -2px;
-              left: 0;
-              right: 0;
-              height: 3px;
-              background-color: var(--verd-fosc);
-            }
 
-            /* Responsive Mobile Enhancements */
-            @media (max-width: 768px) {
-              .casals-seasonal-banner {
-                padding: 32px 24px !important;
-                border-radius: 12px !important;
-              }
-              .casals-banner-title {
-                font-size: 28px !important;
-              }
-              .casals-banner-footer {
-                flex-direction: column;
-                align-items: flex-start !important;
-                gap: 16px;
-              }
-              .casals-snowflake-svg {
-                width: 130px !important;
-                height: 130px !important;
-                right: -15px !important;
-                bottom: -15px !important;
-                top: auto !important;
-                transform: none !important;
-              }
-              .casals-seasonal-banner:hover .casals-snowflake-svg {
-                transform: rotate(15deg) !important;
-              }
-              .filter-tabs-container {
-                gap: 16px;
-                margin-bottom: 20px;
-              }
-              .filter-tab-button {
-                font-size: 11px;
-                padding: 8px 2px;
-              }
-            }
-          `}</style>
 
-          {/* 1. Franja estacional dels Casals */}
-          {casalsBanner && (
-            <div 
-              onClick={() => {
-                if (selectedTipus === 'Casals') {
-                  updateFilter('tipus', 'Extraescolars');
-                } else {
-                  trackEvent('casals_banner_click', casalsBanner.nom);
-                  updateFilter('tipus', 'Casals');
-                  scrollToFiltresHeader();
-                }
-              }}
-              className={`casals-seasonal-banner ${selectedTipus === 'Casals' ? 'active' : ''}`}
-              style={{
-                position: 'relative',
-                overflow: 'hidden',
-                background: '#062612',
-                border: selectedTipus === 'Casals' 
-                  ? '2px solid #a83925' 
-                  : '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: '16px',
-                padding: '40px 48px',
-                marginBottom: '24px',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                boxShadow: '0 12px 32px rgba(6, 38, 18, 0.25)'
-              }}
-            >
-              {/* Dynamic background seasonal decoration */}
-              {renderBannerIcon(casalsBanner.nom)}
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', zIndex: 2, position: 'relative', textAlign: 'left', width: '100%' }}>
-                {/* Kicker */}
-                <span style={{ 
-                  fontFamily: 'var(--font-sans)', 
-                  fontSize: '11px', 
-                  fontWeight: 800, 
-                  color: '#d95738', 
-                  textTransform: 'uppercase', 
-                  letterSpacing: '0.08em' 
-                }}>
-                  {casalsBanner.kicker || 'Temporada'}
-                </span>
-
-                {/* Title */}
-                <h3 className="casals-banner-title" style={{ 
-                  margin: '8px 0', 
-                  fontFamily: 'var(--font-serif)', 
-                  fontStyle: 'italic', 
-                  fontSize: '50px', 
-                  color: '#ffffff', 
-                  fontWeight: 700,
-                  lineHeight: 1.2
-                }}>
-                  {renderBannerTitle(casalsBanner.titol || '')}
-                </h3>
-
-                {/* Subtitle */}
-                <p style={{ 
-                  margin: '0 0 32px 0', 
-                  fontFamily: 'var(--font-sans)', 
-                  fontSize: '15px', 
-                  color: 'rgba(255, 255, 255, 0.85)',
-                  maxWidth: '520px',
-                  lineHeight: 1.5
-                }}>
-                  {casalsBanner.subtitol}
-                </p>
-
-                {/* Footer row */}
-                <div className="casals-banner-footer" style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'space-between',
-                  width: '100%'
-                }}>
-                  <span style={{ 
-                    fontFamily: 'var(--font-serif)', 
-                    fontStyle: 'italic', 
-                    fontSize: '18px', 
-                    color: '#eae6df',
-                    fontWeight: 500
-                  }}>
-                    {casalsBanner.dates}
-                  </span>
-
-                  <button 
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation(); // prevent double toggle
-                      if (selectedTipus === 'Casals') {
-                        updateFilter('tipus', 'Extraescolars');
-                      } else {
-                        updateFilter('tipus', 'Casals');
-                        scrollToFiltresHeader();
-                      }
-                    }}
-                    className="casals-banner-action-btn"
-                    style={{
-                      backgroundColor: '#a83925',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '6px',
-                      padding: '12px 24px',
-                      fontFamily: 'var(--font-sans)',
-                      fontSize: '14px',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      boxShadow: '0 4px 12px rgba(168, 57, 37, 0.3)'
-                    }}
-                  >
-                    {selectedTipus === 'Casals' ? 'Tancar filtre ×' : 'Descobreix els casals →'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 2. Pestanyes Segmentades (Extraescolars vs Tallers) */}
+          {/* 2. Pestanyes Segmentades (Extraescolars vs Tallers vs Casals) */}
           <div id="filtres-header" className="filter-tabs-container">
             <button 
+              type="button"
               onClick={() => updateFilter('tipus', 'Extraescolars')}
               className={`filter-tab-button ${selectedTipus !== 'Tallers i Oci' && selectedTipus !== 'Casals' ? 'active' : ''}`}
             >
               Extraescolars setmanals
             </button>
             <button 
+              type="button"
               onClick={() => updateFilter('tipus', 'Tallers i Oci')}
               className={`filter-tab-button ${selectedTipus === 'Tallers i Oci' ? 'active' : ''}`}
             >
               Activitats i Tallers
+            </button>
+            <button 
+              type="button"
+              onClick={() => updateFilter('tipus', 'Casals')}
+              className={`filter-tab-button ${selectedTipus === 'Casals' ? 'active' : ''}`}
+            >
+              Casals<br />d'estiu
             </button>
           </div>
         </div>
@@ -799,6 +596,39 @@ export default function Filtres({
                     </select>
                 </div>
                 
+                {/* Botó "Veure X resultats" fixe directament a sobre del de netejar filtres */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const el = document.getElementById('results-container');
+                    if (el) {
+                      const y = el.getBoundingClientRect().top + window.scrollY - 76;
+                      window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+                    }
+                  }}
+                  className="hoverable btn-veure-resultats"
+                  style={{
+                    width: '100%',
+                    backgroundColor: 'var(--verd, #1b3d2f)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '100px',
+                    padding: '14px 24px',
+                    fontFamily: 'var(--font-sans)',
+                    fontSize: '15px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    boxShadow: '0 4px 14px rgba(27, 61, 47, 0.25)',
+                    marginTop: '8px'
+                  }}
+                >
+                  Veure {filtered.length} resultat{filtered.length !== 1 ? 's' : ''} →
+                </button>
+
                 <button 
                   onClick={() => {
                     router.replace('?', { scroll: false });
@@ -1172,59 +1002,6 @@ export default function Filtres({
         </div>
     </section>
 
-      {/* Botó flotant mòbil "Veure X resultats" */}
-      <style>{`
-        @keyframes slideUpBtn {
-          from { opacity: 0; transform: translateX(-50%) translateY(16px); }
-          to   { opacity: 1; transform: translateX(-50%) translateY(0); }
-        }
-        .mobile-results-btn-wrap {
-          display: none;
-        }
-        @media (max-width: 768px) {
-          .mobile-results-btn-wrap {
-            display: block;
-            position: fixed;
-            bottom: 24px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 998;
-            pointer-events: auto;
-            animation: slideUpBtn 0.3s ease;
-          }
-        }
-      `}</style>
-      {!resultsInView && (
-        <div className="mobile-results-btn-wrap">
-          <button
-            onClick={() => {
-              const el = document.getElementById('results-container');
-              if (el) {
-                const y = el.getBoundingClientRect().top + window.scrollY - 76;
-                window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
-              }
-            }}
-            style={{
-              backgroundColor: 'var(--verd)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '100px',
-              padding: '15px 28px',
-              fontFamily: 'var(--font-sans)',
-              fontSize: '15px',
-              fontWeight: 700,
-              cursor: 'pointer',
-              boxShadow: '0 8px 28px rgba(26, 107, 58, 0.45)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            Veure {filtered.length} resultat{filtered.length !== 1 ? 's' : ''} →
-          </button>
-        </div>
-      )}
     </>
   );
 }

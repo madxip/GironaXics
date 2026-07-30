@@ -2902,4 +2902,112 @@
     .af-btn-save { flex: 1; justify-content: center; }
     .af-preu-row { flex-direction: column; align-items: stretch; }
     .af-toast-wrap { top: 16px; right: 8px; left: 8px; width: auto; max-width: none; }
+
+    /* Reordenació mòbil: Hero -> Filtres -> Estadístiques -> Resta de contingut */
+    .home-main-layout {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    .home-hero-wrap { order: 1; }
+    .home-filtres-wrap { order: 2; }
+    .home-stats-wrap { order: 3; }
+    .home-rest-wrap { order: 4; }
+
+    /* Amagar el banner gegant de casals sobre els filtres en mòbil */
+    .casals-seasonal-banner {
+        display: none !important;
+    }
+
+    .editorial-sep {
+        display: flex;
+        align-items: center;
+        padding: 30px 5vw 30px;
+    }
+
+    .filter-tabs-container {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 6px !important;
+        margin-bottom: 0 !important;
+        border-bottom: 1px solid rgba(12, 34, 20, 0.1);
+        padding-bottom: 2px;
+        width: 100%;
+        overflow-x: visible !important;
+    }
+
+    .filter-tab-button {
+        font-size: 10.5px !important;
+        padding: 8px 2px !important;
+        white-space: normal !important;
+        text-align: center !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        line-height: 1.2 !important;
+    }
+}
+
+/* Casals Banner Styles & Filter Tabs Styles */
+.casals-seasonal-banner {
+  display: flex;
+  width: 100%;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.casals-seasonal-banner:hover {
+  transform: translateY(-2px);
+  border-color: #d95738 !important;
+}
+.casals-seasonal-banner:hover .casals-snowflake-svg {
+  opacity: 0.22 !important;
+  transform: translateY(-50%) rotate(15deg) !important;
+}
+.casals-banner-action-btn:hover {
+  background-color: #bd3f28 !important;
+  transform: scale(1.02);
+}
+
+.filter-tabs-container {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid rgba(12, 34, 20, 0.1);
+  padding-bottom: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.filter-tabs-container::-webkit-scrollbar {
+  display: none;
+}
+.filter-tab-button {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 800;
+  color: rgba(12, 34, 20, 0.4);
+  background: none;
+  border: none;
+  padding: 10px 4px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  outline: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.filter-tab-button:hover {
+  color: var(--verd-fosc);
+}
+.filter-tab-button.active {
+  color: var(--verd-fosc);
+}
+.filter-tab-button.active::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: var(--verd-fosc);
 }

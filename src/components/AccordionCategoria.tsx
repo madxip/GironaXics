@@ -96,8 +96,8 @@ export default function AccordionCategoria({
               gap: isGridGroup ? undefined : '16px' 
             }}
           >
-            {activitats.map(a => (
-              <ActivitatCard key={a.slug} activitat={a} />
+            {activitats.map((a, idx) => (
+              <ActivitatCard key={`${a.id || a.slug}-${idx}`} activitat={a} />
             ))}
           </div>
         );

@@ -4,17 +4,7 @@ import Link from 'next/link';
 import Image from './SafeImage';
 import { Activitat } from '@/lib/types';
 import { normalizeSlug } from '@/lib/utils';
-import { useMemo, useState, useEffect } from 'react';
-
-// Barreja un array de forma aleatòria (Fisher-Yates)
-function shuffle<T>(arr: T[]): T[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
+import { useMemo } from 'react';
 
 /**
  * Preu base promocional en €/mes per destacar una activitat (Fase 1 / Centres)
@@ -94,58 +84,37 @@ function CardPromo() {
 }
 
 interface Props {
-  destacades: Activitat[];
+  destacades?: Activitat[];
   all: Activitat[];
 }
 
-export default function Destacades({ destacades, all }: Props) {
-  const TOTAL_SLOTS = 5;
-  const [isMounted, setIsMounted] = useState(false);
+export default function Destacades({ all }: Props) {
+  // Seleccionem les 5 últimes activitats entrades a Airtable de 5 centres diferents
+  const cards = useMemo(() => {
+    const seenCentres = new Set<string>();
+    const result: Activitat[] = [];
+    const reversed = [...all].reverse();
 
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  // Calculem les targetes a mostrar. useMemo garanteix que l'aleatorietat
-  // és estable durant la sessió (no rebarreja en cada re-render).
-  const { cards, showPromo } = useMemo(() => {
-    const venudes = destacades.slice(); // destacades marcades a Airtable
-    const maxVenudes = TOTAL_SLOTS;
-
-    if (venudes.length >= maxVenudes) {
-      // 5 o més venudes → mostrem les 5 primeres, sense promo
-      return { cards: venudes.slice(0, TOTAL_SLOTS), showPromo: false };
+    for (const act of reversed) {
+      const c = (act.centre || '').trim().toLowerCase();
+      if (!c || seenCentres.has(c)) continue;
+      seenCentres.add(c);
+      result.push(act);
+      if (result.length >= 5) break;
     }
 
-    // Activitats que no estan en les destacades venudes
-    const slugsVenduts = new Set(venudes.map(d => d.slug));
-    const pool = all.filter(a => !slugsVenduts.has(a.slug));
-    
-    // Evitem mismatch d'hidratació: només barregem aleatòriament a client un cop muntat.
-    // Durant el render de servidor i la primera hidratació a client fem servir l'ordre determinista original.
-    const poolForSelection = isMounted ? shuffle(pool) : pool;
-
-    // Nombre de slots lliures (reservem l'últim per la promo)
-    const slotsLliures = TOTAL_SLOTS - 1 - venudes.length;
-    const farciment = poolForSelection.slice(0, slotsLliures);
-    const candidats = [...venudes, ...farciment];
-
-    // La card gran (posició 0) ha de tenir foto pròpia (imatgeUrl).
-    // Si la primera no en té, busquem la primera del pool que sí tingui.
-    const granIdx = candidats.findIndex(a => !!a.imatgeUrl);
-    if (granIdx > 0) {
-      // Posem la que té foto al capdavant, deixem la resta en ordre
-      const ambFoto = candidats[granIdx];
-      candidats.splice(granIdx, 1);
-      candidats.unshift(ambFoto);
+    // Si no arribem a 5 centres diferents, completem amb les últimes entrades restants
+    if (result.length < 5) {
+      for (const act of reversed) {
+        if (!result.some(r => r.slug === act.slug)) {
+          result.push(act);
+          if (result.length >= 5) break;
+        }
+      }
     }
-    // Si granIdx === -1 no hi ha cap amb foto → deixem l'ordre tal qual (fallback)
 
-    return {
-      cards: candidats,
-      showPromo: true,
-    };
-  }, [destacades, all, isMounted]);
+    return result;
+  }, [all]);
 
   const getMockImg = (color: string) =>
     `data:image/svg+xml,%3Csvg viewBox='0 0 400 300' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%25' height='100%25' fill='%23${color}'/%3E%3C/svg%3E`;
@@ -157,8 +126,7 @@ export default function Destacades({ destacades, all }: Props) {
 
   // Slot 0 → card gran, slots 1-3 → cards normals, slot 4 → promo o normal
   const gran = cards[0];
-  const normals = cards.slice(1); // fins a 3 normals
-  const totalNormals = showPromo ? normals : cards.slice(1, 4);
+  const totalNormals = cards.slice(1);
 
   return (
     <section className="destacades">
@@ -207,10 +175,8 @@ export default function Destacades({ destacades, all }: Props) {
           </Link>
         ))}
 
-        {/* Última posició: promo o 5a activitat */}
-        {showPromo ? (
-          <CardPromo />
-        ) : cards[4] ? (
+        {/* 5a posició: 5a activitat de centre diferent o promo */}
+        {cards[4] ? (
           <Link
             href={`/activitats/${normalizeSlug(cards[4].categoria)}/${cards[4].slug}`}
             className="card card-normal hoverable"
@@ -231,7 +197,9 @@ export default function Destacades({ destacades, all }: Props) {
               </div>
             </div>
           </Link>
-        ) : null}
+        ) : (
+          <CardPromo />
+        )}
 
       </div>
     </section>
