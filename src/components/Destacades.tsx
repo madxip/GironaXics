@@ -18,7 +18,7 @@ interface Props {
 }
 
 export default function Destacades({ all }: Props) {
-  // Seleccionem les 5 últimes activitats entrades a Airtable de 5 centres diferents
+  // Seleccionem les 8 últimes activitats entrades a Airtable de 8 centres diferents
   const cards = useMemo(() => {
     const seenCentres = new Set<string>();
     const result: Activitat[] = [];
@@ -29,15 +29,15 @@ export default function Destacades({ all }: Props) {
       if (!c || seenCentres.has(c)) continue;
       seenCentres.add(c);
       result.push(act);
-      if (result.length >= 5) break;
+      if (result.length >= 8) break;
     }
 
-    // Si no arribem a 5 centres diferents, completem amb les últimes entrades restants
-    if (result.length < 5) {
+    // Si no arribem a 8 centres diferents, completem amb les últimes entrades restants
+    if (result.length < 8) {
       for (const act of reversed) {
         if (!result.some(r => r.slug === act.slug)) {
           result.push(act);
-          if (result.length >= 5) break;
+          if (result.length >= 8) break;
         }
       }
     }
@@ -187,10 +187,10 @@ export default function Destacades({ all }: Props) {
       <style jsx>{`
         .ultimes-novetats-grid {
           display: grid;
-          grid-template-columns: repeat(3, 1fr);
+          grid-template-columns: repeat(4, 1fr);
           gap: 24px;
         }
-        @media (max-width: 1024px) {
+        @media (max-width: 1200px) {
           .ultimes-novetats-grid {
             grid-template-columns: repeat(2, 1fr);
           }
