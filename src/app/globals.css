@@ -265,11 +265,7 @@
         }
 
         .scroll-indicator-bottom {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
+            display: none !important;
             flex-direction: column;
             align-items: center;
             gap: 6px;
@@ -283,6 +279,10 @@
             cursor: pointer;
             transition: opacity 0.3s ease, transform 0.3s ease;
             z-index: 10;
+        }
+
+        .btn-veure-resultats {
+            display: none !important;
         }
 
         .scroll-indicator-bottom:hover {
@@ -1084,7 +1084,19 @@
             }
 
             .scroll-indicator-bottom {
-                display: none !important;
+                display: flex !important;
+                position: relative !important;
+                left: auto !important;
+                bottom: auto !important;
+                transform: none !important;
+                margin-top: 24px;
+                margin-bottom: 8px;
+                font-size: 11.5px !important;
+                align-items: center;
+            }
+
+            .btn-veure-resultats {
+                display: flex !important;
             }
 
             /* Estadístiques horitzontals compactes en mòbil */
