@@ -1894,8 +1894,7 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: "12px" }}>
                     {galeria.map((url, idx) => (
                       <div key={idx} style={{ aspectRatio: "1", borderRadius: "8px", overflow: "hidden", border: "1px solid var(--crema-fosca, #eae2d1)", position: "relative", backgroundColor: "#fbfcfb" }}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={url} alt={`Galeria ${idx + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={() => handleRemoveGalleryImage(idx)} />
+                        <img src={url} alt={`Galeria ${idx + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                         <button type="button" onClick={() => handleRemoveGalleryImage(idx)}
                           style={{ position: "absolute", top: "4px", right: "4px", backgroundColor: "rgba(220,38,38,0.9)", color: "white", border: "none", borderRadius: "50%", width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
                           <Trash2 size={12} />
