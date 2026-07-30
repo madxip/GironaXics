@@ -1084,12 +1084,7 @@
             }
 
             .scroll-indicator-bottom {
-                position: relative !important;
-                left: auto !important;
-                bottom: auto !important;
-                transform: none !important;
-                margin-top: 24px;
-                font-size: 11px !important;
+                display: none !important;
             }
 
             /* Estadístiques horitzontals compactes en mòbil */

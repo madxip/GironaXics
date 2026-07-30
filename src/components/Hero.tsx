@@ -4,11 +4,6 @@ export default function Hero() {
 
   return (
     <section className="hero">
-      {/* Subtítol de localització mòbil */}
-      <div className="hero-mobile-location">
-        GIRONA, CATALUNYA
-      </div>
-
       <h1 className="hero-title">
         <div className="line-1">Troba</div>
 
