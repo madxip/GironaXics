@@ -391,7 +391,7 @@ export default function Filtres({
               onClick={() => updateFilter('tipus', 'Casals')}
               className={`filter-tab-button ${selectedTipus === 'Casals' ? 'active' : ''}`}
             >
-              Casals<br />d'estiu
+              Casals<br className="mobile-br-only" /> d'estiu
             </button>
           </div>
         </div>

@@ -2945,6 +2945,14 @@
         justify-content: center !important;
         line-height: 1.2 !important;
     }
+
+    .mobile-br-only {
+        display: inline !important;
+    }
+}
+
+.mobile-br-only {
+    display: none;
 }
 
 /* Casals Banner Styles & Filter Tabs Styles */
