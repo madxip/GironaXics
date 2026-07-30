@@ -110,12 +110,31 @@ export default function Hero() {
           font-family: inherit;
         }
 
-        @media (max-width: 768px) {
+        :global(.scroll-indicator-bottom) {
+          display: none !important;
+        }
+
+        @media (max-width: 900px) {
           .hero-mobile-location {
             display: block;
           }
           .hero-mobile-search-form {
             display: block;
+          }
+          :global(.scroll-indicator-bottom) {
+            display: flex !important;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            color: var(--verd-fosc, #0c2214);
+            font-family: var(--font-sans);
+            font-size: 11.5px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-top: 24px;
+            margin-bottom: 12px;
           }
         }
       `}</style>

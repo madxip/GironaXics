@@ -487,7 +487,6 @@ export default function Filtres({
                     fontSize: '15px',
                     fontWeight: 700,
                     cursor: 'pointer',
-                    display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '8px',
