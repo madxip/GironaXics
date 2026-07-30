@@ -1,22 +1,14 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
 
 export default function FloatingMobileFilterBar() {
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
-  const searchParams = useSearchParams();
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  // Compta quants filtres de cerca o edat estan actius a la URL
-  const activeCount = Array.from(searchParams?.entries() || []).filter(([key, val]) => {
-    if (!val || val === 'Totes' || val === 'totes') return false;
-    return ['cerca', 'categoria', 'edat', 'barri', 'poblacio', 'dia', 'tipus', 'descompte', 'gratuites'].includes(key);
-  }).length;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -58,11 +50,6 @@ export default function FloatingMobileFilterBar() {
         <span style={{ fontWeight: 700, fontSize: '14px', letterSpacing: '-0.01em' }}>
           Cercar & Filtres
         </span>
-        {activeCount > 0 && (
-          <span className="mobile-filter-badge">
-            {activeCount}
-          </span>
-        )}
       </button>
 
       <style jsx>{`
@@ -101,16 +88,6 @@ export default function FloatingMobileFilterBar() {
         .mobile-floating-filter-btn:active {
           transform: scale(0.96);
           background-color: #122b21;
-        }
-
-        .mobile-filter-badge {
-          background-color: var(--taronja, #d95738);
-          color: white;
-          font-size: 11px;
-          font-weight: 800;
-          padding: 2px 7px;
-          border-radius: 12px;
-          margin-left: 2px;
         }
 
         @keyframes floatIn {
