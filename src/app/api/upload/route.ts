@@ -42,10 +42,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No s'ha proporcionat cap fitxer." }, { status: 400 });
     }
 
-    // 1. Validar tipus MIME
-    if (!ALLOWED_TYPES.has(file.type)) {
+    // 1. Validar tipus MIME i extensió
+    const fileType = (file.type || "").toLowerCase();
+    const fileExt = (file.name.split('.').pop() || "").toLowerCase();
+    const isAllowedType = ALLOWED_TYPES.has(fileType) || 
+                          fileType.startsWith("image/") ||
+                          ["jpg", "jpeg", "png", "webp", "gif", "avif", "heic", "heif"].includes(fileExt);
+
+    if (!isAllowedType) {
       return NextResponse.json(
-        { error: "Tipus de fitxer no permès. Només s'accepten imatges (JPEG, PNG, WebP, AVIF, GIF, HEIC)." },
+        { error: `Tipus de fitxer no permès (${file.name}). Només s'accepten imatges (JPEG, PNG, WebP, AVIF, GIF, HEIC).` },
         { status: 400 }
       );
     }

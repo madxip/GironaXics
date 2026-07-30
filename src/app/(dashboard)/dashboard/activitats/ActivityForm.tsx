@@ -731,25 +731,22 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
   const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
-    if (galleryInputRef.current) galleryInputRef.current.value = "";
 
-    // Les imatges de galeria es pugen directament sense crop
+    // Convertim a Array abans que e.target.value es resetegi
+    const filesArray = Array.from(files);
     setIsUploadingGallery(true);
     setToast(null);
 
-    const uploadPromises = Array.from(files).map(async (file) => {
+    const uploadPromises = filesArray.map(async (file) => {
       const formData = new FormData();
       formData.append("file", file);
       const res = await fetch("/api/upload", {
         method: "POST",
         body: formData,
       });
-      if (!res.ok) {
-        throw new Error(`Error en pujar ${file.name}`);
-      }
       const data = await res.json();
-      if (!data.url) {
-        throw new Error(data.error || "No s'ha obtingut cap URL.");
+      if (!res.ok || !data.url) {
+        throw new Error(data.error || `Error en pujar ${file.name}`);
       }
       return data.url as string;
     });
@@ -757,14 +754,20 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
     try {
       const urls = await Promise.all(uploadPromises);
       setGaleria((prev) => [...prev, ...urls]);
-    } catch (err) {
-      console.error(err);
+      setToast({
+        type: "success",
+        message: `${urls.length} imatge${urls.length > 1 ? "s afegides" : " afegida"} a la galeria amb èxit!`
+      });
+    } catch (err: unknown) {
+      const errorObj = err as Error;
+      console.error("[Gallery Upload Error]:", err);
       setToast({
         type: "error",
-        message: "No s'han pogut pujar algunes imatges de la galeria. Intenta-ho de nou."
+        message: errorObj?.message || "No s'han pogut pujar algunes imatges de la galeria. Intenta-ho de nou."
       });
     } finally {
       setIsUploadingGallery(false);
+      if (galleryInputRef.current) galleryInputRef.current.value = "";
     }
   };
 
