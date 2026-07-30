@@ -9,111 +9,7 @@ import { normalizeSlug } from '@/lib/utils';
 import { trackEvent } from '@/lib/trackEvent';
 import { isTallerExpiredOrEnded, getNextTallerDate } from '@/lib/tallerDates';
 
-const renderBannerTitle = (title: string) => {
-  if (!title) return null;
-  const regex = /\[(.*?)\]/;
-  const match = title.match(regex);
-  if (match) {
-    const parts = title.split(regex);
-    return (
-      <>
-        {parts[0]}
-        <span style={{ color: '#d95738' }}>{match[1]}</span>
-        {parts[2]}
-      </>
-    );
-  }
-  return title;
-};
 
-const renderBannerIcon = (nom: string) => {
-  const s = (nom || '').toLowerCase();
-  
-  const iconStyle: React.CSSProperties = {
-    position: 'absolute',
-    right: '40px',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    width: '220px',
-    height: '220px',
-    opacity: 0.12,
-    color: '#ffffff',
-    pointerEvents: 'none',
-    transition: 'all 0.3s ease'
-  };
-
-  if (s.includes('estiu') || s.includes('summer') || s.includes('sol')) {
-    // Sun SVG for Summer
-    return (
-      <svg 
-        viewBox="0 0 24 24" 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="1.2" 
-        strokeLinecap="round" 
-        strokeLinejoin="round"
-        className="casals-snowflake-svg"
-        style={iconStyle}
-      >
-        <circle cx="12" cy="12" r="4"></circle>
-        <line x1="12" y1="2" x2="12" y2="4"></line>
-        <line x1="12" y1="20" x2="12" y2="22"></line>
-        <line x1="4.93" y1="4.93" x2="6.34" y2="6.34"></line>
-        <line x1="17.66" y1="17.66" x2="19.07" y2="19.07"></line>
-        <line x1="2" y1="12" x2="4" y2="12"></line>
-        <line x1="20" y1="12" x2="22" y2="12"></line>
-        <line x1="6.34" y1="17.66" x2="4.93" y2="19.07"></line>
-        <line x1="19.07" y1="4.93" x2="17.66" y2="6.34"></line>
-      </svg>
-    );
-  }
-
-  if (s.includes('santa') || s.includes('primavera') || s.includes('pasqua') || s.includes('spring')) {
-    // Leaf/Flower SVG for Spring
-    return (
-      <svg 
-        viewBox="0 0 24 24" 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="1.2" 
-        strokeLinecap="round" 
-        strokeLinejoin="round"
-        className="casals-snowflake-svg"
-        style={iconStyle}
-      >
-        <path d="M12 2c1.7 0 3 1.3 3 3v14c0 1.7-1.3 3-3 3s-3-1.3-3-3V5c0-1.7 1.3-3 3-3z"></path>
-        <path d="M12 6c3.3 0 6 2.7 6 6s-2.7 6-6 6-6-2.7-6-6 2.7-6 6-6z"></path>
-      </svg>
-    );
-  }
-
-  // Fallback: Snowflake for Nadal/Winter
-  return (
-    <svg 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="1.2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round"
-      className="casals-snowflake-svg"
-      style={iconStyle}
-    >
-      <line x1="12" y1="2" x2="12" y2="22"></line>
-      <line x1="22" y1="12" x2="2" y2="12"></line>
-      <path d="m20 16-4-4 4-4"></path>
-      <path d="m4 8 4 4-4 4"></path>
-      <path d="m16 20-4-4-4 4"></path>
-      <path d="m8 4 4 4 4-4"></path>
-      <line x1="19.07" y1="4.93" x2="4.93" y2="19.07"></line>
-      <line x1="19.07" y1="19.07" x2="4.93" y2="4.93"></line>
-      <path d="m14 4 4 4v4"></path>
-      <path d="m10 4-4 4v4"></path>
-      <path d="m18 14v4l-4 4"></path>
-      <path d="m6 14v4l4 4"></path>
-    </svg>
-  );
-};
 
 const EDAT_GROUPS = [
   'Totes',
@@ -185,8 +81,7 @@ function matchEdatGroup(edatStr: string | undefined, group: string): boolean {
 
 export default function Filtres({ 
   activitats, 
-  sponsors = [],
-  casalsBanner = null
+  sponsors = []
 }: { 
   activitats: Activitat[], 
   sponsors?: Sponsor[],
@@ -214,18 +109,7 @@ export default function Filtres({
     }
   }, []);
 
-  // Detecta si els resultats ja són visibles a pantalla (per amagar el botó flotant)
-  const [resultsInView, setResultsInView] = useState(false);
-  useEffect(() => {
-    const el = document.getElementById('results-container');
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => setResultsInView(entry.isIntersecting),
-      { threshold: 0.05 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
+
 
   const selectedTipus = searchParams.get('tipus') || 'Extraescolars';
   const selectedCategoria = searchParams.get('categoria') || 'Totes';
@@ -267,22 +151,7 @@ export default function Filtres({
   };
 
 
-  const scrollToFiltresHeader = () => {
-    setTimeout(() => {
-      const element = document.getElementById('filtres-header');
-      if (element) {
-        const isMobile = window.innerWidth <= 768;
-        const nav = document.getElementById('nav');
-        const navHeight = nav ? nav.offsetHeight : (isMobile ? 65 : 80);
-        // We want to show the bottom part of the banner (footer + bottom padding + margin) below the nav.
-        // On desktop: ~100px. On mobile: ~75px.
-        const bannerVisibleBottom = isMobile ? 75 : 100;
-        const offset = -(navHeight + bannerVisibleBottom);
-        const y = element.getBoundingClientRect().top + window.scrollY + offset;
-        window.scrollTo({ top: y, behavior: 'smooth' });
-      }
-    }, 100);
-  };
+
 
   const handleSponsorClick = (sponsorNom: string) => {
     // Tracking a Airtable
