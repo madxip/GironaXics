@@ -6,83 +6,6 @@ import { Activitat } from '@/lib/types';
 import { normalizeSlug } from '@/lib/utils';
 import { useMemo } from 'react';
 
-/**
- * Preu base promocional en €/mes per destacar una activitat (Fase 1 / Centres)
- */
-const PROMO_PREU_MENSUAL: number = 10;
-
-function CardPromo() {
-  return (
-    <div
-      className="card card-normal hoverable"
-      style={{
-        background: 'linear-gradient(135deg, var(--verd-fosc) 0%, #1d5c3a 100%)',
-        cursor: 'default',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        textAlign: 'center',
-        padding: '24px',
-        gap: '12px',
-        textDecoration: 'none',
-        color: 'white',
-      }}
-    >
-      <div style={{
-        fontSize: '28px',
-        lineHeight: 1,
-        marginBottom: '4px',
-      }}>
-        ✦
-      </div>
-      <div style={{
-        fontFamily: 'var(--font-serif)',
-        fontStyle: 'italic',
-        fontSize: '20px',
-        lineHeight: 1.2,
-        color: 'white',
-      }}>
-        Destaca la teva activitat
-      </div>
-      <div style={{
-        fontSize: '13px',
-        opacity: 0.8,
-        lineHeight: 1.5,
-        maxWidth: '200px',
-      }}>
-        Apareix en aquest apartat i arriba a més famílies de Girona
-      </div>
-      <div style={{
-        marginTop: '8px',
-        background: 'rgba(255,255,255,0.15)',
-        border: '1px solid rgba(255,255,255,0.3)',
-        borderRadius: '20px',
-        padding: '6px 16px',
-        fontSize: '13px',
-        fontWeight: 700,
-        letterSpacing: '0.03em',
-        color: 'white',
-      }}>
-        Des de {PROMO_PREU_MENSUAL}€/mes
-      </div>
-      <Link
-        href="/per-a-centres"
-        style={{
-          marginTop: '4px',
-          fontSize: '12px',
-          color: 'rgba(255,255,255,0.7)',
-          textDecoration: 'underline',
-          textUnderlineOffset: '3px',
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        Saber-ne més →
-      </Link>
-    </div>
-  );
-}
-
 interface Props {
   destacades?: Activitat[];
   all: Activitat[];
@@ -121,87 +44,171 @@ export default function Destacades({ all }: Props) {
 
   const mockColors = ['1A6B3A', 'F5A623', 'D4EDD9', '1A6B3A', 'F5A623'];
 
-  // Necessitem almenys la gran + suficients per emplenar (la promo compta com a slot)
   if (cards.length === 0) return null;
 
-  // Slot 0 → card gran, slots 1-3 → cards normals, slot 4 → promo o normal
-  const gran = cards[0];
-  const totalNormals = cards.slice(1);
-
   return (
-    <section className="destacades">
-      <div className="masonry" id="destacades-grid">
+    <section className="destacades" style={{ paddingBottom: '60px' }}>
+      <div className="ultimes-novetats-grid">
+        {cards.map((act, i) => {
+          const categoryTag = (act.subcategoria || act.categoria || 'ACTIVITAT').toUpperCase();
+          const priceText = act.preu != null && act.preu !== '' 
+            ? (String(act.preu).includes('€') ? act.preu : `Des de ${act.preu}€`) 
+            : 'A consultar';
+          const locationText = act.barri || act.poblacio || 'Girona';
+          const imgSrc = act.imatgeThumbnailUrl || act.imatgeUrl || act.centreImatgeUrl || getMockImg(mockColors[i % mockColors.length]);
 
-        {/* Card gran (posició 0) */}
-        <Link
-          href={`/activitats/${normalizeSlug(gran.categoria)}/${gran.slug}`}
-          className="card card-large hoverable"
-          style={{ textDecoration: 'none' }}
-        >
-          <Image
-            src={gran.imatgeThumbnailUrl || gran.imatgeUrl || getMockImg(mockColors[0])}
-            alt={gran.nom || 'Imatge destacada'}
-            fill
-            style={{ objectFit: 'cover' }}
-          />
-          <div className="card-large-content">
-            <div className="card-large-title">{gran.nom}</div>
-            <div style={{ fontSize: '14px', opacity: 0.8 }}>{gran.centre} · {gran.barri}</div>
-          </div>
-        </Link>
+          return (
+            <Link
+              key={`${act.slug}-${i}`}
+              href={`/activitats/${normalizeSlug(act.categoria)}/${act.slug}`}
+              className="novetat-card hoverable"
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                borderRadius: '20px',
+                backgroundColor: '#ffffff',
+                border: '1px solid rgba(12, 34, 20, 0.08)',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.06)',
+                overflow: 'hidden',
+                textDecoration: 'none',
+                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+              }}
+            >
+              {/* Part superior: Imatge + Categoria + Informació superposada */}
+              <div style={{ position: 'relative', width: '100%', height: '210px', overflow: 'hidden' }}>
+                <Image
+                  src={imgSrc}
+                  alt={act.nom || 'Imatge activitat'}
+                  fill
+                  style={{ objectFit: 'cover' }}
+                />
+                
+                {/* Overlay degradat fosc només a la part inferior de la imatge per llegibilitat del text */}
+                <div style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'linear-gradient(to top, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.3) 55%, transparent 100%)',
+                  zIndex: 1
+                }} />
 
-        {/* Cards normals (posicions 1–3) */}
-        {totalNormals.map((a, i) => (
-          <Link
-            key={a.slug}
-            href={`/activitats/${normalizeSlug(a.categoria)}/${a.slug}`}
-            className="card card-normal hoverable"
-            style={{ textDecoration: 'none' }}
-          >
-            <div className="card-normal-img" style={{ position: 'relative', width: '100%', height: '140px' }}>
-              <Image
-                src={a.imatgeThumbnailUrl || a.imatgeUrl || getMockImg(mockColors[(i + 1) % mockColors.length])}
-                alt={a.nom || `Imatge destacada ${i + 2}`}
-                fill
-                style={{ objectFit: 'cover' }}
-              />
-            </div>
-            <div className="card-normal-content">
-              <div className="card-normal-title">{a.nom}</div>
-              <div className="card-normal-info">
-                {a.centre} · {a.edat} · {a.preu != null && a.preu !== '' ? `${a.preu}€` : 'A consultar'}
+                {/* Badge de Categoria dalt a l'esquerra */}
+                <div style={{ position: 'absolute', top: '14px', left: '14px', zIndex: 2 }}>
+                  <span style={{
+                    backgroundColor: '#ffffff',
+                    color: 'var(--verd-fosc, #1b3d2f)',
+                    padding: '5px 12px',
+                    borderRadius: '30px',
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    letterSpacing: '0.05em',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.12)'
+                  }}>
+                    {categoryTag}
+                  </span>
+                </div>
+
+                {/* Text de Centre i Títol a sobre de la imatge */}
+                <div style={{
+                  position: 'absolute',
+                  bottom: '16px',
+                  left: '18px',
+                  right: '18px',
+                  zIndex: 2,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '2px'
+                }}>
+                  <div style={{
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    color: 'rgba(255, 255, 255, 0.85)'
+                  }}>
+                    {act.centre}
+                  </div>
+                  <h3 style={{
+                    fontFamily: 'var(--font-serif)',
+                    fontStyle: 'italic',
+                    fontSize: '22px',
+                    fontWeight: 700,
+                    color: '#ffffff',
+                    margin: 0,
+                    lineHeight: 1.2
+                  }}>
+                    {act.nom}
+                  </h3>
+                </div>
               </div>
-            </div>
-          </Link>
-        ))}
 
-        {/* 5a posició: 5a activitat de centre diferent o promo */}
-        {cards[4] ? (
-          <Link
-            href={`/activitats/${normalizeSlug(cards[4].categoria)}/${cards[4].slug}`}
-            className="card card-normal hoverable"
-            style={{ textDecoration: 'none' }}
-          >
-            <div className="card-normal-img" style={{ position: 'relative', width: '100%', height: '140px' }}>
-              <Image
-                src={cards[4].imatgeThumbnailUrl || cards[4].imatgeUrl || getMockImg(mockColors[4])}
-                alt={cards[4].nom || 'Imatge destacada 5'}
-                fill
-                style={{ objectFit: 'cover' }}
-              />
-            </div>
-            <div className="card-normal-content">
-              <div className="card-normal-title">{cards[4].nom}</div>
-              <div className="card-normal-info">
-                {cards[4].centre} · {cards[4].edat} · {cards[4].preu != null && cards[4].preu !== '' ? `${cards[4].preu}€` : 'A consultar'}
+              {/* Part inferior: Dades clau de l'activitat */}
+              <div style={{
+                padding: '16px 18px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px',
+                backgroundColor: '#ffffff',
+                flex: 1,
+                justifyContent: 'space-between'
+              }}>
+                {/* Línia 1: Edat i Preu */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#2d3748', fontWeight: 600 }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#d95738" strokeWidth="2" style={{ width: '16px', height: '16px', flexShrink: 0 }}>
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                      <line x1="16" y1="2" x2="16" y2="6"/>
+                      <line x1="8" y1="2" x2="8" y2="6"/>
+                      <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    <span>{act.edat || 'Totes les edats'}</span>
+                  </div>
+
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--verd-fosc, #1b3d2f)' }}>
+                    {priceText}
+                  </div>
+                </div>
+
+                {/* Separador subtil */}
+                <div style={{ height: '1px', backgroundColor: 'rgba(12, 34, 20, 0.08)', margin: '2px 0' }} />
+
+                {/* Línia 2: Ubicació i Veure detalls */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#2d3748', fontWeight: 600 }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#1b3d2f" strokeWidth="2" style={{ width: '16px', height: '16px', flexShrink: 0 }}>
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                      <circle cx="12" cy="10" r="3"/>
+                    </svg>
+                    <span>{locationText}</span>
+                  </div>
+
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--taronja, #d95738)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    Veure detalls →
+                  </div>
+                </div>
               </div>
-            </div>
-          </Link>
-        ) : (
-          <CardPromo />
-        )}
-
+            </Link>
+          );
+        })}
       </div>
+
+      <style jsx>{`
+        .ultimes-novetats-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 24px;
+        }
+        @media (max-width: 1024px) {
+          .ultimes-novetats-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+        @media (max-width: 768px) {
+          .ultimes-novetats-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+          }
+        }
+      `}</style>
     </section>
   );
 }
