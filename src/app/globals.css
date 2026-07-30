@@ -264,16 +264,47 @@
             flex-wrap: wrap;
         }
 
-        .scroll-indicator {
+        .scroll-indicator-bottom {
             position: absolute;
-            right: 5vw;
-            top: 50%;
-            transform: translateY(-50%) rotate(90deg);
-            transform-origin: right center;
-            font-size: 11px;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            color: var(--verd-fosc, #0c2214);
+            font-family: var(--font-sans);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
             text-transform: uppercase;
-            letter-spacing: 0.2em;
-            color: var(--muted);
+            cursor: pointer;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            z-index: 10;
+        }
+
+        .scroll-indicator-bottom:hover {
+            opacity: 0.8;
+        }
+
+        .scroll-indicator-bottom .bounce-arrow {
+            width: 18px;
+            height: 18px;
+            animation: bounce-down 2s infinite ease-in-out;
+        }
+
+        @keyframes bounce-down {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(5px);
+            }
+            60% {
+                transform: translateY(2px);
+            }
         }
 
         /* Franja Estadístiques */
@@ -1052,8 +1083,13 @@
                 font-size: 14px !important;
             }
 
-            .scroll-indicator {
-                display: none;
+            .scroll-indicator-bottom {
+                position: relative !important;
+                left: auto !important;
+                bottom: auto !important;
+                transform: none !important;
+                margin-top: 24px;
+                font-size: 11px !important;
             }
 
             /* Estadístiques horitzontals compactes en mòbil */

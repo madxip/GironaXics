@@ -42,7 +42,23 @@ export default function Hero() {
 
 
 
-      <div className="scroll-indicator">Fes scroll per descobrir</div>
+      <a
+        href="#filtres-header"
+        className="scroll-indicator-bottom"
+        onClick={(e) => {
+          e.preventDefault();
+          const el = document.getElementById('filtres-header') || document.getElementById('filtres');
+          if (el) {
+            const y = el.getBoundingClientRect().top + window.scrollY - 80;
+            window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+          }
+        }}
+      >
+        <span>Troba l'activitat per al teu fill</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="bounce-arrow">
+          <path d="M12 5v14M19 12l-7 7-7-7" />
+        </svg>
+      </a>
 
       <style jsx>{`
         .hero-mobile-location {
