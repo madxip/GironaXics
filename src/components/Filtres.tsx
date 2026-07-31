@@ -811,7 +811,8 @@ function getDeterministicSeed(str: string): number {
                             style={{
                               backgroundImage: activeSponsor.imatgeFonsUrl 
                                 ? `url(${activeSponsor.imatgeFonsUrl})` 
-                                : `linear-gradient(135deg, #091a10 0%, #0c2214 50%, #112d1b 100%)`
+                                : `linear-gradient(135deg, #091a10 0%, #0c2214 50%, #112d1b 100%)`,
+                              backgroundPosition: activeSponsor.posicioFons || 'center',
                             }}
                           >
                             {/* Fons fosc per llegibilitat */}

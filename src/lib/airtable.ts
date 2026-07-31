@@ -1405,6 +1405,7 @@ export async function getSponsors(): Promise<Sponsor[]> {
         titol: (f.slogan || f.Slogan || f.titol || f.Titol || '') as string,
         descripcio: (f.descripcio || f.Descripcio || '') as string,
         enllac: (f.enllac || f.Enllac || '') as string,
+        posicioFons: (f.posicio_fons || f.Posicio_fons || f.posicio || f.Posicio || '') as string,
         // Tots els registres han passat el filtre {actiu}=TRUE() d'Airtable
         actiu: true,
       };

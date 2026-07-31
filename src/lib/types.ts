@@ -49,6 +49,7 @@ export interface Sponsor {
   titol?: string;
   rawImatgeUrl?: string;
   rawImatgeFonsUrl?: string;
+  posicioFons?: string;
 }
 
 export interface Centre {
