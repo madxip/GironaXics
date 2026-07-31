@@ -663,10 +663,11 @@ function getDeterministicSeed(str: string): number {
                           align-items: center;
                           gap: 10px;
                           background-color: #f7f6f0;
-                          padding: 6px 18px 6px 8px;
+                          padding: 6px 14px 6px 8px;
                           border-radius: 50px;
-                          flex-shrink: 0;
+                          max-width: 100%;
                           border: 1px solid rgba(0,0,0,0.05);
+                          overflow: hidden;
                         }
                         
                         .sponsor-logo-icon {
@@ -693,8 +694,11 @@ function getDeterministicSeed(str: string): number {
                           font-size: 11px;
                           font-weight: 800;
                           color: var(--verd-fosc);
-                          letter-spacing: 0.05em;
+                          letter-spacing: 0.03em;
                           line-height: 1.2;
+                          white-space: nowrap;
+                          overflow: hidden;
+                          text-overflow: ellipsis;
                         }
                         
                         /* CTA Pill */
@@ -815,7 +819,7 @@ function getDeterministicSeed(str: string): number {
                             
                             {/* Badge superior: PATROCINAT · CATEGORIA */}
                             <div className="sponsor-top-badge">
-                              PATROCINAT · {selectedCategoria.toUpperCase()}
+                              {selectedCategoria === 'Totes' ? 'PATROCINAT' : `PATROCINAT · ${selectedCategoria.toUpperCase()}`}
                             </div>
                             
                             {/* Contingut del patrocinador */}
@@ -823,9 +827,11 @@ function getDeterministicSeed(str: string): number {
                                <h3 className="sponsor-premium-title">
                                  {activeSponsor.titol || `Mou-te amb ${activeSponsor.nom}`}
                                </h3>
-                              <p className="sponsor-premium-desc">
-                                {activeSponsor.descripcio || `El partner d'${selectedCategoria} a GironaXics. Troba tot el que necessites per a les teves activitats.`}
-                              </p>
+                              {activeSponsor.descripcio ? (
+                                <p className="sponsor-premium-desc">{activeSponsor.descripcio}</p>
+                              ) : selectedCategoria !== 'Totes' ? (
+                                <p className="sponsor-premium-desc">{`El partner d'${selectedCategoria} a GironaXics. Troba tot el que necessites per a les teves activitats.`}</p>
+                              ) : null}
                               
                               {/* Fila de botons inferiors */}
                               <div className="sponsor-buttons-row">
