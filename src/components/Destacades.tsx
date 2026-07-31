@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from './SafeImage';
 import { Activitat } from '@/lib/types';
 import { normalizeSlug } from '@/lib/utils';
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo } from 'react';
 
 const saveScroll = () => {
   if (typeof window !== 'undefined') {
@@ -109,11 +109,6 @@ interface Props {
 
 export default function Destacades({ destacades, all }: Props) {
   const TOTAL_SLOTS = 5;
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   // Calculem les targetes a mostrar. useMemo garanteix que l'aleatorietat
   // és estable durant la sessió (no rebarreja en cada re-render).
