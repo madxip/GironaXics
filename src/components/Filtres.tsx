@@ -367,7 +367,10 @@ function getDeterministicSeed(str: string): number {
   }, [filtered, selectedCategoria]);
 
   const activeSponsor = useMemo(() => {
-    if (!sponsors || sponsors.length === 0 || selectedCategoria === 'Totes') return null;
+    if (!sponsors || sponsors.length === 0) return null;
+    if (selectedCategoria === 'Totes') {
+      return sponsors.find(s => (s.categoriaSlug === 'totes' || s.categoriaSlug === 'general') && s.actiu) || null;
+    }
     const catSlug = normalizeSlug(selectedCategoria);
     return sponsors.find(s => s.categoriaSlug === catSlug && s.actiu) || null;
   }, [sponsors, selectedCategoria]);
