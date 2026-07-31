@@ -23,7 +23,10 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://gironaxics.cat'),
-  title: "GironaXics - Extraescolars a Girona (Gi)",
+  title: {
+    default: "GironaXics - Extraescolars, casals i activitats a Girona",
+    template: "%s | GironaXics",
+  },
   description: "El directori d'extraescolars, tallers, casals i activitats de les comarques gironines.",
   icons: {
     icon: [
@@ -37,7 +40,8 @@ export const metadata: Metadata = {
   },
   manifest: "/site.webmanifest",
   openGraph: {
-    title: "GironaXics - Extraescolars a Girona",
+    siteName: 'GironaXics',
+    title: "GironaXics - Extraescolars, casals i activitats a Girona",
     description: "El directori d'extraescolars, tallers, casals i activitats de les comarques gironines.",
     locale: 'ca_ES',
     type: 'website',

@@ -3,7 +3,6 @@ export const dynamic = 'force-dynamic';
 import { Metadata } from 'next';
 import Nav from '@/components/Nav';
 import Hero from '@/components/Hero';
-import Stats from '@/components/Stats';
 import Filtres from '@/components/Filtres';
 import Destacades from '@/components/Destacades';
 import Categories from '@/components/Categories';
@@ -23,8 +22,25 @@ export async function generateMetadata(): Promise<Metadata> {
     getCentres(),
   ]);
 
+  const title = "GironaXics | Extraescolars, casals i activitats a Girona";
+  const description = `M\u00e9s de ${activitats.length} activitats per a nens de 2 a 18 anys a Girona i comarques a ${centres.length} centres. Gratu\u00eft per a les fam\u00edlies. En catal\u00e0.`;
+
   return {
-    description: `M\u00e9s de ${activitats.length} activitats per a nens de 2 a 18 anys a Girona i comarques a ${centres.length} centres. Gratu\u00eft per a les fam\u00edlies. En catal\u00e0.`,
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      siteName: 'GironaXics',
+      url: 'https://gironaxics.cat',
+      locale: 'ca_ES',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+    },
   };
 }
 
@@ -48,12 +64,25 @@ export default async function Home() {
   });
   const numCategories = uniqueCategories.size;
 
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "GironaXics",
+    "alternateName": ["Girona Xics", "GironaXics.cat"],
+    "url": "https://gironaxics.cat",
+    "description": `M\u00e9s de ${activitats.length} activitats per a nens de 2 a 18 anys a Girona i comarques a ${centres.length} centres. Gratu\u00eft per a les fam\u00edlies. En catal\u00e0.`
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+      />
       <Nav />
       <main id="main-content" className="home-main-layout">
         <div className="home-hero-wrap">
-          <Hero />
+          <Hero numCentres={centres.length} numCategories={numCategories} numActivitats={activitats.length} />
         </div>
 
         <div className="home-filtres-wrap">
@@ -76,10 +105,6 @@ export default async function Home() {
           }>
             <Filtres activitats={activitats} sponsors={sponsors} casalsBanner={casalsBanner} />
           </Suspense>
-        </div>
-
-        <div className="home-stats-wrap">
-          <Stats numCentres={centres.length} numCategories={numCategories} numActivitats={activitats.length} />
         </div>
 
         <div className="home-rest-wrap">

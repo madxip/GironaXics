@@ -297,10 +297,19 @@ export default function Filtres({
       return true;
     });
 
-    // Generem pesos aleatoris per a cada activitat (es mantenen constants durant la sessió de filtre)
+function getDeterministicSeed(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return (Math.abs(hash) % 10000) / 10000;
+}
+
+    // Generem pesos pseudo-aleatoris deterministes per a cada activitat (evita mismatch d'hidratació)
     const randomWeights: Record<string, number> = {};
     activitats.forEach(a => {
-      randomWeights[a.id || a.slug] = Math.random();
+      randomWeights[a.id || a.slug] = getDeterministicSeed(a.id || a.slug);
     });
 
     const tallers: typeof filtered = [];

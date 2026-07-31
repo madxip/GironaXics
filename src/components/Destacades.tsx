@@ -12,14 +12,17 @@ const saveScroll = () => {
   }
 };
 
-// Barreja un array de forma aleatòria (Fisher-Yates)
-function shuffle<T>(arr: T[]): T[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
+function getDeterministicSeed(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
   }
-  return a;
+  return (Math.abs(hash) % 10000) / 10000;
+}
+
+function deterministicShuffle<T extends { id?: string; slug: string }>(arr: T[]): T[] {
+  return [...arr].sort((a, b) => getDeterministicSeed(a.id || a.slug) - getDeterministicSeed(b.id || b.slug));
 }
 
 /**
@@ -129,7 +132,7 @@ export default function Destacades({ destacades, all }: Props) {
     
     // Evitem mismatch d'hidratació: només barregem aleatòriament a client un cop muntat.
     // Durant el render de servidor i la primera hidratació a client fem servir l'ordre determinista original.
-    const poolForSelection = isMounted ? shuffle(pool) : pool;
+    const poolForSelection = deterministicShuffle(pool);
 
     // Nombre de slots lliures (reservem l'últim per la promo)
     const slotsLliures = TOTAL_SLOTS - 1 - venudes.length;
@@ -151,7 +154,7 @@ export default function Destacades({ destacades, all }: Props) {
       cards: candidats,
       showPromo: true,
     };
-  }, [destacades, all, isMounted]);
+  }, [destacades, all]);
 
   const getMockImg = (color: string) =>
     `data:image/svg+xml,%3Csvg viewBox='0 0 400 300' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%25' height='100%25' fill='%23${color}'/%3E%3C/svg%3E`;

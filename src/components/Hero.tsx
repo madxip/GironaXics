@@ -1,143 +1,106 @@
 "use client";
 
-export default function Hero() {
+import { useEffect, useRef } from 'react';
+
+interface HeroProps {
+  numCentres?: number;
+  numCategories?: number;
+  numActivitats?: number;
+}
+
+export default function Hero({
+  numCentres = 73,
+  numCategories = 11,
+  numActivitats = 450
+}: HeroProps) {
+  const statRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const el = entry.target as HTMLElement;
+          const val = parseInt(el.getAttribute('data-val') || '0', 10);
+          const isPlus = el.getAttribute('data-plus') === 'true';
+          const duration = 1200;
+          const startTime = performance.now();
+
+          const update = (time: number) => {
+            const elapsed = time - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const ease = 1 - Math.pow(1 - progress, 4);
+            const currentVal = Math.floor(ease * val);
+            el.innerText = isPlus ? `+${currentVal}` : `${currentVal}`;
+            if (progress < 1) {
+              requestAnimationFrame(update);
+            } else {
+              el.innerText = isPlus ? `+${val}` : `${val}`;
+            }
+          };
+          requestAnimationFrame(update);
+          observer.unobserve(el);
+        }
+      });
+    }, { threshold: 0.2 });
+
+    statRefs.current.forEach(stat => {
+      if (stat) observer.observe(stat);
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <section className="hero">
-      <h1 className="hero-title">
-        <div className="line-1">Troba</div>
+    <div className="hero-wrapper">
+      <section className="hero">
+        <h1 className="hero-title">
+          <div className="line-1">Troba</div>
 
-        {/* Contenidor de les paraules amb slider vertical en CSS pur */}
-        <div className="words-container">
-          <div className="words-slider">
-            <div className="word-slide">
-              <div className="line-2">les millors</div>
-              <div className="line-3">extraescolars</div>
-            </div>
-            <div className="word-slide">
-              <div className="line-2">els millors</div>
-              <div className="line-3">tallers</div>
-            </div>
-            <div className="word-slide">
-              <div className="line-2">les millors</div>
-              <div className="line-3">activitats</div>
-            </div>
-            <div className="word-slide">
-              <div className="line-2">els millors</div>
-              <div className="line-3">casals</div>
-            </div>
-            {/* Repetició de la primera per a un loop infinit i fluid */}
-            <div className="word-slide">
-              <div className="line-2">les millors</div>
-              <div className="line-3">extraescolars</div>
+          {/* Contenidor de les paraules amb slider vertical en CSS pur */}
+          <div className="words-container">
+            <div className="words-slider">
+              <div className="word-slide">
+                <div className="line-2">les millors</div>
+                <div className="line-3">extraescolars</div>
+              </div>
+              <div className="word-slide">
+                <div className="line-2">els millors</div>
+                <div className="line-3">tallers</div>
+              </div>
+              <div className="word-slide">
+                <div className="line-2">les millors</div>
+                <div className="line-3">activitats</div>
+              </div>
+              <div className="word-slide">
+                <div className="line-2">els millors</div>
+                <div className="line-3">casals</div>
+              </div>
+              {/* Repetició de la primera per a un loop infinit i fluid */}
+              <div className="word-slide">
+                <div className="line-2">les millors</div>
+                <div className="line-3">extraescolars</div>
+              </div>
             </div>
           </div>
+        </h1>
+      </section>
+
+      {/* Franja verda de costat a costat (Full Width Green Strip) */}
+      <div className="hero-green-stats-bar">
+        <div className="hero-green-stats-container">
+          <div className="hero-stat-box">
+            <div className="hero-stat-number" data-val={numCentres} ref={el => { statRefs.current[0] = el; }}>0</div>
+            <div className="hero-stat-label">centres</div>
+          </div>
+          <div className="hero-stat-box">
+            <div className="hero-stat-number" data-val={numCategories} ref={el => { statRefs.current[1] = el; }}>0</div>
+            <div className="hero-stat-label">categories</div>
+          </div>
+          <div className="hero-stat-box">
+            <div className="hero-stat-number" data-val={numActivitats} data-plus="true" ref={el => { statRefs.current[2] = el; }}>+0</div>
+            <div className="hero-stat-label">activitats</div>
+          </div>
         </div>
-      </h1>
-
-
-
-      <a
-        href="#filtres-header"
-        className="scroll-indicator-bottom"
-        onClick={(e) => {
-          e.preventDefault();
-          const el = document.getElementById('filtres-header') || document.getElementById('filtres');
-          if (el) {
-            const y = el.getBoundingClientRect().top + window.scrollY - 80;
-            window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
-          }
-        }}
-      >
-        <span>Troba l'activitat per al teu fill</span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="bounce-arrow">
-          <path d="M12 5v14M19 12l-7 7-7-7" />
-        </svg>
-      </a>
-
-      <style jsx>{`
-        .hero-mobile-location {
-          display: none;
-          font-family: var(--font-sans);
-          font-size: 11px;
-          font-weight: 800;
-          color: var(--taronja, #d95738);
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          margin-bottom: 12px;
-        }
-
-        .hero-mobile-search-form {
-          display: none;
-          width: 100%;
-          margin-top: 24px;
-        }
-
-        .hero-mobile-search-input-wrap {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          background: #ffffff;
-          border: 1.5px solid var(--crema-fosca, #eae2d1);
-          border-radius: 40px;
-          padding: 6px 6px 6px 16px;
-          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
-        }
-
-        .hero-mobile-input {
-          flex: 1;
-          border: none;
-          outline: none;
-          background: transparent;
-          font-size: 15px;
-          font-family: inherit;
-          color: var(--verd-fosc, #1b3d2f);
-        }
-
-        .hero-mobile-input::placeholder {
-          color: #a0aec0;
-        }
-
-        .hero-mobile-search-btn {
-          background-color: var(--verd, #1b3d2f);
-          color: #ffffff;
-          border: none;
-          border-radius: 30px;
-          padding: 10px 20px;
-          font-size: 14px;
-          font-weight: 700;
-          cursor: pointer;
-          font-family: inherit;
-        }
-
-        :global(.scroll-indicator-bottom) {
-          display: none !important;
-        }
-
-        @media (max-width: 900px) {
-          .hero-mobile-location {
-            display: block;
-          }
-          .hero-mobile-search-form {
-            display: block;
-          }
-          :global(.scroll-indicator-bottom) {
-            display: flex !important;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            text-decoration: none;
-            color: var(--verd-fosc, #0c2214);
-            font-family: var(--font-sans);
-            font-size: 11.5px;
-            font-weight: 800;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            margin-top: 24px;
-            margin-bottom: 12px;
-          }
-        }
-      `}</style>
-    </section>
+      </div>    </div>
   );
 }

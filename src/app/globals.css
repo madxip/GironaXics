@@ -133,7 +133,8 @@
 
         /* Hero */
         .hero {
-            height: 70vh;
+            height: calc(70vh - 90px);
+            min-height: 380px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -305,6 +306,70 @@
             60% {
                 transform: translateY(2px);
             }
+        }
+
+        /* Franja Estadístiques integrada al Hero */
+        .hero-wrapper {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .hero-green-stats-bar {
+            width: 100vw;
+            position: relative;
+            left: 50%;
+            right: 50%;
+            margin-left: -50vw;
+            margin-right: -50vw;
+            background-color: var(--verd-fosc, #0d3d20);
+            color: #ffffff;
+            padding: 20px 5vw;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .hero-green-stats-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            align-items: center;
+            gap: 20px;
+        }
+
+        .hero-stat-box {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .hero-stat-number {
+            font-family: var(--font-sans);
+            font-size: clamp(48px, 6vw, 76px);
+            font-weight: 800;
+            line-height: 1;
+            color: #ffffff;
+        }
+
+        .hero-stat-box:nth-child(1) .hero-stat-number {
+            color: #4ade80;
+        }
+
+        .hero-stat-box:nth-child(2) .hero-stat-number {
+            color: var(--taronja, #f5a623);
+        }
+
+        .hero-stat-box:nth-child(3) .hero-stat-number {
+            color: #ffffff;
+        }
+
+        .hero-stat-label {
+            font-family: var(--font-sans);
+            font-size: 17px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.9);
+            letter-spacing: 0.02em;
         }
 
         /* Franja Estadístiques */
@@ -1097,6 +1162,31 @@
 
             .btn-veure-resultats {
                 display: flex !important;
+            }
+
+            .hero-green-stats-bar {
+                padding: 16px 4vw;
+            }
+
+            .hero-green-stats-container {
+                gap: 8px;
+            }
+
+            .hero-stat-box {
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 2px;
+                text-align: center;
+            }
+
+            .hero-stat-number {
+                font-size: 40px;
+                font-weight: 800;
+            }
+
+            .hero-stat-label {
+                font-size: 12px;
             }
 
             /* Estadístiques horitzontals compactes en mòbil */
