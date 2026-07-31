@@ -1791,8 +1791,15 @@
             gap: 16px;
         }
 
-        body.modal-open {
-            overflow: hidden;
+        /* Sticky sidebar card for Activity Detail on Desktop */
+        @media (min-width: 769px) {
+            .detail-grid {
+                align-items: start !important;
+            }
+            .detail-col-right {
+                position: sticky !important;
+                top: 96px !important;
+            }
         }
 
         @media (max-width: 768px) {
