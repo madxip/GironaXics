@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Activitat, Sponsor, CasalsBanner } from '@/lib/types';
 import AccordionCategoria from './AccordionCategoria';
-import { normalizeSlug } from '@/lib/utils';
+import { normalizeSlug, getSessionRandomSeed, getDeterministicSeed } from '@/lib/utils';
 import { trackEvent } from '@/lib/trackEvent';
 import { isTallerExpiredOrEnded, getNextTallerDate } from '@/lib/tallerDates';
 
@@ -89,6 +89,13 @@ export default function Filtres({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  const [sessionSeed, setSessionSeed] = useState<string>('');
+
+  // Carrega o crea la llavor aleatòria única per a la sessió de navegació (sessionStorage)
+  useEffect(() => {
+    setSessionSeed(getSessionRandomSeed());
+  }, []);
 
   // Restaura la posició de scroll quan es torna d'una fitxa d'activitat
   useEffect(() => {
@@ -297,19 +304,10 @@ export default function Filtres({
       return true;
     });
 
-function getDeterministicSeed(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) - hash + str.charCodeAt(i);
-    hash |= 0;
-  }
-  return (Math.abs(hash) % 10000) / 10000;
-}
-
-    // Generem pesos pseudo-aleatoris deterministes per a cada activitat (evita mismatch d'hidratació)
+    // Generem pesos pseudo-aleatoris deterministes per a cada activitat basats en la llavor de sessió de l'usuari
     const randomWeights: Record<string, number> = {};
     activitats.forEach(a => {
-      randomWeights[a.id || a.slug] = getDeterministicSeed(a.id || a.slug);
+      randomWeights[a.id || a.slug] = getDeterministicSeed(a.id || a.slug, sessionSeed);
     });
 
     const tallers: typeof filtered = [];
@@ -337,14 +335,14 @@ function getDeterministicSeed(str: string): number {
       return aNext.getTime() - bNext.getTime();
     });
 
-    // Extraescolars de centres confirmats: ordre aleatori a cada càrrega
+    // Extraescolars de centres confirmats: ordre aleatori estabilitzat per la sessió de l'usuari
     confirmats.sort((a, b) => (randomWeights[a.id || a.slug] ?? 0.5) - (randomWeights[b.id || b.slug] ?? 0.5));
 
-    // Extraescolars de centres no confirmats: ordre aleatori a cada càrrega
+    // Extraescolars de centres no confirmats: ordre aleatori estabilitzat per la sessió de l'usuari
     noConfirmats.sort((a, b) => (randomWeights[a.id || a.slug] ?? 0.5) - (randomWeights[b.id || b.slug] ?? 0.5));
 
     return [...tallers, ...confirmats, ...noConfirmats];
-  }, [activitats, selectedTipus, selectedCategoria, selectedSubcategoria, selectedEdat, selectedBarri]);
+  }, [activitats, selectedTipus, selectedCategoria, selectedSubcategoria, selectedEdat, selectedBarri, sessionSeed]);
 
   const grouped = useMemo(() => {
     return filtered.reduce((acc, a) => {

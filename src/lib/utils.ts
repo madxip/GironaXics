@@ -198,5 +198,38 @@ export function mapAirtableError(err: unknown): string {
   return `Error de la base de dades: ${msg}`;
 }
 
+/**
+ * Obté o crea una llavor aleatòria única per a la sessió de navegació de l'usuari (sessionStorage).
+ * Aquesta llavor es manté 100% igual durant tota la visita/sessió de l'usuari (mentre navega,
+ * obre fitxes de centres i torna enrere). En una nova sessió/pestanya, es genera una nova llavor.
+ */
+export function getSessionRandomSeed(): string {
+  if (typeof window === 'undefined') return '';
+  try {
+    let seed = sessionStorage.getItem('gironaxics_session_seed');
+    if (!seed) {
+      seed = Math.random().toString(36).substring(2);
+      sessionStorage.setItem('gironaxics_session_seed', seed);
+    }
+    return seed;
+  } catch {
+    return 'fallback';
+  }
+}
+
+/**
+ * Calcula un pes/hash determinista entre 0 i 1 basat en una clau i la llavor de sessió de l'usuari.
+ */
+export function getDeterministicSeed(str: string, sessionSeed = ''): number {
+  const combined = str + sessionSeed;
+  let hash = 0;
+  for (let i = 0; i < combined.length; i++) {
+    hash = (hash << 5) - hash + combined.charCodeAt(i);
+    hash |= 0;
+  }
+  return (Math.abs(hash) % 10000) / 10000;
+}
+
+
 
 

@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import Image from './SafeImage';
 import { Activitat } from '@/lib/types';
-import { normalizeSlug } from '@/lib/utils';
-import { useMemo } from 'react';
+import { normalizeSlug, getSessionRandomSeed, getDeterministicSeed } from '@/lib/utils';
+import { useMemo, useState, useEffect } from 'react';
 
 const saveScroll = () => {
   if (typeof window !== 'undefined') {
@@ -12,17 +12,8 @@ const saveScroll = () => {
   }
 };
 
-function getDeterministicSeed(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) - hash + str.charCodeAt(i);
-    hash |= 0;
-  }
-  return (Math.abs(hash) % 10000) / 10000;
-}
-
-function deterministicShuffle<T extends { id?: string; slug: string }>(arr: T[]): T[] {
-  return [...arr].sort((a, b) => getDeterministicSeed(a.id || a.slug) - getDeterministicSeed(b.id || b.slug));
+function deterministicShuffle<T extends { id?: string; slug: string }>(arr: T[], seed = ''): T[] {
+  return [...arr].sort((a, b) => getDeterministicSeed(a.id || a.slug, seed) - getDeterministicSeed(b.id || b.slug, seed));
 }
 
 /**
@@ -110,6 +101,12 @@ interface Props {
 export default function Destacades({ destacades, all }: Props) {
   const TOTAL_SLOTS = 5;
 
+  const [sessionSeed, setSessionSeed] = useState<string>('');
+
+  useEffect(() => {
+    setSessionSeed(getSessionRandomSeed());
+  }, []);
+
   // Calculem les targetes a mostrar. useMemo garanteix que l'aleatorietat
   // és estable durant la sessió (no rebarreja en cada re-render).
   const { cards, showPromo } = useMemo(() => {
@@ -125,9 +122,7 @@ export default function Destacades({ destacades, all }: Props) {
     const slugsVenduts = new Set(venudes.map(d => d.slug));
     const pool = all.filter(a => !slugsVenduts.has(a.slug));
     
-    // Evitem mismatch d'hidratació: només barregem aleatòriament a client un cop muntat.
-    // Durant el render de servidor i la primera hidratació a client fem servir l'ordre determinista original.
-    const poolForSelection = deterministicShuffle(pool);
+    const poolForSelection = deterministicShuffle(pool, sessionSeed);
 
     // Nombre de slots lliures (reservem l'últim per la promo)
     const slotsLliures = TOTAL_SLOTS - 1 - venudes.length;
@@ -149,7 +144,7 @@ export default function Destacades({ destacades, all }: Props) {
       cards: candidats,
       showPromo: true,
     };
-  }, [destacades, all]);
+  }, [destacades, all, sessionSeed]);
 
   const getMockImg = (color: string) =>
     `data:image/svg+xml,%3Csvg viewBox='0 0 400 300' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%25' height='100%25' fill='%23${color}'/%3E%3C/svg%3E`;
