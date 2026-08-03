@@ -81,7 +81,8 @@ function matchEdatGroup(edatStr: string | undefined, group: string): boolean {
 
 export default function Filtres({ 
   activitats, 
-  sponsors = []
+  sponsors = [],
+  casalsBanner
 }: { 
   activitats: Activitat[], 
   sponsors?: Sponsor[],
@@ -401,7 +402,7 @@ export default function Filtres({
               onClick={() => updateFilter('tipus', 'Casals')}
               className={`filter-tab-button ${selectedTipus === 'Casals' ? 'active' : ''}`}
             >
-              Casals<br className="mobile-br-only" /> d'estiu
+              {casalsBanner?.nom || "Casals de temporada"}
             </button>
           </div>
         </div>
