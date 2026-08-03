@@ -397,13 +397,15 @@ export default function Filtres({
             >
               Activitats i Tallers
             </button>
-            <button 
-              type="button"
-              onClick={() => updateFilter('tipus', 'Casals')}
-              className={`filter-tab-button ${selectedTipus === 'Casals' ? 'active' : ''}`}
-            >
-              {casalsBanner?.nom || "Casals de temporada"}
-            </button>
+            {casalsBanner && (
+              <button 
+                type="button"
+                onClick={() => updateFilter('tipus', 'Casals')}
+                className={`filter-tab-button ${selectedTipus === 'Casals' ? 'active' : ''}`}
+              >
+                {casalsBanner.nom || casalsBanner.titol || "Casals de temporada"}
+              </button>
+            )}
           </div>
         </div>
 
@@ -523,7 +525,7 @@ export default function Filtres({
         <div className="map-results" style={{ gridColumn: 'span 8', paddingLeft: '0' }}>
             <h2 aria-live="polite" style={{ fontSize: '24px', marginTop: '0', marginBottom: '24px', fontFamily: 'var(--font-serif)', fontStyle: 'italic', color: 'var(--verd-fosc)' }}>
               {selectedTipus === 'Casals' 
-                ? `Casals de Temporada (${filtered.length})` 
+                ? `${casalsBanner?.nom || casalsBanner?.titol || 'Casals de Temporada'} (${filtered.length})` 
                 : selectedTipus === 'Tallers' || selectedTipus === 'Tallers i Oci'
                   ? `Activitats i Tallers (${filtered.length})`
                   : `Extraescolars Setmanals (${filtered.length})`}
