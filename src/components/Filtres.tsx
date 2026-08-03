@@ -367,12 +367,23 @@ export default function Filtres({
 
   const activeSponsor = useMemo(() => {
     if (!sponsors || sponsors.length === 0) return null;
+    let matchingSponsors: Sponsor[];
     if (selectedCategoria === 'Totes') {
-      return sponsors.find(s => (s.categoriaSlug === 'totes' || s.categoriaSlug === 'general') && s.actiu) || null;
+      matchingSponsors = sponsors.filter(s => (s.categoriaSlug === 'totes' || s.categoriaSlug === 'general') && s.actiu);
+    } else {
+      const catSlug = normalizeSlug(selectedCategoria);
+      matchingSponsors = sponsors.filter(s => s.categoriaSlug === catSlug && s.actiu);
     }
-    const catSlug = normalizeSlug(selectedCategoria);
-    return sponsors.find(s => s.categoriaSlug === catSlug && s.actiu) || null;
-  }, [sponsors, selectedCategoria]);
+
+    if (matchingSponsors.length === 0) return null;
+    if (matchingSponsors.length === 1) return matchingSponsors[0];
+
+    // Quan hi ha més d'1 sponsor actiu (ex: 2 -> 50%, 3 -> 33.3%, 4 -> 25%), en triem 1 a l'atzar de forma justa
+    const key = `sponsor-${selectedCategoria}`;
+    const seedNum = getDeterministicSeed(key, sessionSeed);
+    const index = Math.floor(seedNum * matchingSponsors.length) % matchingSponsors.length;
+    return matchingSponsors[index];
+  }, [sponsors, selectedCategoria, sessionSeed]);
 
   return (
     <>
