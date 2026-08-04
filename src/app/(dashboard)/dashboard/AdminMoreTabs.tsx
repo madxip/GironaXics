@@ -89,29 +89,25 @@ export default function AdminMoreTabs({
   }, [tab]);
 
   async function loadData() {
-    if (!supabase) return;
     setLoading(true);
     try {
-      if (tab === "categories") {
-        const cats = await getDbCategories();
-        const subs = await getDbSubcategories();
-        setCategories(cats);
-        setSubcategories(subs);
-      } else if (tab === "casals") {
-        const cas = await getDbCasalsBanners();
-        setCasals(cas);
-      } else if (tab === "sponsors") {
-        const sp = await getDbSponsors();
-        setSponsors(sp);
-      } else if (tab === "usuaris") {
-        const u = await getDbUsuaris();
-        setUsuaris(u);
-      } else if (tab === "poblacions") {
-        const p = await getDbPoblacions();
-        setPoblacions(p);
-      } else if (tab === "analytics") {
-        const a = await getDbAnalytics();
-        setAnalytics(a);
+      const res = await fetch(`/api/admin/tab-data?tab=${tab}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (tab === "categories") {
+          if (Array.isArray(data.categories)) setCategories(data.categories);
+          if (Array.isArray(data.subcategories)) setSubcategories(data.subcategories);
+        } else if (tab === "casals") {
+          if (Array.isArray(data.casals)) setCasals(data.casals);
+        } else if (tab === "sponsors") {
+          if (Array.isArray(data.sponsors)) setSponsors(data.sponsors);
+        } else if (tab === "usuaris") {
+          if (Array.isArray(data.usuaris)) setUsuaris(data.usuaris);
+        } else if (tab === "poblacions") {
+          if (Array.isArray(data.poblacions)) setPoblacions(data.poblacions);
+        } else if (tab === "analytics") {
+          if (Array.isArray(data.analytics)) setAnalytics(data.analytics);
+        }
       }
     } catch (err) {
       console.error("Error carregant dades:", err);
