@@ -1374,6 +1374,15 @@ export async function updateCentre(id: string, data: Partial<Omit<Centre, 'id' |
 }
 
 export async function getSponsors(): Promise<Sponsor[]> {
+  if (process.env.DB_PROVIDER === 'supabase' || supabase || !API_KEY || !BASE_ID) {
+    try {
+      const dbSponsors = await getDbSponsors();
+      if (dbSponsors && dbSponsors.length > 0) return dbSponsors;
+    } catch (e) {
+      console.warn('[Airtable Bridge] Error carregant sponsors des de Supabase:', e);
+    }
+  }
+
   if (!API_KEY || !BASE_ID) return [];
 
   // Cache en memòria per reduir crides a Airtable
@@ -1460,6 +1469,14 @@ export async function getSponsors(): Promise<Sponsor[]> {
 
 
 export async function getCasalsBanner(): Promise<CasalsBanner | null> {
+  if (process.env.DB_PROVIDER === 'supabase' || supabase || !API_KEY || !BASE_ID) {
+    try {
+      return await getDbCasalsBanner();
+    } catch (e) {
+      console.warn('[Airtable Bridge] Error carregant casalsBanner des de Supabase:', e);
+    }
+  }
+
   // Cache en memòria per reduir crides a Airtable
   const cache = readCache();
   const now = Date.now();
@@ -1526,6 +1543,15 @@ export async function getCasalsBanner(): Promise<CasalsBanner | null> {
 }
 
 export async function getPoblacions(): Promise<PoblacioRecord[]> {
+  if (process.env.DB_PROVIDER === 'supabase' || supabase || !API_KEY || !BASE_ID) {
+    try {
+      const dbPoblacions = await getDbPoblacions();
+      if (dbPoblacions && dbPoblacions.length > 0) return dbPoblacions;
+    } catch (e) {
+      console.warn('[Airtable Bridge] Error carregant poblacions des de Supabase:', e);
+    }
+  }
+
   if (!API_KEY || !BASE_ID) return [];
   
   const cache = readCache();
