@@ -29,7 +29,8 @@ import {
   createCentreAction, 
   getCentreActivitiesAction, 
   updateCRMActivityAction,
-  toggleCentreActiuAction
+  toggleCentreActiuAction,
+  deleteCentreAction
 } from "@/app/actions/crm";
 import Toast from "@/components/Toast";
 import Link from "next/link";
@@ -344,6 +345,22 @@ export default function AdminCentresTab({ initialCentres, poblacions, initialCen
     }
   };
 
+  const handleDeleteCentre = async (centre: CRMCentre) => {
+    if (!confirm(`ATENCIÓ: Segur que vols eliminar el centre "${centre.nom}"? Això esborrarà automàticament totes les seves activitats associades.`)) return;
+    
+    try {
+      const res = await deleteCentreAction(centre.id);
+      if (res.success) {
+        setCentres(prev => prev.filter(c => c.id !== centre.id));
+        setToast({ type: "success", message: `El centre "${centre.nom}" s'ha eliminat correctament.` });
+      } else {
+        setToast({ type: "error", message: res.error || "Error al eliminar el centre." });
+      }
+    } catch {
+      setToast({ type: "error", message: "Error de connexió." });
+    }
+  };
+
   return (
     <div>
       {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
@@ -599,6 +616,28 @@ export default function AdminCentresTab({ initialCentres, poblacions, initialCen
                             >
                               <BarChart2 size={13} />
                               <span>Stats</span>
+                            </button>
+                            <button
+                              onClick={() => handleDeleteCentre(c)}
+                              title="Eliminar Centre"
+                              className="dashboard-action-btn"
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                backgroundColor: "#fce8e6",
+                                color: "#c5221f",
+                                border: "1px solid rgba(197,34,31,0.2)",
+                                padding: "8px 12px",
+                                borderRadius: "6px",
+                                cursor: "pointer",
+                                fontSize: "13px",
+                                fontWeight: 600,
+                                transition: "all 0.2s"
+                              }}
+                            >
+                              <Trash2 size={13} />
+                              <span>Elimina</span>
                             </button>
                           </div>
                         </td>

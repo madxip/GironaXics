@@ -77,6 +77,8 @@ export interface CasalsBanner {
   subtitol?: string;
   dates?: string;
   dataLimit?: string;
+  dataInici?: string;
+  dataFi?: string;
 }
 
 export interface PoblacioRecord {

@@ -300,6 +300,21 @@ export async function updateDbCentre(id: string, data: Partial<Centre>): Promise
   return !error;
 }
 
+export async function deleteDbCentre(id: string): Promise<boolean> {
+  if (!supabase || !id) return false;
+  // 1. Esborrar activitats del centre
+  await supabase.from('activitats').delete().eq('centre_id', id);
+  // 2. Esborrar usuaris vinculats al centre
+  await supabase.from('usuaris_centres').delete().eq('centre_id', id);
+  // 3. Esborrar el centre
+  const { error } = await supabase.from('centres').delete().eq('id', id);
+  if (error) {
+    console.error('[Supabase DB] Error esborrant centre:', error);
+    return false;
+  }
+  return true;
+}
+
 // ─── 3. CATEGORIES & SUBCATEGORIES ─────────────────────────────────────────
 
 export async function getDbCategories(ciutat: string = 'girona'): Promise<CategoryRecord[]> {
@@ -442,28 +457,47 @@ export async function getDbCasalsBanners(ciutat: string = 'girona'): Promise<Cas
     titol: r.titol || '',
     subtitol: r.subtitol || '',
     dates: r.dates || '',
-    dataLimit: r.data_limit || ''
+    dataLimit: r.data_limit || '',
+    dataInici: r.data_inici || '',
+    dataFi: r.data_fi || ''
   }));
 }
 
 export async function getDbCasalsBanner(ciutat: string = 'girona'): Promise<CasalsBanner | null> {
   if (!supabase) return null;
-  const { data, error } = await supabase.from('casals_banners').select('*').eq('ciutat', ciutat).eq('actiu', true).limit(1);
+  const today = new Date().toISOString().split('T')[0];
+  const { data, error } = await supabase.from('casals_banners').select('*').eq('ciutat', ciutat).eq('actiu', true);
   if (error || !data || data.length === 0) return null;
-  const r = data[0];
+
+  const activeBanner = data.find(r => {
+    if (r.data_inici && r.data_inici > today) return false;
+    if (r.data_fi && r.data_fi < today) return false;
+    return true;
+  }) || data[0];
+
   return {
-    id: r.id,
-    nom: r.nom,
-    actiu: !!r.actiu,
-    kicker: r.kicker || '',
-    titol: r.titol || '',
-    subtitol: r.subtitol || '',
-    dates: r.dates || '',
-    dataLimit: r.data_limit || ''
+    id: activeBanner.id,
+    nom: activeBanner.nom,
+    actiu: !!activeBanner.actiu,
+    kicker: activeBanner.kicker || '',
+    titol: activeBanner.titol || '',
+    subtitol: activeBanner.subtitol || '',
+    dates: activeBanner.dates || '',
+    dataLimit: activeBanner.data_limit || '',
+    dataInici: activeBanner.data_inici || '',
+    dataFi: activeBanner.data_fi || ''
   };
 }
 
-export async function createDbCasalsBanner(nom: string, titol: string, subtitol: string, dataLimit: string, ciutat: string = 'girona'): Promise<string | null> {
+export async function createDbCasalsBanner(
+  nom: string, 
+  titol: string, 
+  subtitol: string, 
+  dataLimit: string, 
+  dataInici: string = '', 
+  dataFi: string = '', 
+  ciutat: string = 'girona'
+): Promise<string | null> {
   if (!supabase || !nom) return null;
   const id = `casal_${Math.random().toString(36).substring(2, 8)}`;
   const { error } = await supabase.from('casals_banners').insert([{
@@ -472,6 +506,8 @@ export async function createDbCasalsBanner(nom: string, titol: string, subtitol:
     titol,
     subtitol,
     data_limit: dataLimit,
+    data_inici: dataInici,
+    data_fi: dataFi,
     actiu: true,
     ciutat
   }]);
@@ -489,6 +525,8 @@ export async function updateDbCasalsBanner(id: string, data: Partial<CasalsBanne
   if (data.subtitol !== undefined) updates.subtitol = data.subtitol;
   if (data.dates !== undefined) updates.dates = data.dates;
   if (data.dataLimit !== undefined) updates.data_limit = data.dataLimit;
+  if (data.dataInici !== undefined) updates.data_inici = data.dataInici;
+  if (data.dataFi !== undefined) updates.data_fi = data.dataFi;
 
   const { error } = await supabase.from('casals_banners').update(updates).eq('id', id);
   return !error;

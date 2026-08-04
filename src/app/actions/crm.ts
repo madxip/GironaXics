@@ -160,3 +160,28 @@ export async function createCentreAction(
     return { success: false, error: message };
   }
 }
+
+import { deleteDbCentre } from "@/lib/db";
+
+/**
+ * Delete a centre and its linked activities and user accounts.
+ * Admin only.
+ */
+export async function deleteCentreAction(centreId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    await verifyAdminUser();
+    const success = await deleteDbCentre(centreId);
+    if (success) {
+      revalidateTag('centres');
+      revalidateTag('activitats');
+      revalidatePath('/');
+      revalidatePath('/dashboard');
+      return { success: true };
+    }
+    return { success: false, error: "No s'ha pogut eliminar el centre." };
+  } catch (err) {
+    console.error('[CRM Server Action] Error deleting centre:', err);
+    const message = err instanceof Error ? err.message : 'Error de connexió.';
+    return { success: false, error: message };
+  }
+}

@@ -70,7 +70,9 @@ export default function AdminMoreTabs({
     nom: "Casals d'Estiu",
     titol: "Casals d'Estiu a Girona",
     subtitol: "Tots els casals d'estiu per a infants i adolescents",
-    dataLimit: ""
+    dataLimit: "",
+    dataInici: "",
+    dataFi: ""
   });
 
   // Estats per formulari de Sponsors
@@ -163,10 +165,17 @@ export default function AdminMoreTabs({
     e.preventDefault();
     if (!newCasal.nom.trim()) return;
     setSaving(true);
-    const id = await createDbCasalsBanner(newCasal.nom, newCasal.titol, newCasal.subtitol, newCasal.dataLimit);
+    const id = await createDbCasalsBanner(
+      newCasal.nom, 
+      newCasal.titol, 
+      newCasal.subtitol, 
+      newCasal.dataLimit,
+      newCasal.dataInici,
+      newCasal.dataFi
+    );
     if (id) {
       setMsg("✅ Campanya de Casals afegida!");
-      setNewCasal({ nom: "", titol: "", subtitol: "", dataLimit: "" });
+      setNewCasal({ nom: "", titol: "", subtitol: "", dataLimit: "", dataInici: "", dataFi: "" });
       loadData();
     } else {
       setMsg("❌ Error afegint la campanya de Casals.");
@@ -373,6 +382,27 @@ export default function AdminMoreTabs({
                   />
                 </div>
 
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "13px", fontWeight: 700, marginBottom: "4px" }}>Data Inici Visibilitat (Publicar)</label>
+                    <input
+                      type="date"
+                      value={newCasal.dataInici}
+                      onChange={e => setNewCasal({ ...newCasal, dataInici: e.target.value })}
+                      style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #ccc" }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: "13px", fontWeight: 700, marginBottom: "4px" }}>Data Fi Visibilitat (Ocultar)</label>
+                    <input
+                      type="date"
+                      value={newCasal.dataFi}
+                      onChange={e => setNewCasal({ ...newCasal, dataFi: e.target.value })}
+                      style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #ccc" }}
+                    />
+                  </div>
+                </div>
+
                 <button
                   type="submit"
                   disabled={saving}
@@ -392,7 +422,12 @@ export default function AdminMoreTabs({
                     <div>
                       <div style={{ fontWeight: 700, fontSize: "16px" }}>{c.nom}</div>
                       <div style={{ fontSize: "13px", color: "var(--muted)" }}>{c.titol}</div>
-                      {c.dataLimit && <div style={{ fontSize: "12px", color: "#d95738" }}>Límit: {c.dataLimit}</div>}
+                      {c.dataLimit && <div style={{ fontSize: "12px", color: "#d95738" }}>Límit inscripció: {c.dataLimit}</div>}
+                      {(c.dataInici || c.dataFi) && (
+                        <div style={{ fontSize: "12px", color: "var(--verd)", marginTop: "2px", fontWeight: 600 }}>
+                          📅 Mostra des de {c.dataInici || 'Inici'} fins a {c.dataFi || 'Sempre'}
+                        </div>
+                      )}
                     </div>
 
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
