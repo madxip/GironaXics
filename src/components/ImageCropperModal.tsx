@@ -1,21 +1,22 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Check, ZoomIn, ZoomOut } from 'lucide-react';
+import { X, Check, ZoomIn, ZoomOut, Crop } from 'lucide-react';
 
 interface ImageCropperModalProps {
   imageSrc: string;
   onCropComplete: (croppedBlob: Blob) => void;
   onClose: () => void;
-  aspectRatio?: number; // p.ex. 16/9 o 4/3
+  aspectRatio?: number; // p.ex. 3/4 o 16/9
 }
 
 export default function ImageCropperModal({
   imageSrc,
   onCropComplete,
   onClose,
-  aspectRatio = 16 / 9
+  aspectRatio = 3 / 4
 }: ImageCropperModalProps) {
+  const [currentAspect, setCurrentAspect] = useState<number>(aspectRatio);
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -25,10 +26,9 @@ export default function ImageCropperModal({
   const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
-    // Reset offset on image change
     setOffset({ x: 0, y: 0 });
     setZoom(1);
-  }, [imageSrc]);
+  }, [imageSrc, currentAspect]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -55,9 +55,9 @@ export default function ImageCropperModal({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Amplitud de sortida HD per a la imatge de fons
-    const targetWidth = 1200;
-    const targetHeight = Math.round(targetWidth / aspectRatio);
+    // Resolució HD de sortida
+    const targetWidth = currentAspect < 1 ? 900 : 1200;
+    const targetHeight = Math.round(targetWidth / currentAspect);
 
     canvas.width = targetWidth;
     canvas.height = targetHeight;
@@ -65,26 +65,21 @@ export default function ImageCropperModal({
     const container = containerRef.current.getBoundingClientRect();
     const img = imgRef.current;
 
-    // Calcular escala i posició relativa de la imatge dins del Marc de Retall
     const imgNaturalWidth = img.naturalWidth;
     const imgNaturalHeight = img.naturalHeight;
 
-    // Escala del contenidor visual respecte al canvas de sortida
     const scaleFactor = targetWidth / container.width;
 
-    // Renderitzar imatge al canvas
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, targetWidth, targetHeight);
 
     ctx.save();
-    // Traslladar i escalar segons el zoom i l'arrossegament de l'usuari
     ctx.translate(
       targetWidth / 2 + offset.x * scaleFactor,
       targetHeight / 2 + offset.y * scaleFactor
     );
     ctx.scale(zoom, zoom);
 
-    // Dibuixar la imatge centrada
     const drawWidth = container.width * scaleFactor;
     const drawHeight = (container.width / (imgNaturalWidth / imgNaturalHeight)) * scaleFactor;
 
@@ -112,7 +107,7 @@ export default function ImageCropperModal({
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.85)',
+      backgroundColor: 'rgba(0, 0, 0, 0.88)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -124,19 +119,21 @@ export default function ImageCropperModal({
         color: 'white',
         borderRadius: '16px',
         width: '100%',
-        maxWidth: '650px',
-        padding: '24px',
+        maxWidth: '540px',
+        padding: '20px 24px',
         boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
         display: 'flex',
         flexDirection: 'column',
-        gap: '20px'
+        gap: '16px',
+        maxHeight: '95vh',
+        overflowY: 'auto'
       }}>
         {/* Capçalera */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>🖼️ Retallar Imatge de Fons</h3>
-            <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#9ca3af' }}>
-              Arrossega la imatge i utilitza el zoom per enquadrar el fons del patrocinador.
+            <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#9ca3af' }}>
+              Arrossega i ajusta el zoom per enquadrar el fons del patrocinador.
             </p>
           </div>
           <button
@@ -147,56 +144,87 @@ export default function ImageCropperModal({
           </button>
         </div>
 
-        {/* Àrea de Retall / Canvas d'Enquadrament */}
-        <div
-          ref={containerRef}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-          style={{
-            position: 'relative',
-            width: '100%',
-            height: '300px',
-            backgroundColor: '#111827',
-            borderRadius: '12px',
-            overflow: 'hidden',
-            cursor: isDragging ? 'grabbing' : 'grab',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            border: '2px dashed #4b5563'
-          }}
-        >
-          {/* Imatge arrossegable */}
-          <img
-            ref={imgRef}
-            src={imageSrc}
-            alt="Per retallar"
-            style={{
-              position: 'absolute',
-              maxWidth: 'none',
-              width: '100%',
-              transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`,
-              userSelect: 'none',
-              pointerEvents: 'none',
-              transition: isDragging ? 'none' : 'transform 0.1s ease-out'
-            }}
-          />
+        {/* Selecció de Proporció d'Aspecte */}
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <span style={{ fontSize: '12px', fontWeight: 700, color: '#9ca3af', marginRight: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <Crop size={14} /> Proporció:
+          </span>
+          {[
+            { label: '3:4 Vertical (Desktop)', val: 3 / 4 },
+            { label: '1:1 Quadrat (Mòbil)', val: 1 },
+            { label: '16:9 Horitzontal', val: 16 / 9 }
+          ].map(opt => (
+            <button
+              key={opt.label}
+              type="button"
+              onClick={() => setCurrentAspect(opt.val)}
+              style={{
+                padding: '5px 10px',
+                borderRadius: '6px',
+                border: 'none',
+                fontSize: '11px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                background: Math.abs(currentAspect - opt.val) < 0.01 ? 'var(--verd, #10b981)' : '#374151',
+                color: Math.abs(currentAspect - opt.val) < 0.01 ? 'white' : '#9ca3af'
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
 
-          {/* Marc de Guia / Overlay */}
-          <div style={{
-            position: 'absolute',
-            inset: 0,
-            border: '2px solid var(--verd, #10b981)',
-            boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.5)',
-            pointerEvents: 'none',
-            borderRadius: '8px'
-          }} />
+        {/* Àrea de Retall */}
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+          <div
+            ref={containerRef}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            style={{
+              position: 'relative',
+              width: currentAspect < 1 ? '240px' : '100%',
+              height: currentAspect < 1 ? '320px' : '260px',
+              backgroundColor: '#111827',
+              borderRadius: '12px',
+              overflow: 'hidden',
+              cursor: isDragging ? 'grabbing' : 'grab',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '2px dashed #4b5563',
+              boxShadow: 'inset 0 0 20px rgba(0,0,0,0.5)'
+            }}
+          >
+            <img
+              ref={imgRef}
+              src={imageSrc}
+              alt="Per retallar"
+              style={{
+                position: 'absolute',
+                maxWidth: 'none',
+                width: '100%',
+                transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`,
+                userSelect: 'none',
+                pointerEvents: 'none',
+                transition: isDragging ? 'none' : 'transform 0.1s ease-out'
+              }}
+            />
+
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              border: '2px solid var(--verd, #10b981)',
+              boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.5)',
+              pointerEvents: 'none',
+              borderRadius: '8px'
+            }} />
+          </div>
         </div>
 
         {/* Controls de Zoom */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', background: '#374151', padding: '12px 16px', borderRadius: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', background: '#374151', padding: '10px 16px', borderRadius: '10px' }}>
           <ZoomOut size={18} color="#9ca3af" />
           <input
             type="range"
@@ -214,17 +242,18 @@ export default function ImageCropperModal({
         </div>
 
         {/* Botons d'Acció */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '4px' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
           <button
             type="button"
             onClick={onClose}
             style={{
-              padding: '10px 18px',
+              padding: '8px 16px',
               borderRadius: '8px',
               border: '1px solid #4b5563',
               background: 'transparent',
               color: '#d1d5db',
               fontWeight: 600,
+              fontSize: '13px',
               cursor: 'pointer'
             }}
           >
@@ -234,19 +263,20 @@ export default function ImageCropperModal({
             type="button"
             onClick={handleSaveCrop}
             style={{
-              padding: '10px 20px',
+              padding: '8px 18px',
               borderRadius: '8px',
               border: 'none',
               background: 'var(--verd, #10b981)',
               color: 'white',
               fontWeight: 700,
+              fontSize: '13px',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '6px'
             }}
           >
-            <Check size={18} /> Retalla i Desa
+            <Check size={16} /> Retalla i Desa
           </button>
         </div>
       </div>

@@ -603,12 +603,18 @@ export default function AdminMoreTabs({
 
                 <div>
                   <label style={{ display: "block", fontSize: "13px", fontWeight: 700, marginBottom: "4px" }}>Categoria / Tipus</label>
-                  <input
-                    type="text"
+                  <select
                     value={newSponsor.categoriaSlug}
                     onChange={e => setNewSponsor({ ...newSponsor, categoriaSlug: e.target.value })}
-                    style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #ccc" }}
-                  />
+                    style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #ccc", background: "white", fontSize: "14px" }}
+                  >
+                    <option value="general">⭐ TOTES (Sense filtre / General)</option>
+                    {categories.map(c => (
+                      <option key={c.id || c.slug} value={c.slug}>
+                        {c.nom} ({c.slug})
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <button
@@ -736,7 +742,7 @@ export default function AdminMoreTabs({
       {cropperImageSrc && (
         <ImageCropperModal
           imageSrc={cropperImageSrc}
-          aspectRatio={16 / 9}
+          aspectRatio={3 / 4}
           onClose={() => setCropperImageSrc(null)}
           onCropComplete={async (croppedBlob) => {
             setCropperImageSrc(null);
