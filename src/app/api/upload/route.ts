@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { put } from "@vercel/blob";
+import { supabase } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -66,7 +67,32 @@ export async function POST(req: NextRequest) {
 
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    // 3. Vercel Blob Storage (permanent, primera opció)
+    // 3. Supabase Storage (permanent, primera opció)
+    if (supabase) {
+      try {
+        const ext = file.name.split('.').pop() || 'jpg';
+        const filename = `activities/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+        const { data: storageData, error: storageErr } = await supabase.storage
+          .from('imatges')
+          .upload(filename, buffer, {
+            contentType: file.type || 'image/jpeg',
+            upsert: true
+          });
+
+        if (!storageErr && storageData) {
+          const { data: publicUrlData } = supabase.storage.from('imatges').getPublicUrl(filename);
+          if (publicUrlData?.publicUrl) {
+            return NextResponse.json({ url: publicUrlData.publicUrl });
+          }
+        } else if (storageErr) {
+          console.warn("[Upload API] Supabase storage upload error:", storageErr);
+        }
+      } catch (supabaseStorageErr) {
+        console.warn("[Upload API] Error carregant a Supabase Storage:", supabaseStorageErr);
+      }
+    }
+
+    // 4. Vercel Blob Storage (fallback)
     if (process.env.BLOB_READ_WRITE_TOKEN) {
       try {
         const ext = file.name.split('.').pop() || 'jpg';
