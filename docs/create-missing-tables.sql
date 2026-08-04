@@ -1,5 +1,5 @@
 -- ==============================================================================
--- CREAR LES 2 TAULES MANCANTS A SUPABASE (categories i analytics)
+-- CREAR I HABILITAR TAULES MANCANTS A SUPABASE (categories, analytics, usuaris_centres)
 -- Executa aquestes línies a l'SQL Editor de Supabase (https://supabase.com)
 -- ==============================================================================
 
@@ -26,9 +26,10 @@ CREATE TABLE IF NOT EXISTS public.analytics (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- HABILITAR SEGURETAT RLS I LECTURA/ESCRIPTURA
+-- HABILITAR SEGURETAT RLS I POLÍTIQUES DE LECTURA
 ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.analytics ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.usuaris_centres ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Lectura pública categories" ON public.categories;
 CREATE POLICY "Lectura pública categories" ON public.categories FOR SELECT USING (true);
@@ -38,3 +39,6 @@ CREATE POLICY "Inserció pública d'analytics" ON public.analytics FOR INSERT WI
 
 DROP POLICY IF EXISTS "Lectura pública d'analytics" ON public.analytics;
 CREATE POLICY "Lectura pública d'analytics" ON public.analytics FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Lectura pública usuaris_centres" ON public.usuaris_centres;
+CREATE POLICY "Lectura pública usuaris_centres" ON public.usuaris_centres FOR SELECT USING (true);

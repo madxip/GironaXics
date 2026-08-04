@@ -466,7 +466,7 @@ ON CONFLICT (id) DO UPDATE SET
           id: r.id || f.id,
           email: f.email || f.Email || '',
           centre_id: rawCentreId || null,
-          password_hash: f.password_hash || f.password || f.Password || '',
+          password_hash: f.PasswordHash || f.password_hash || f.password || f.Password || '',
           ciutat: 'girona'
         };
       }).filter(u => u.email);

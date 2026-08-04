@@ -453,6 +453,31 @@ export async function getDbUsuaris(ciutat: string = 'girona'): Promise<UserRecor
   }));
 }
 
+export async function getDbUserByEmail(email: string) {
+  if (!supabase || !email) return null;
+  const { data, error } = await supabase
+    .from('usuaris_centres')
+    .select('*')
+    .ilike('email', email.toLowerCase().trim())
+    .limit(1);
+
+  if (error || !data || data.length === 0) return null;
+  const r = data[0];
+  const cleanEmail = (r.email || '').toLowerCase().trim();
+  const isAdmin = cleanEmail === 'hola@gironaxics.cat' || cleanEmail === 'jtaulats1976@gmail.com' || !!r.is_admin;
+
+  return {
+    id: r.id,
+    nom: r.nom || r.email.split('@')[0],
+    email: r.email,
+    passwordHash: r.password_hash || '',
+    centreId: r.centre_id || null,
+    aprovat: true,
+    isAdmin,
+  };
+}
+
+
 // ─── 7. POBLACIONS ──────────────────────────────────────────────────────────
 
 export async function getDbPoblacions(ciutat: string = 'girona'): Promise<PoblacioRecord[]> {

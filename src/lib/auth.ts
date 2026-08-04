@@ -2,6 +2,7 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { getUserByEmail } from "./airtable";
+import { getDbUserByEmail } from "./db";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -16,14 +17,18 @@ export const authOptions: NextAuthOptions = {
           throw new Error("missing-credentials");
         }
 
-        const user = await getUserByEmail(credentials.email);
+        const email = credentials.email.trim().toLowerCase();
+        let user = await getDbUserByEmail(email);
+        if (!user) {
+          user = await getUserByEmail(email);
+        }
 
         if (!user) {
           throw new Error("no-user");
         }
 
         // Enforce manual approval
-        if (!user.aprovat) {
+        if (!user.aprovat && !user.isAdmin) {
           throw new Error("not-approved");
         }
 
@@ -32,6 +37,7 @@ export const authOptions: NextAuthOptions = {
         if (!isPasswordValid) {
           throw new Error("wrong-password");
         }
+
 
         return {
           id: user.id,
