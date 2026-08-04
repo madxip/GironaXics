@@ -128,10 +128,48 @@ async function fetchFromAirtable(endpoint: string, options: RequestInit = {}): P
 
 // --- Public APIs ---
 
+import { getDbCentres, getDbUsuaris, getDbActivitats, supabase } from './db';
+
 /**
  * Fetch all centres, matching each with their contact user from Usuaris_Centres.
  */
 export async function getCentresWithContacts(): Promise<CRMCentre[]> {
+  if (process.env.DB_PROVIDER === 'supabase' || supabase || !API_KEY || !BASE_ID) {
+    try {
+      const centres = await getDbCentres();
+      const usuaris = await getDbUsuaris();
+      const activitats = await getDbActivitats();
+
+      const userMap = new Map(usuaris.map(u => [u.centreId || '', u]));
+      const actCountMap = new Map<string, number>();
+      activitats.forEach(a => {
+        if (a.centreId) actCountMap.set(a.centreId, (actCountMap.get(a.centreId) || 0) + 1);
+      });
+
+      return centres.map(c => {
+        const u = userMap.get(c.id || '');
+        return {
+          id: c.id || '',
+          nom: c.nom,
+          adreca: c.adreca,
+          telefon: c.telefon,
+          email: c.email,
+          web: c.web,
+          barri: c.barri,
+          descripcio: c.descripcio,
+          imatgeUrl: c.imatgeUrl || '',
+          contactName: u?.email || '',
+          contactEmail: u?.email || '',
+          contactUserId: u?.id,
+          activityCount: actCountMap.get(c.id || '') || 0,
+          actiu: true,
+        };
+      });
+    } catch (err) {
+      console.error('[CRM DB] Error fetching centres from Supabase:', err);
+    }
+  }
+
   if (!API_KEY || !BASE_ID) {
     console.warn('[CRM] Airtable credentials missing. Using local cached data.');
     return getLocalCache().centres;

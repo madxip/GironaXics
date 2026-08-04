@@ -8,6 +8,8 @@ import { Plus, Activity, ShieldCheck, Info, Lock } from "lucide-react";
 import ActivitatsTable from "./ActivitatsTable";
 import AdminDashboardTabs from "./AdminDashboardTabs";
 
+import { getAllDbActivitats, getDbActivitats, getDbCentres, getDbPoblacions, supabase } from "@/lib/db";
+
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage({ searchParams }: { searchParams: { centreId?: string; success?: string } }) {
@@ -19,15 +21,16 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
 
   const centreId = session.user.centreId;
   const isAdmin = session.user.isAdmin;
+  const useDb = process.env.DB_PROVIDER === 'supabase' || !!supabase;
 
   // Admin veu TOTES les activitats (publicades + no publicades); els centres només les seves
   const activitats = isAdmin
-    ? await getAllActivitats()
-    : await getActivitatsByCentreId(centreId);
+    ? (useDb ? await getAllDbActivitats() : await getAllActivitats())
+    : (useDb ? (await getAllDbActivitats()).filter(a => a.centreId === centreId) : await getActivitatsByCentreId(centreId));
 
   const publicadesCount = isAdmin ? activitats.filter(a => a.publicada).length : activitats.length;
 
-  const centres = await getCentres();
+  const centres = useDb ? await getDbCentres() : await getCentres();
   const userCentre = centres.find(c => c.id === centreId);
   const centreNom = isAdmin ? "Administrador" : (userCentre ? userCentre.nom : "El teu Centre");
 
@@ -36,7 +39,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
   const poblacionsGrouped: Record<string, string[]> = {};
   if (isAdmin) {
     initialCentresForAdmin = await getCentresWithContacts();
-    const allPoblacions = await getPoblacions();
+    const allPoblacions = useDb ? await getDbPoblacions() : await getPoblacions();
     allPoblacions.forEach(p => {
       if (p.comarca && p.nom) {
         if (!poblacionsGrouped[p.comarca]) {
