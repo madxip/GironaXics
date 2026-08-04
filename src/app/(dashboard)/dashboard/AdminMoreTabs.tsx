@@ -85,6 +85,7 @@ export default function AdminMoreTabs({
     descripcio: "",
     titol: ""
   });
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -473,14 +474,54 @@ export default function AdminMoreTabs({
                 </div>
 
                 <div>
-                  <label style={{ display: "block", fontSize: "13px", fontWeight: 700, marginBottom: "4px" }}>URL de la Imatge / Logo</label>
+                  <label style={{ display: "block", fontSize: "13px", fontWeight: 700, marginBottom: "4px" }}>
+                    Logo del Patrocinador
+                  </label>
+                  
+                  <div style={{ marginBottom: "8px" }}>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setUploadingLogo(true);
+                        try {
+                          const formData = new FormData();
+                          formData.append('file', file);
+                          const res = await fetch('/api/upload', { method: 'POST', body: formData });
+                          const json = await res.json();
+                          if (json.url) {
+                            setNewSponsor(prev => ({ ...prev, imatgeUrl: json.url }));
+                            setMsg("✅ Logo de sponsor carregat correctament a Supabase!");
+                          } else {
+                            setMsg("❌ Error pujant la imatge.");
+                          }
+                        } catch (err) {
+                          setMsg("❌ Error de connexió.");
+                        } finally {
+                          setUploadingLogo(false);
+                        }
+                      }}
+                      style={{ width: "100%", padding: "6px 10px", borderRadius: "6px", border: "1px solid #ccc", background: "white", fontSize: "13px" }}
+                    />
+                    {uploadingLogo && <div style={{ fontSize: "12px", color: "var(--verd)", fontWeight: 600, marginTop: "4px" }}>⏳ Pujant imatge a Supabase...</div>}
+                  </div>
+
                   <input
                     type="text"
-                    placeholder="https://..."
+                    placeholder="o enganxa una URL https://..."
                     value={newSponsor.imatgeUrl}
                     onChange={e => setNewSponsor({ ...newSponsor, imatgeUrl: e.target.value })}
                     style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #ccc" }}
                   />
+
+                  {newSponsor.imatgeUrl && (
+                    <div style={{ marginTop: "8px", padding: "8px", background: "white", borderRadius: "8px", border: "1px solid #eee", display: "flex", alignItems: "center", gap: "10px" }}>
+                      <img src={newSponsor.imatgeUrl} alt="Preview" style={{ height: "40px", objectFit: "contain", borderRadius: "4px" }} />
+                      <span style={{ fontSize: "11px", color: "#666", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{newSponsor.imatgeUrl}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div>
