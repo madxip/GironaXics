@@ -23,6 +23,7 @@ import {
   getDbPoblacions,
   getDbAnalytics
 } from "@/lib/db";
+import ImageCropperModal from "@/components/ImageCropperModal";
 import { CRMCentre } from "@/lib/crm";
 
 interface AdminMoreTabsProps {
@@ -80,12 +81,15 @@ export default function AdminMoreTabs({
     nom: "",
     categoriaSlug: "patrocinador",
     imatgeUrl: "",
+    imatgeFonsUrl: "",
     enllac: "",
     actiu: true,
     descripcio: "",
     titol: ""
   });
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingBg, setUploadingBg] = useState(false);
+  const [cropperImageSrc, setCropperImageSrc] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
@@ -203,7 +207,7 @@ export default function AdminMoreTabs({
     const id = await createDbSponsor(newSponsor);
     if (id) {
       setMsg("✅ Sponsor afegit amb èxit!");
-      setNewSponsor({ nom: "", categoriaSlug: "patrocinador", imatgeUrl: "", enllac: "", actiu: true, descripcio: "", titol: "" });
+      setNewSponsor({ nom: "", categoriaSlug: "patrocinador", imatgeUrl: "", imatgeFonsUrl: "", enllac: "", actiu: true, descripcio: "", titol: "" });
       loadData();
     } else {
       setMsg("❌ Error creant el sponsor.");
@@ -525,6 +529,48 @@ export default function AdminMoreTabs({
                 </div>
 
                 <div>
+                  <label style={{ display: "block", fontSize: "13px", fontWeight: 700, marginBottom: "4px" }}>
+                    Imatge de Fons / Banner (Pujar i Retallar)
+                  </label>
+                  
+                  <div style={{ marginBottom: "8px" }}>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          if (typeof reader.result === 'string') {
+                            setCropperImageSrc(reader.result);
+                          }
+                        };
+                        reader.readAsDataURL(file);
+                        e.target.value = "";
+                      }}
+                      style={{ width: "100%", padding: "6px 10px", borderRadius: "6px", border: "1px solid #ccc", background: "white", fontSize: "13px" }}
+                    />
+                    {uploadingBg && <div style={{ fontSize: "12px", color: "var(--verd)", fontWeight: 600, marginTop: "4px" }}>⏳ Pujant fons retallat a Supabase...</div>}
+                  </div>
+
+                  <input
+                    type="text"
+                    placeholder="o URL de fons https://..."
+                    value={newSponsor.imatgeFonsUrl}
+                    onChange={e => setNewSponsor({ ...newSponsor, imatgeFonsUrl: e.target.value })}
+                    style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #ccc" }}
+                  />
+
+                  {newSponsor.imatgeFonsUrl && (
+                    <div style={{ marginTop: "8px", padding: "8px", background: "white", borderRadius: "8px", border: "1px solid #eee" }}>
+                      <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--verd)", marginBottom: "4px" }}>Vista prèvia del Fons:</div>
+                      <div style={{ width: "100%", height: "60px", borderRadius: "6px", backgroundImage: `url(${newSponsor.imatgeFonsUrl})`, backgroundSize: "cover", backgroundPosition: "center" }} />
+                    </div>
+                  )}
+                </div>
+
+                <div>
                   <label style={{ display: "block", fontSize: "13px", fontWeight: 700, marginBottom: "4px" }}>Enllaç Web (Link)</label>
                   <input
                     type="text"
@@ -666,6 +712,33 @@ export default function AdminMoreTabs({
             </table>
           </div>
         </div>
+      )}
+      {cropperImageSrc && (
+        <ImageCropperModal
+          imageSrc={cropperImageSrc}
+          aspectRatio={16 / 9}
+          onClose={() => setCropperImageSrc(null)}
+          onCropComplete={async (croppedBlob) => {
+            setCropperImageSrc(null);
+            setUploadingBg(true);
+            try {
+              const formData = new FormData();
+              formData.append('file', croppedBlob, 'sponsor_bg.jpg');
+              const res = await fetch('/api/upload', { method: 'POST', body: formData });
+              const json = await res.json();
+              if (json.url) {
+                setNewSponsor(prev => ({ ...prev, imatgeFonsUrl: json.url }));
+                setMsg("✅ Imatge de fons retallada i desada a Supabase!");
+              } else {
+                setMsg("❌ Error pujant la imatge de fons.");
+              }
+            } catch {
+              setMsg("❌ Error de connexió en pujar la imatge.");
+            } finally {
+              setUploadingBg(false);
+            }
+          }}
+        />
       )}
     </div>
   );
