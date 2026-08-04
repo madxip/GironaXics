@@ -103,33 +103,67 @@ function mapSupabaseCentre(r: Record<string, any>): Centre {
 
 export async function getDbActivitats(ciutat: string = 'girona'): Promise<Activitat[]> {
   if (!supabase) return [];
-  const { data, error } = await supabase
+  const { data: actData, error } = await supabase
     .from('activitats')
     .select('*')
     .eq('ciutat', ciutat)
-    .eq('publicada', true)
-    .order('nom');
+    .eq('publicada', true);
 
-  if (error) {
+  if (error || !actData) {
     console.error('[Supabase DB] Error obtenint activitats:', error);
     return [];
   }
-  return (data || []).map(mapSupabaseActivitat);
+
+  const { data: centreData } = await supabase.from('centres').select('id, imatge_url, interessat');
+  const centreMap = new Map((centreData || []).map(c => [c.id, c]));
+
+  const activitats = actData.map(r => {
+    const act = mapSupabaseActivitat(r);
+    if (r.centre_id && centreMap.has(r.centre_id)) {
+      const c = centreMap.get(r.centre_id)!;
+      act.centreImatgeUrl = c.imatge_url || act.centreImatgeUrl || '';
+      act.centreInteressat = !!(c.interessat || act.centreInteressat);
+    }
+    return act;
+  });
+
+  return activitats.sort((a, b) => {
+    if (a.centreInteressat && !b.centreInteressat) return -1;
+    if (!a.centreInteressat && b.centreInteressat) return 1;
+    return a.nom.localeCompare(b.nom, 'ca');
+  });
 }
 
 export async function getAllDbActivitats(ciutat: string = 'girona'): Promise<Activitat[]> {
   if (!supabase) return [];
-  const { data, error } = await supabase
+  const { data: actData, error } = await supabase
     .from('activitats')
     .select('*')
-    .eq('ciutat', ciutat)
-    .order('nom');
+    .eq('ciutat', ciutat);
 
-  if (error) {
+  if (error || !actData) {
     console.error('[Supabase DB] Error obtenint totes les activitats:', error);
     return [];
   }
-  return (data || []).map(mapSupabaseActivitat);
+
+  const { data: centreData } = await supabase.from('centres').select('id, imatge_url, interessat');
+  const centreMap = new Map((centreData || []).map(c => [c.id, c]));
+
+  const activitats = actData.map(r => {
+    const act = mapSupabaseActivitat(r);
+    if (r.centre_id && centreMap.has(r.centre_id)) {
+      const c = centreMap.get(r.centre_id)!;
+      act.centreImatgeUrl = c.imatge_url || act.centreImatgeUrl || '';
+      act.centreInteressat = !!(c.interessat || act.centreInteressat);
+    }
+    return act;
+  });
+
+  return activitats.sort((a, b) => {
+    if (a.centreInteressat && !b.centreInteressat) return -1;
+    if (!a.centreInteressat && b.centreInteressat) return 1;
+    return a.nom.localeCompare(b.nom, 'ca');
+  });
 }
 
 export async function getDbActivitatBySlug(slug: string, ciutat: string = 'girona'): Promise<Activitat | null> {
@@ -142,14 +176,30 @@ export async function getDbActivitatBySlug(slug: string, ciutat: string = 'giron
     .single();
 
   if (error || !data) return null;
-  return mapSupabaseActivitat(data);
+  const act = mapSupabaseActivitat(data);
+  if (data.centre_id) {
+    const { data: centre } = await supabase.from('centres').select('imatge_url, interessat').eq('id', data.centre_id).single();
+    if (centre) {
+      act.centreImatgeUrl = centre.imatge_url || act.centreImatgeUrl || '';
+      act.centreInteressat = !!(centre.interessat || act.centreInteressat);
+    }
+  }
+  return act;
 }
 
 export async function getDbActivitatById(id: string): Promise<Activitat | null> {
   if (!supabase || !id) return null;
   const { data, error } = await supabase.from('activitats').select('*').eq('id', id).single();
   if (error || !data) return null;
-  return mapSupabaseActivitat(data);
+  const act = mapSupabaseActivitat(data);
+  if (data.centre_id) {
+    const { data: centre } = await supabase.from('centres').select('imatge_url, interessat').eq('id', data.centre_id).single();
+    if (centre) {
+      act.centreImatgeUrl = centre.imatge_url || act.centreImatgeUrl || '';
+      act.centreInteressat = !!(centre.interessat || act.centreInteressat);
+    }
+  }
+  return act;
 }
 
 export async function createDbActivitat(data: Partial<Activitat> & { nom: string; centreId: string }): Promise<string | null> {
