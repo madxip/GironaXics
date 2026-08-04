@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createClient } from '@supabase/supabase-js';
 import { Activitat, Centre, Sponsor } from './types';
 import { normalizeSlug } from './utils';
@@ -12,7 +13,7 @@ export const supabase = (supabaseUrl && supabaseKey)
 /**
  * Mapeja un registre de la taula `activitats` de Supabase a la interfície `Activitat`.
  */
-function mapSupabaseActivitat(r: Record<string, unknown>): Activitat {
+function mapSupabaseActivitat(r: Record<string, any>): Activitat {
   return {
     id: r.id,
     slug: r.slug,
@@ -53,7 +54,7 @@ function mapSupabaseActivitat(r: Record<string, unknown>): Activitat {
 /**
  * Mapeja un registre de la taula `centres` de Supabase a la interfície `Centre`.
  */
-function mapSupabaseCentre(r: Record<string, unknown>): Centre {
+function mapSupabaseCentre(r: Record<string, any>): Centre {
   return {
     id: r.id,
     slug: r.slug,
@@ -257,7 +258,7 @@ export async function createDbActivitat(data: Partial<Activitat> & { nom: string
 export async function updateDbActivitat(id: string, data: Partial<Activitat>): Promise<boolean> {
   if (!supabase || !id) return false;
 
-  const updates: Record<string, unknown> = {};
+  const updates: Record<string, any> = {};
 
   if (data.nom !== undefined) updates.nom = data.nom;
   if (data.barri !== undefined) updates.barri = data.barri;
@@ -314,7 +315,7 @@ export async function deleteDbActivitat(id: string): Promise<boolean> {
 export async function updateDbCentre(id: string, data: Partial<Centre>): Promise<boolean> {
   if (!supabase || !id) return false;
 
-  const updates: Record<string, unknown> = {};
+  const updates: Record<string, any> = {};
   if (data.nom !== undefined) updates.nom = data.nom;
   if (data.adreca !== undefined) updates.adreca = data.adreca;
   if (data.telefon !== undefined) updates.telefon = data.telefon;
