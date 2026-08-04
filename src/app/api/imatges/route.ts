@@ -5,18 +5,6 @@ import sharp from 'sharp';
 
 export const dynamic = 'force-dynamic';
 
-// Dominis de confiança on resideixen les imatges d'Airtable
-const ALLOWED_HOSTS = ['v5.airtableusercontent.com', 'dl.airtable.com'];
-
-function isAirtableUrl(url: string): boolean {
-  try {
-    const { hostname } = new URL(url);
-    return ALLOWED_HOSTS.includes(hostname);
-  } catch {
-    return false;
-  }
-}
-
 // Cache 30 dies al navegador i a la CDN de Vercel (s-maxage)
 // La CDN guarda la resposta i la serveix sense tocar el servidor en visites successives
 const CACHE = 'public, max-age=2592000, s-maxage=2592000, stale-while-revalidate=86400';
