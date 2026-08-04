@@ -155,14 +155,24 @@ export default function AdminMoreTabs({
 
   async function handleDeleteCat(id: string) {
     if (!confirm("Segur que vols eliminar aquesta categoria?")) return;
-    await deleteDbCategory(id);
-    loadData();
+    const res = await fetch(`/api/admin/tab-data?item=category&id=${id}`, { method: "DELETE" });
+    if (res.ok) {
+      setMsg("✅ Categoria eliminada!");
+      loadData();
+    } else {
+      setMsg("❌ Error eliminant la categoria.");
+    }
   }
 
   async function handleDeleteSubcat(id: string) {
     if (!confirm("Segur que vols eliminar aquesta subcategoria?")) return;
-    await deleteDbSubcategory(id);
-    loadData();
+    const res = await fetch(`/api/admin/tab-data?item=subcategory&id=${id}`, { method: "DELETE" });
+    if (res.ok) {
+      setMsg("✅ Subcategoria eliminada!");
+      loadData();
+    } else {
+      setMsg("❌ Error eliminant la subcategoria.");
+    }
   }
 
   // 2. HANDLERS CASALS
@@ -195,8 +205,13 @@ export default function AdminMoreTabs({
 
   async function handleDeleteCasal(id: string) {
     if (!confirm("Segur que vols eliminar aquesta campanya de Casals?")) return;
-    await deleteDbCasalsBanner(id);
-    loadData();
+    const res = await fetch(`/api/admin/tab-data?item=casal&id=${id}`, { method: "DELETE" });
+    if (res.ok) {
+      setMsg("✅ Campanya de Casals eliminada!");
+      loadData();
+    } else {
+      setMsg("❌ Error eliminant la campanya de Casals.");
+    }
   }
 
   // 3. HANDLERS SPONSORS
@@ -222,8 +237,13 @@ export default function AdminMoreTabs({
 
   async function handleDeleteSponsor(id: string) {
     if (!confirm("Segur que vols eliminar aquest sponsor?")) return;
-    await deleteDbSponsor(id);
-    loadData();
+    const res = await fetch(`/api/admin/tab-data?item=sponsor&id=${id}`, { method: "DELETE" });
+    if (res.ok) {
+      setMsg("✅ Sponsor eliminat!");
+      loadData();
+    } else {
+      setMsg("❌ Error eliminant el sponsor.");
+    }
   }
 
   // 4. HANDLERS USUARIS CENTRES
