@@ -1,14 +1,13 @@
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+import { createClient } from '@supabase/supabase-js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { createClient } from '@supabase/supabase-js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.join(__dirname, '..');
 
-// Cargar .env.local
 function loadEnv() {
   const envPath = path.join(projectRoot, '.env.local');
   if (!fs.existsSync(envPath)) return {};
@@ -27,232 +26,160 @@ function loadEnv() {
 }
 
 const env = loadEnv();
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_ROLE_KEY;
+const SUPABASE_URL = env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!SUPABASE_URL || !SUPABASE_KEY) {
-  console.error('❌ Falten les claus de Supabase a .env.local');
+if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+  console.error('❌ Manca SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY.');
   process.exit(1);
 }
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-const BUCKET_NAME = 'imatges';
-
-async function ensureBucket() {
-  console.log(`📦 Verificant / creant el bucket "${BUCKET_NAME}" a Supabase Storage...`);
-  const { data: buckets, error: listError } = await supabase.storage.listBuckets();
-  
-  if (listError) {
-    console.error('❌ Error llistant buckets:', listError.message);
+async function ensureBucketExists() {
+  const { data: buckets } = await supabase.storage.listBuckets();
+  const exists = (buckets || []).some(b => b.name === 'imatges');
+  if (!exists) {
+    console.log('📦 Creant el bucket public "imatges" a Supabase Storage...');
+    await supabase.storage.createBucket('imatges', { public: true });
   }
-
-  const bucketExists = (buckets || []).some(b => b.name === BUCKET_NAME);
-  if (!bucketExists) {
-    const { error: createError } = await supabase.storage.createBucket(BUCKET_NAME, {
-      public: true, // Bucket públic per a lliure accés des del web
-      fileSizeLimit: 10485760, // 10MB per imatge
-    });
-    if (createError) {
-      console.error(`❌ Error creant el bucket "${BUCKET_NAME}":`, createError.message);
-      return false;
-    }
-    console.log(`✅ Bucket públic "${BUCKET_NAME}" creat amb èxit!`);
-  } else {
-    console.log(`✅ Bucket "${BUCKET_NAME}" ja existeix.`);
-  }
-
-  // Garantir que el bucket sigui públic
-  await supabase.storage.updateBucket(BUCKET_NAME, { public: true });
-  return true;
 }
 
-// Descarregar imatge a Buffer des d'una URL
-async function fetchImageBuffer(url) {
-  if (!url || !url.startsWith('http')) return null;
+async function uploadImageFromUrl(imageUrl, storagePath) {
+  if (!imageUrl || !imageUrl.startsWith('http')) return null;
+  // Si la imatge ja està a Supabase Storage, no cal tornar-la a carregar
+  if (imageUrl.includes('supabase.co/storage')) return imageUrl;
+
   try {
-    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    const res = await fetch(imageUrl, { signal: AbortSignal.timeout(10000) });
     if (!res.ok) return null;
+    const contentType = res.headers.get('content-type') || 'image/jpeg';
     const arrayBuffer = await res.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    const contentType = res.headers.get('content-type') || 'image/jpeg';
-    return { buffer, contentType };
+
+    const { data, error } = await supabase.storage
+      .from('imatges')
+      .upload(storagePath, buffer, {
+        contentType,
+        upsert: true
+      });
+
+    if (error) {
+      console.warn(`⚠️ Error pujant ${storagePath}:`, error.message);
+      return null;
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from('imatges')
+      .getPublicUrl(storagePath);
+
+    return publicUrlData.publicUrl;
   } catch (err) {
+    console.warn(`⚠️ Exception baixant/pujant ${storagePath}:`, err.message);
     return null;
   }
 }
 
-// Detectar extensió des de contentType o URL
-function getExtension(url, contentType) {
-  if (contentType?.includes('png')) return 'png';
-  if (contentType?.includes('webp')) return 'webp';
-  if (contentType?.includes('gif')) return 'gif';
-  if (contentType?.includes('svg')) return 'svg';
-  if (url.includes('.png')) return 'png';
-  if (url.includes('.webp')) return 'webp';
-  return 'jpg';
-}
+async function run() {
+  console.log('🚀 Iniciant migració d\'imatges cap a Supabase Storage...');
+  await ensureBucketExists();
 
-async function uploadToStorage(storagePath, buffer, contentType) {
-  const { error } = await supabase.storage.from(BUCKET_NAME).upload(storagePath, buffer, {
-    contentType,
-    upsert: true,
-  });
-  if (error) {
-    console.error(`❌ Error pujant ${storagePath}:`, error.message);
-    return null;
-  }
-  const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(storagePath);
-  return data.publicUrl;
-}
-
-async function migrateImages() {
-  console.log('🚀 Iniciant migració d\'imatges d\'Airtable cap a Supabase Storage...');
-  
-  const ready = await ensureBucket();
-  if (!ready) process.exit(1);
-
-  // 1. MIGRAR IMATGES DE CENTRES
-  console.log('\n🏬 1. Processant imatges de Centres...');
-  const { data: centres } = await supabase.from('centres').select('*');
-  let centresMigrats = 0;
-
-  for (const c of centres || []) {
-    if (c.imatge_url && c.imatge_url.startsWith('http') && !c.imatge_url.includes('supabase.co')) {
-      const fetched = await fetchImageBuffer(c.imatge_url);
-      if (fetched) {
-        const ext = getExtension(c.imatge_url, fetched.contentType);
-        const storagePath = `centres/${c.slug || c.id}.${ext}`;
-        const publicUrl = await uploadToStorage(storagePath, fetched.buffer, fetched.contentType);
-        
-        if (publicUrl) {
-          await supabase.from('centres').update({ imatge_url: publicUrl }).eq('id', c.id);
-          centresMigrats++;
-          process.stdout.write(`   ✅ Centre: ${c.nom}\n`);
+  // 1. CENTRES LOGOS
+  console.log('\n🏫 1. Processant logos de CENTRES...');
+  const { data: centres } = await supabase.from('centres').select('id, slug, nom, imatge_url');
+  let centresUpdated = 0;
+  if (centres) {
+    for (const c of centres) {
+      if (c.imatge_url && c.imatge_url.startsWith('http') && !c.imatge_url.includes('supabase.co')) {
+        const ext = c.imatge_url.includes('.png') ? 'png' : c.imatge_url.includes('.webp') ? 'webp' : 'jpg';
+        const fileName = `centres/${c.slug || c.id}.${ext}`;
+        const newUrl = await uploadImageFromUrl(c.imatge_url, fileName);
+        if (newUrl) {
+          await supabase.from('centres').update({ imatge_url: newUrl }).eq('id', c.id);
+          centresUpdated++;
+          console.log(`  ✓ Logo desat per a: ${c.nom}`);
         }
       }
     }
   }
-  console.log(`✨ ${centresMigrats} imatges de centres migrades a Supabase Storage!`);
+  console.log(`✅ S'han migrat ${centresUpdated} logos de centres a Supabase Storage.`);
 
-  // 2. MIGRAR IMATGES D'ACTIVITATS
-  console.log('\n🎨 2. Processant imatges d\'Activitats i Galeries...');
-  const { data: activitats } = await supabase.from('activitats').select('*');
-  let activitatsMigrades = 0;
+  // 2. ACTIVITATS IMATGES
+  console.log('\n🎨 2. Processant imatges d\'ACTIVITATS...');
+  const { data: activitats } = await supabase.from('activitats').select('id, slug, nom, imatge_url, imatge_thumbnail_url');
+  let actsUpdated = 0;
+  if (activitats) {
+    for (const a of activitats) {
+      let updated = false;
+      const updates = {};
 
-  for (const a of activitats || []) {
-    let updatedNeeded = false;
-    let newImatgeUrl = a.imatge_url;
-    let newThumbUrl = a.imatge_thumbnail_url;
-    let newGaleria = Array.isArray(a.galeria) ? [...a.galeria] : [];
-
-    // Imatge principal
-    if (a.imatge_url && a.imatge_url.startsWith('http') && !a.imatge_url.includes('supabase.co')) {
-      const fetched = await fetchImageBuffer(a.imatge_url);
-      if (fetched) {
-        const ext = getExtension(a.imatge_url, fetched.contentType);
-        const storagePath = `activitats/${a.slug || a.id}.${ext}`;
-        const publicUrl = await uploadToStorage(storagePath, fetched.buffer, fetched.contentType);
-        if (publicUrl) {
-          newImatgeUrl = publicUrl;
-          newThumbUrl = publicUrl;
-          updatedNeeded = true;
-        }
-      }
-    }
-
-    // Galeria
-    let galeriaUpdated = false;
-    const updatedGaleria = [];
-    for (let idx = 0; idx < newGaleria.length; idx++) {
-      const gUrl = newGaleria[idx];
-      if (gUrl && gUrl.startsWith('http') && !gUrl.includes('supabase.co')) {
-        const fetched = await fetchImageBuffer(gUrl);
-        if (fetched) {
-          const ext = getExtension(gUrl, fetched.contentType);
-          const storagePath = `activitats/${a.slug || a.id}/galeria-${idx + 1}.${ext}`;
-          const publicUrl = await uploadToStorage(storagePath, fetched.buffer, fetched.contentType);
-          if (publicUrl) {
-            updatedGaleria.push(publicUrl);
-            galeriaUpdated = true;
-          } else {
-            updatedGaleria.push(gUrl);
+      if (a.imatge_url && a.imatge_url.startsWith('http') && !a.imatge_url.includes('supabase.co')) {
+        const ext = a.imatge_url.includes('.png') ? 'png' : a.imatge_url.includes('.webp') ? 'webp' : 'jpg';
+        const fileName = `activitats/${a.slug || a.id}.${ext}`;
+        const newUrl = await uploadImageFromUrl(a.imatge_url, fileName);
+        if (newUrl) {
+          updates.imatge_url = newUrl;
+          if (!a.imatge_thumbnail_url || a.imatge_thumbnail_url === a.imatge_url) {
+            updates.imatge_thumbnail_url = newUrl;
           }
-        } else {
-          updatedGaleria.push(gUrl);
+          updated = true;
         }
-      } else {
-        updatedGaleria.push(gUrl);
       }
-    }
 
-    if (galeriaUpdated) {
-      newGaleria = updatedGaleria;
-      updatedNeeded = true;
-    }
+      if (a.imatge_thumbnail_url && a.imatge_thumbnail_url.startsWith('http') && !a.imatge_thumbnail_url.includes('supabase.co') && !updates.imatge_thumbnail_url) {
+        const ext = a.imatge_thumbnail_url.includes('.png') ? 'png' : a.imatge_thumbnail_url.includes('.webp') ? 'webp' : 'jpg';
+        const fileName = `activitats/thumb_${a.slug || a.id}.${ext}`;
+        const newThumbUrl = await uploadImageFromUrl(a.imatge_thumbnail_url, fileName);
+        if (newThumbUrl) {
+          updates.imatge_thumbnail_url = newThumbUrl;
+          updated = true;
+        }
+      }
 
-    if (updatedNeeded) {
-      await supabase.from('activitats').update({
-        imatge_url: newImatgeUrl,
-        imatge_thumbnail_url: newThumbUrl,
-        galeria: newGaleria,
-      }).eq('id', a.id);
-      activitatsMigrades++;
-      process.stdout.write(`   ✅ Activitat (${activitatsMigrades}): ${a.nom}\n`);
+      if (updated) {
+        await supabase.from('activitats').update(updates).eq('id', a.id);
+        actsUpdated++;
+      }
     }
   }
+  console.log(`✅ S'han migrat ${actsUpdated} imatges d'activitats a Supabase Storage.`);
 
-  console.log(`✨ ${activitatsMigrades} imatges d'activitats migrades amb èxit a Supabase Storage!`);
+  // 3. SPONSORS IMATGES
+  console.log('\n🤝 3. Processant imatges de SPONSORS...');
+  const { data: sponsors } = await supabase.from('sponsors').select('id, nom, imatge_url, imatge_fons_url');
+  let sponsorsUpdated = 0;
+  if (sponsors) {
+    for (const s of sponsors) {
+      const updates = {};
+      let updated = false;
 
-  // 3. MIGRAR IMATGES DE SPONSORS
-  console.log('\n🏆 3. Processant imatges de Sponsors...');
-  const { data: sponsors } = await supabase.from('sponsors').select('*');
-  let sponsorsMigrats = 0;
-
-  for (const s of sponsors || []) {
-    let updateNeeded = false;
-    let newImatgeUrl = s.imatge_url;
-    let newFonsUrl = s.imatge_fons_url;
-
-    if (s.imatge_url && s.imatge_url.startsWith('http') && !s.imatge_url.includes('supabase.co')) {
-      const fetched = await fetchImageBuffer(s.imatge_url);
-      if (fetched) {
-        const ext = getExtension(s.imatge_url, fetched.contentType);
-        const storagePath = `sponsors/${s.id}.${ext}`;
-        const publicUrl = await uploadToStorage(storagePath, fetched.buffer, fetched.contentType);
-        if (publicUrl) {
-          newImatgeUrl = publicUrl;
-          updateNeeded = true;
+      if (s.imatge_url && s.imatge_url.startsWith('http') && !s.imatge_url.includes('supabase.co')) {
+        const fileName = `sponsors/logo_${s.id}.jpg`;
+        const newUrl = await uploadImageFromUrl(s.imatge_url, fileName);
+        if (newUrl) {
+          updates.imatge_url = newUrl;
+          updated = true;
         }
       }
-    }
 
-    if (s.imatge_fons_url && s.imatge_fons_url.startsWith('http') && !s.imatge_fons_url.includes('supabase.co')) {
-      const fetched = await fetchImageBuffer(s.imatge_fons_url);
-      if (fetched) {
-        const ext = getExtension(s.imatge_fons_url, fetched.contentType);
-        const storagePath = `sponsors/${s.id}-fons.${ext}`;
-        const publicUrl = await uploadToStorage(storagePath, fetched.buffer, fetched.contentType);
-        if (publicUrl) {
-          newFonsUrl = publicUrl;
-          updateNeeded = true;
+      if (s.imatge_fons_url && s.imatge_fons_url.startsWith('http') && !s.imatge_fons_url.includes('supabase.co')) {
+        const fileName = `sponsors/bg_${s.id}.jpg`;
+        const newBgUrl = await uploadImageFromUrl(s.imatge_fons_url, fileName);
+        if (newBgUrl) {
+          updates.imatge_fons_url = newBgUrl;
+          updated = true;
         }
       }
-    }
 
-    if (updateNeeded) {
-      await supabase.from('sponsors').update({
-        imatge_url: newImatgeUrl,
-        imatge_fons_url: newFonsUrl,
-      }).eq('id', s.id);
-      sponsorsMigrats++;
-      process.stdout.write(`   ✅ Sponsor: ${s.nom}\n`);
+      if (updated) {
+        await supabase.from('sponsors').update(updates).eq('id', s.id);
+        sponsorsUpdated++;
+      }
     }
   }
+  console.log(`✅ S'han migrat ${sponsorsUpdated} imatges de sponsors a Supabase Storage.`);
 
-  console.log(`✨ ${sponsorsMigrats} imatges de sponsors migrades!`);
-
-  console.log('\n🎉 PROCES DE MIGRACIÓ D\'IMATGES A SUPABASE STORAGE COMPLETAT AMB ÈXIT!');
+  console.log('\n🎉 PROCES DE MIGRACIO D\'IMATGES COMPLETAT AMB EXXI!');
 }
 
-migrateImages().catch(err => console.error('❌ Error migrant imatges:', err));
+run();

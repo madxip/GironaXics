@@ -4,6 +4,14 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
+        hostname: '*.supabase.co',
+      },
+      {
+        protocol: 'https',
+        hostname: 'fgghipujyartbzumtmzv.supabase.co',
+      },
+      {
+        protocol: 'https',
         hostname: 'v5.airtableusercontent.com',
       },
       {
@@ -46,8 +54,8 @@ const nextConfig = {
     // In development mode, Next.js requires 'unsafe-eval' for fast refresh/eval-source-maps
     // and WebSockets (ws: wss:) for Hot Module Replacement (HMR) connection.
     const cspValue = isDev
-      ? "default-src 'self'; img-src 'self' data: blob: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' ws: wss: https://v5.airtableusercontent.com https://dl.airtable.com https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://va.vercel-scripts.com https://vitals.vercel-insights.com; object-src 'none';"
-      : "default-src 'self'; img-src 'self' data: blob: https://images.unsplash.com https://files.catbox.moe https://litter.catbox.moe https://litterbox.catbox.moe https://*.catbox.moe https://tmpfiles.org https://*.public.blob.vercel-storage.com https://v5.airtableusercontent.com https://dl.airtable.com https://www.google-analytics.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://v5.airtableusercontent.com https://dl.airtable.com https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://va.vercel-scripts.com https://vitals.vercel-insights.com; object-src 'none'; frame-ancestors 'none';";
+      ? "default-src 'self'; img-src 'self' data: blob: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' ws: wss: https://*.supabase.co https://fgghipujyartbzumtmzv.supabase.co https://v5.airtableusercontent.com https://dl.airtable.com https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://va.vercel-scripts.com https://vitals.vercel-insights.com; object-src 'none';"
+      : "default-src 'self'; img-src 'self' data: blob: https://*.supabase.co https://fgghipujyartbzumtmzv.supabase.co https://images.unsplash.com https://files.catbox.moe https://litter.catbox.moe https://litterbox.catbox.moe https://*.catbox.moe https://tmpfiles.org https://*.public.blob.vercel-storage.com https://v5.airtableusercontent.com https://dl.airtable.com https://www.google-analytics.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://*.supabase.co https://fgghipujyartbzumtmzv.supabase.co https://v5.airtableusercontent.com https://dl.airtable.com https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://va.vercel-scripts.com https://vitals.vercel-insights.com; object-src 'none'; frame-ancestors 'none';";
 
     return [
       {

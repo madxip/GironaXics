@@ -4,6 +4,8 @@ import React from 'react';
 import Image, { ImageProps } from 'next/image';
 
 const ALLOWED_DOMAINS = [
+  'supabase.co',
+  'fgghipujyartbzumtmzv.supabase.co',
   'v5.airtableusercontent.com',
   'dl.airtable.com',
   'images.unsplash.com',

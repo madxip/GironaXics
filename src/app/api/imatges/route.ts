@@ -9,6 +9,16 @@ export const dynamic = 'force-dynamic';
 // La CDN guarda la resposta i la serveix sense tocar el servidor en visites successives
 const CACHE = 'public, max-age=2592000, s-maxage=2592000, stale-while-revalidate=86400';
 
+function getValidUrl(url?: string, rawUrl?: string): string {
+  if (url && typeof url === 'string' && !url.includes('/api/imatges') && (url.startsWith('http://') || url.startsWith('https://'))) {
+    return url;
+  }
+  if (rawUrl && typeof rawUrl === 'string' && !rawUrl.includes('/api/imatges') && (rawUrl.startsWith('http://') || rawUrl.startsWith('https://'))) {
+    return rawUrl;
+  }
+  return '';
+}
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const type      = searchParams.get('type');
@@ -18,21 +28,19 @@ export async function GET(req: NextRequest) {
   const wStr = searchParams.get('w');
   let reqWidth = wStr ? parseInt(wStr, 10) : null;
 
-  // Optimització: si no es demana una amplada explícita, assignem una amplada per defecte
-  // segons el tipus d'imatge per evitar servir fitxers 4K/originals d'Airtable.
   if (!reqWidth) {
     if (type === 'activitat-thumb') {
-      reqWidth = 200; // Targeta petita (80px rendered)
+      reqWidth = 200;
     } else if (type === 'centre') {
-      reqWidth = 160; // Logo centre (64px rendered)
+      reqWidth = 160;
     } else if (type === 'sponsor-logo') {
-      reqWidth = 120; // Logo patrocinador
+      reqWidth = 120;
     } else if (type === 'activitat-galeria') {
-      reqWidth = 800; // Galeria de fitxa
+      reqWidth = 800;
     } else if (type === 'activitat') {
-      reqWidth = 1000; // Hero fitxa
+      reqWidth = 1000;
     } else if (type === 'sponsor-bg') {
-      reqWidth = 1200; // Fons patrocinador premium
+      reqWidth = 1200;
     }
   }
 
@@ -42,9 +50,8 @@ export async function GET(req: NextRequest) {
     if (type === 'activitat' && slug) {
       const activitats = await getActivitats();
       const act = activitats.find(a => normalizeSlug(a.slug) === normalizeSlug(slug));
-      if (act?.rawImatgeUrl) {
-        targetUrl = act.rawImatgeUrl;
-      } else {
+      targetUrl = getValidUrl(act?.imatgeUrl, act?.rawImatgeUrl);
+      if (!targetUrl) {
         const rawUrl = await getRawActivityImage(slug, false);
         if (rawUrl) targetUrl = rawUrl;
       }
@@ -52,9 +59,8 @@ export async function GET(req: NextRequest) {
     } else if (type === 'activitat-thumb' && slug) {
       const activitats = await getActivitats();
       const act = activitats.find(a => normalizeSlug(a.slug) === normalizeSlug(slug));
-      if (act?.rawImatgeThumbnailUrl) {
-        targetUrl = act.rawImatgeThumbnailUrl;
-      } else {
+      targetUrl = getValidUrl(act?.imatgeThumbnailUrl || act?.imatgeUrl, act?.rawImatgeThumbnailUrl);
+      if (!targetUrl) {
         const rawUrl = await getRawActivityImage(slug, true);
         if (rawUrl) targetUrl = rawUrl;
       }
@@ -62,7 +68,7 @@ export async function GET(req: NextRequest) {
     } else if (type === 'activitat-galeria' && slug) {
       const activitats = await getActivitats();
       const act = activitats.find(a => normalizeSlug(a.slug) === normalizeSlug(slug));
-      if (act?.rawGaleria?.[index]) targetUrl = act.rawGaleria[index];
+      if (act?.galeria?.[index]) targetUrl = getValidUrl(act.galeria[index], act?.rawGaleria?.[index]);
 
     } else if (type === 'centre' && (slug || id)) {
       const centres = await getCentres();
@@ -72,11 +78,8 @@ export async function GET(req: NextRequest) {
         (slug && normalizeSlug(c.slug) === normalizeSlug(searchKey)) ||
         (slug && c.nom && normalizeSlug(c.nom) === normalizeSlug(searchKey))
       );
-      if (centre?.rawImatgeUrl) {
-        targetUrl = centre.rawImatgeUrl;
-      } else {
-        // Fallback directe a Airtable: si el centre és nou o no està marcat com actiu encara,
-        // cerca la imatge directament a Airtable sense passar pel filtre d'actius ni per la caché.
+      targetUrl = getValidUrl(centre?.imatgeUrl, centre?.rawImatgeUrl);
+      if (!targetUrl) {
         const directUrl = await getRawCentreImage(searchKey);
         if (directUrl) targetUrl = directUrl;
       }
@@ -84,12 +87,12 @@ export async function GET(req: NextRequest) {
     } else if (type === 'sponsor-logo' && id) {
       const sponsors = await getSponsors();
       const sponsor = sponsors.find(s => s.id === id);
-      if (sponsor?.rawImatgeUrl) targetUrl = sponsor.rawImatgeUrl;
+      targetUrl = getValidUrl(sponsor?.imatgeUrl, sponsor?.rawImatgeUrl);
 
     } else if (type === 'sponsor-bg' && id) {
       const sponsors = await getSponsors();
       const sponsor = sponsors.find(s => s.id === id);
-      if (sponsor?.rawImatgeFonsUrl) targetUrl = sponsor.rawImatgeFonsUrl;
+      targetUrl = getValidUrl(sponsor?.imatgeFonsUrl, sponsor?.rawImatgeFonsUrl);
     }
   } catch (error) {
     console.error('[Images API] Error resolving image:', error);
