@@ -108,7 +108,7 @@ export async function GET(req: NextRequest) {
   }
 
   // Fallback: placeholder local
-  if (!targetUrl || !isAirtableUrl(targetUrl)) {
+  if (!targetUrl || (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://'))) {
     const placeholder = NextResponse.redirect(
       new URL('/placeholder-activitat.svg', req.url), 307
     );

@@ -1,6 +1,15 @@
 import { Activitat, Centre, Sponsor, CasalsBanner, PoblacioRecord } from './types';
 import activitatsSeed from '../../seed/activitats-inicials.json';
 import { normalizeSlug } from './utils';
+import { 
+  getDbActivitats, 
+  getAllDbActivitats, 
+  getDbCentres, 
+  getDbSponsors, 
+  getDbCasalsBanner, 
+  getDbPoblacions, 
+  supabase 
+} from './db';
 
 const API_KEY = process.env.AIRTABLE_API_KEY;
 const BASE_ID = process.env.AIRTABLE_BASE_ID;
@@ -403,6 +412,15 @@ async function _doFetchActivitatsPublicades(): Promise<Activitat[]> {
 }
 
 export async function getActivitats(): Promise<Activitat[]> {
+  if (process.env.DB_PROVIDER === 'supabase' || supabase || !API_KEY || !BASE_ID) {
+    try {
+      const dbActs = await getDbActivitats();
+      if (dbActs && dbActs.length > 0) return dbActs;
+    } catch (e) {
+      console.warn('[Airtable Bridge] Error carregant activitats des de Supabase:', e);
+    }
+  }
+
   if (!API_KEY || !BASE_ID) {
     console.warn("Manca AIRTABLE_API_KEY o AIRTABLE_BASE_ID. Utilitzant dades de prova.");
     return getFallbackActivitats().map(a => {
@@ -451,6 +469,15 @@ export async function getActivitats(): Promise<Activitat[]> {
  * activitats no publicades (esborranys) sense haver d'anar a Airtable.
  */
 export async function getAllActivitats(): Promise<Activitat[]> {
+  if (process.env.DB_PROVIDER === 'supabase' || supabase || !API_KEY || !BASE_ID) {
+    try {
+      const dbActs = await getAllDbActivitats();
+      if (dbActs && dbActs.length > 0) return dbActs;
+    } catch (e) {
+      console.warn('[Airtable Bridge] Error carregant totes les activitats des de Supabase:', e);
+    }
+  }
+
   if (!API_KEY || !BASE_ID) {
     return getFallbackActivitats().map(a => ({ ...a }));
   }
@@ -570,6 +597,15 @@ async function _doFetchCentres(): Promise<Centre[]> {
 }
 
 export async function getCentres(): Promise<Centre[]> {
+  if (process.env.DB_PROVIDER === 'supabase' || supabase || !API_KEY || !BASE_ID) {
+    try {
+      const dbCentres = await getDbCentres();
+      if (dbCentres && dbCentres.length > 0) return dbCentres;
+    } catch (e) {
+      console.warn('[Airtable Bridge] Error carregant centres des de Supabase:', e);
+    }
+  }
+
   if (!API_KEY || !BASE_ID) return [];
 
   const cache = readCache();
