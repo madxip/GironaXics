@@ -79,6 +79,32 @@ function matchEdatGroup(edatStr: string | undefined, group: string): boolean {
   return false;
 }
 
+function formatTabLabel(text: string) {
+  if (!text) return null;
+  const clean = text.trim();
+  if (clean.includes('|') || clean.includes('/') || clean.includes('\n')) {
+    const parts = clean.split(/[|\/\n]/);
+    const first = parts[0].trim();
+    const rest = parts.slice(1).join(' ').trim();
+    return (
+      <>
+        {first} <span className="mobile-br-only"><br /></span>{rest}
+      </>
+    );
+  }
+  const spaceIdx = clean.indexOf(' ');
+  if (spaceIdx !== -1) {
+    const firstWord = clean.substring(0, spaceIdx);
+    const rest = clean.substring(spaceIdx + 1);
+    return (
+      <>
+        {firstWord} <span className="mobile-br-only"><br /></span>{rest}
+      </>
+    );
+  }
+  return clean;
+}
+
 export default function Filtres({ 
   activitats, 
   sponsors = [],
@@ -414,9 +440,7 @@ export default function Filtres({
                 onClick={() => updateFilter('tipus', 'Casals')}
                 className={`filter-tab-button ${selectedTipus === 'Casals' ? 'active' : ''}`}
               >
-                {casalsBanner.nom || casalsBanner.titol || (
-                  <>Casals <span className="mobile-br-only"><br /></span>d&apos;estiu</>
-                )}
+                {formatTabLabel(casalsBanner.nom || casalsBanner.titol || "Casals d'estiu")}
               </button>
             )}
           </div>
