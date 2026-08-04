@@ -408,15 +408,17 @@ export default function Filtres({
             >
               Activitats i Tallers
             </button>
-            <button 
-              type="button"
-              onClick={() => updateFilter('tipus', 'Casals')}
-              className={`filter-tab-button ${selectedTipus === 'Casals' ? 'active' : ''}`}
-            >
-              {casalsBanner?.nom || casalsBanner?.titol || (
-                <>Casals <span className="mobile-br-only"><br /></span>d&apos;estiu</>
-              )}
-            </button>
+            {casalsBanner && (
+              <button 
+                type="button"
+                onClick={() => updateFilter('tipus', 'Casals')}
+                className={`filter-tab-button ${selectedTipus === 'Casals' ? 'active' : ''}`}
+              >
+                {casalsBanner.nom || casalsBanner.titol || (
+                  <>Casals <span className="mobile-br-only"><br /></span>d&apos;estiu</>
+                )}
+              </button>
+            )}
           </div>
         </div>
 
