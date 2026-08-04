@@ -127,8 +127,12 @@ export default function AdminMoreTabs({
     e.preventDefault();
     if (!newCatName.trim()) return;
     setSaving(true);
-    const newId = await createDbCategory(newCatName.trim());
-    if (newId) {
+    const res = await fetch("/api/admin/tab-data", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "create-category", data: { nom: newCatName.trim() } })
+    });
+    if (res.ok) {
       setNewCatName("");
       setMsg("✅ Categoria principal creada!");
       loadData();
@@ -142,8 +146,12 @@ export default function AdminMoreTabs({
     e.preventDefault();
     if (!newSubcatName.trim()) return;
     setSaving(true);
-    const newId = await createDbSubcategory(newSubcatName.trim(), selectedParentCat);
-    if (newId) {
+    const res = await fetch("/api/admin/tab-data", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "create-subcategory", data: { nom: newSubcatName.trim(), categoria: selectedParentCat } })
+    });
+    if (res.ok) {
       setNewSubcatName("");
       setMsg("✅ Subcategoria creada!");
       loadData();
@@ -180,15 +188,12 @@ export default function AdminMoreTabs({
     e.preventDefault();
     if (!newCasal.nom.trim()) return;
     setSaving(true);
-    const id = await createDbCasalsBanner(
-      newCasal.nom, 
-      newCasal.titol, 
-      newCasal.subtitol, 
-      newCasal.dataLimit,
-      newCasal.dataInici,
-      newCasal.dataFi
-    );
-    if (id) {
+    const res = await fetch("/api/admin/tab-data", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "create-casal", data: newCasal })
+    });
+    if (res.ok) {
       setMsg("✅ Campanya de Casals afegida!");
       setNewCasal({ nom: "", titol: "", subtitol: "", dataLimit: "", dataInici: "", dataFi: "" });
       loadData();
@@ -199,8 +204,12 @@ export default function AdminMoreTabs({
   }
 
   async function handleToggleCasalActiu(id: string, currentStatus: boolean) {
-    await updateDbCasalsBanner(id, { actiu: !currentStatus });
-    loadData();
+    const res = await fetch("/api/admin/tab-data", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "update-casal", id, data: { actiu: !currentStatus } })
+    });
+    if (res.ok) loadData();
   }
 
   async function handleDeleteCasal(id: string) {
@@ -219,10 +228,14 @@ export default function AdminMoreTabs({
     e.preventDefault();
     if (!newSponsor.nom.trim()) return;
     setSaving(true);
-    const id = await createDbSponsor(newSponsor);
-    if (id) {
+    const res = await fetch("/api/admin/tab-data", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "create-sponsor", data: newSponsor })
+    });
+    if (res.ok) {
       setMsg("✅ Sponsor afegit amb èxit!");
-      setNewSponsor({ nom: "", categoriaSlug: "patrocinador", imatgeUrl: "", imatgeFonsUrl: "", enllac: "", actiu: true, descripcio: "", titol: "" });
+      setNewSponsor({ nom: "", categoriaSlug: "general", imatgeUrl: "", imatgeFonsUrl: "", enllac: "", actiu: true, descripcio: "", titol: "" });
       loadData();
     } else {
       setMsg("❌ Error creant el sponsor.");
@@ -231,8 +244,12 @@ export default function AdminMoreTabs({
   }
 
   async function handleToggleSponsorActiu(id: string, currentStatus: boolean) {
-    await updateDbSponsor(id, { actiu: !currentStatus });
-    loadData();
+    const res = await fetch("/api/admin/tab-data", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "update-sponsor", id, data: { actiu: !currentStatus } })
+    });
+    if (res.ok) loadData();
   }
 
   async function handleDeleteSponsor(id: string) {
@@ -582,10 +599,100 @@ export default function AdminMoreTabs({
                     style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #ccc" }}
                   />
 
-                  {newSponsor.imatgeFonsUrl && (
-                    <div style={{ marginTop: "8px", padding: "8px", background: "white", borderRadius: "8px", border: "1px solid #eee" }}>
-                      <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--verd)", marginBottom: "4px" }}>Vista prèvia del Fons:</div>
-                      <div style={{ width: "100%", height: "60px", borderRadius: "6px", backgroundImage: `url(${newSponsor.imatgeFonsUrl})`, backgroundSize: "cover", backgroundPosition: "center" }} />
+                  {/* PREVISUALITZACIÓ DUAL DESKTOP I MÒBIL */}
+                  {(newSponsor.imatgeUrl || newSponsor.imatgeFonsUrl || newSponsor.nom) && (
+                    <div style={{ marginTop: "12px", padding: "14px", background: "white", borderRadius: "12px", border: "1px solid #e0e0e0" }}>
+                      <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--verd)", marginBottom: "10px" }}>
+                        👁️ Previsualització en temps real (Com es veurà al web):
+                      </div>
+
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+                        {/* MODEL DESKTOP (3:4 Vertical) */}
+                        <div>
+                          <div style={{ fontSize: "10px", fontWeight: 800, color: "#666", marginBottom: "6px", textTransform: "uppercase" }}>
+                            🖥️ Desktop (Vertical 3:4)
+                          </div>
+                          <div style={{
+                            width: "100%",
+                            aspectRatio: "3/4",
+                            borderRadius: "14px",
+                            position: "relative",
+                            overflow: "hidden",
+                            backgroundImage: newSponsor.imatgeFonsUrl ? `url(${newSponsor.imatgeFonsUrl})` : "none",
+                            backgroundColor: newSponsor.imatgeFonsUrl ? "transparent" : "#1b3d2f",
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "space-between",
+                            padding: "12px",
+                            boxShadow: "0 6px 16px rgba(0,0,0,0.15)",
+                            color: "white"
+                          }}>
+                            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(12, 34, 20, 0.1) 0%, rgba(12, 34, 20, 0.4) 40%, rgba(9, 26, 15, 0.95) 100%)", zIndex: 1 }} />
+                            
+                            <div style={{ position: "relative", zIndex: 2 }}>
+                              <span style={{ backgroundColor: "#ffb703", color: "#1b3d2f", fontSize: "8px", fontWeight: 800, padding: "3px 6px", borderRadius: "20px", textTransform: "uppercase" }}>
+                                Patrocinat
+                              </span>
+                            </div>
+
+                            <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", gap: "6px" }}>
+                              {newSponsor.imatgeUrl && (
+                                <div style={{ backgroundColor: "rgba(255,255,255,0.92)", padding: "4px 6px", borderRadius: "6px", width: "fit-content", display: "flex", alignItems: "center" }}>
+                                  <img src={newSponsor.imatgeUrl} alt="Logo" style={{ maxHeight: "24px", maxWidth: "70px", objectFit: "contain" }} />
+                                </div>
+                              )}
+                              <div style={{ fontWeight: 800, fontSize: "13px", lineHeight: "1.2" }}>
+                                {newSponsor.nom || "Nom del Patrocinador"}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* MODEL MÒBIL (Horitzontal) */}
+                        <div>
+                          <div style={{ fontSize: "10px", fontWeight: 800, color: "#666", marginBottom: "6px", textTransform: "uppercase" }}>
+                            📱 Mòbil (Horitzontal)
+                          </div>
+                          <div style={{
+                            width: "100%",
+                            height: "140px",
+                            borderRadius: "14px",
+                            position: "relative",
+                            overflow: "hidden",
+                            backgroundImage: newSponsor.imatgeFonsUrl ? `url(${newSponsor.imatgeFonsUrl})` : "none",
+                            backgroundColor: newSponsor.imatgeFonsUrl ? "transparent" : "#1b3d2f",
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "space-between",
+                            padding: "10px",
+                            boxShadow: "0 6px 16px rgba(0,0,0,0.15)",
+                            color: "white"
+                          }}>
+                            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(12, 34, 20, 0.2) 0%, rgba(9, 26, 15, 0.95) 100%)", zIndex: 1 }} />
+
+                            <div style={{ position: "relative", zIndex: 2 }}>
+                              <span style={{ backgroundColor: "#ffb703", color: "#1b3d2f", fontSize: "8px", fontWeight: 800, padding: "2px 5px", borderRadius: "20px", textTransform: "uppercase" }}>
+                                Patrocinat
+                              </span>
+                            </div>
+
+                            <div style={{ position: "relative", zIndex: 2, display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: "6px" }}>
+                              <div style={{ fontWeight: 800, fontSize: "12px", lineHeight: "1.2" }}>
+                                {newSponsor.nom || "Nom del Patrocinador"}
+                              </div>
+                              {newSponsor.imatgeUrl && (
+                                <div style={{ backgroundColor: "rgba(255,255,255,0.92)", padding: "3px 5px", borderRadius: "5px", flexShrink: 0 }}>
+                                  <img src={newSponsor.imatgeUrl} alt="Logo" style={{ maxHeight: "20px", maxWidth: "50px", objectFit: "contain" }} />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>

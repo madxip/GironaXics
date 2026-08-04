@@ -12,7 +12,13 @@ import {
   deleteDbSponsor,
   deleteDbCasalsBanner,
   deleteDbCategory,
-  deleteDbSubcategory
+  deleteDbSubcategory,
+  createDbSponsor,
+  updateDbSponsor,
+  createDbCasalsBanner,
+  updateDbCasalsBanner,
+  createDbCategory,
+  createDbSubcategory
 } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -51,6 +57,69 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Tab no vàlid" }, { status: 400 });
   } catch (error) {
     console.error("[Admin Tab Data API] Error:", error);
+    return NextResponse.json({ error: "Error del servidor" }, { status: 500 });
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.isAdmin) {
+      return NextResponse.json({ error: "No autoritzat" }, { status: 401 });
+    }
+
+    const body = await req.json();
+    const { action, data } = body;
+
+    if (action === "create-sponsor") {
+      const id = await createDbSponsor(data);
+      if (id) return NextResponse.json({ success: true, id });
+    } else if (action === "create-casal") {
+      const id = await createDbCasalsBanner(
+        data.nom,
+        data.titol,
+        data.subtitol,
+        data.dataLimit,
+        data.dataInici,
+        data.dataFi
+      );
+      if (id) return NextResponse.json({ success: true, id });
+    } else if (action === "create-category") {
+      const id = await createDbCategory(data.nom, data.icona);
+      if (id) return NextResponse.json({ success: true, id });
+    } else if (action === "create-subcategory") {
+      const id = await createDbSubcategory(data.nom, data.categoria);
+      if (id) return NextResponse.json({ success: true, id });
+    }
+
+    return NextResponse.json({ error: "Acció no vàlida o error al crear" }, { status: 400 });
+  } catch (error) {
+    console.error("[Admin Tab POST API] Error:", error);
+    return NextResponse.json({ error: "Error del servidor" }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.isAdmin) {
+      return NextResponse.json({ error: "No autoritzat" }, { status: 401 });
+    }
+
+    const body = await req.json();
+    const { action, id, data } = body;
+
+    if (action === "update-sponsor") {
+      const ok = await updateDbSponsor(id, data);
+      if (ok) return NextResponse.json({ success: true });
+    } else if (action === "update-casal") {
+      const ok = await updateDbCasalsBanner(id, data);
+      if (ok) return NextResponse.json({ success: true });
+    }
+
+    return NextResponse.json({ error: "Acció no vàlida o error al modificar" }, { status: 400 });
+  } catch (error) {
+    console.error("[Admin Tab PATCH API] Error:", error);
     return NextResponse.json({ error: "Error del servidor" }, { status: 500 });
   }
 }
