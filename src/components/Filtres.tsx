@@ -82,27 +82,34 @@ function matchEdatGroup(edatStr: string | undefined, group: string): boolean {
 function formatTabLabel(text: string) {
   if (!text) return null;
   const clean = text.trim();
+  let firstWord = '';
+  let rest = '';
+
   if (clean.includes('|') || clean.includes('/') || clean.includes('\n')) {
     const parts = clean.split(/[|\/\n]/);
-    const first = parts[0].trim();
-    const rest = parts.slice(1).join(' ').trim();
-    return (
-      <>
-        {first} <span className="mobile-br-only"><br /></span>{rest}
-      </>
-    );
+    firstWord = parts[0].trim();
+    rest = parts.slice(1).join(' ').trim();
+  } else {
+    const spaceIdx = clean.indexOf(' ');
+    if (spaceIdx !== -1) {
+      firstWord = clean.substring(0, spaceIdx);
+      rest = clean.substring(spaceIdx + 1);
+    } else {
+      return clean;
+    }
   }
-  const spaceIdx = clean.indexOf(' ');
-  if (spaceIdx !== -1) {
-    const firstWord = clean.substring(0, spaceIdx);
-    const rest = clean.substring(spaceIdx + 1);
-    return (
-      <>
-        {firstWord} <span className="mobile-br-only"><br /></span>{rest}
-      </>
-    );
-  }
-  return clean;
+
+  const fullText = clean.replace(/[|\/\n]/g, ' ');
+
+  return (
+    <>
+      <span className="tab-desktop-text">{fullText}</span>
+      <span className="tab-mobile-text">
+        <span>{firstWord}</span>
+        <span>{rest}</span>
+      </span>
+    </>
+  );
 }
 
 export default function Filtres({ 
@@ -425,14 +432,14 @@ export default function Filtres({
               onClick={() => updateFilter('tipus', 'Extraescolars')}
               className={`filter-tab-button ${selectedTipus !== 'Tallers i Oci' && selectedTipus !== 'Casals' ? 'active' : ''}`}
             >
-              Extraescolars setmanals
+              {formatTabLabel('Extraescolars setmanals')}
             </button>
             <button 
               type="button"
               onClick={() => updateFilter('tipus', 'Tallers i Oci')}
               className={`filter-tab-button ${selectedTipus === 'Tallers i Oci' ? 'active' : ''}`}
             >
-              Activitats i Tallers
+              {formatTabLabel('Activitats i / Tallers')}
             </button>
             {casalsBanner && (
               <button 

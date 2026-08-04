@@ -3089,9 +3089,27 @@
     .mobile-br-only {
         display: inline !important;
     }
+    .tab-desktop-text {
+        display: none !important;
+    }
+    .tab-mobile-text {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        line-height: 1.15 !important;
+        text-align: center !important;
+    }
 }
 
 .mobile-br-only {
+    display: none;
+}
+
+.tab-desktop-text {
+    display: inline;
+}
+.tab-mobile-text {
     display: none;
 }
 
