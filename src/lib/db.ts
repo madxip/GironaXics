@@ -386,6 +386,26 @@ export async function getDbSponsors(ciutat: string = 'girona'): Promise<Sponsor[
   }));
 }
 
+export async function createDbSponsor(data: Partial<Sponsor> & { nom: string }, ciutat: string = 'girona'): Promise<string | null> {
+  if (!supabase || !data.nom) return null;
+  const id = `sp_${Math.random().toString(36).substring(2, 8)}`;
+  const record = {
+    id,
+    nom: data.nom,
+    categoria_slug: data.categoriaSlug || 'patrocinador',
+    imatge_url: data.imatgeUrl || '',
+    enllac: data.enllac || '',
+    actiu: data.actiu !== undefined ? data.actiu : true,
+    descripcio: data.descripcio || '',
+    imatge_fons_url: data.imatgeFonsUrl || '',
+    titol: data.titol || '',
+    ciutat
+  };
+  const { error } = await supabase.from('sponsors').insert([record]);
+  if (error) return null;
+  return id;
+}
+
 export async function updateDbSponsor(id: string, data: Partial<Sponsor>): Promise<boolean> {
   if (!supabase || !id) return false;
   const updates: Record<string, any> = {};
@@ -402,7 +422,29 @@ export async function updateDbSponsor(id: string, data: Partial<Sponsor>): Promi
   return !error;
 }
 
+export async function deleteDbSponsor(id: string): Promise<boolean> {
+  if (!supabase || !id) return false;
+  const { error } = await supabase.from('sponsors').delete().eq('id', id);
+  return !error;
+}
+
 // ─── 5. CASALS BANNERS ──────────────────────────────────────────────────────
+
+export async function getDbCasalsBanners(ciutat: string = 'girona'): Promise<CasalsBanner[]> {
+  if (!supabase) return [];
+  const { data, error } = await supabase.from('casals_banners').select('*').eq('ciutat', ciutat).order('nom');
+  if (error || !data) return [];
+  return data.map(r => ({
+    id: r.id,
+    nom: r.nom,
+    actiu: !!r.actiu,
+    kicker: r.kicker || '',
+    titol: r.titol || '',
+    subtitol: r.subtitol || '',
+    dates: r.dates || '',
+    dataLimit: r.data_limit || ''
+  }));
+}
 
 export async function getDbCasalsBanner(ciutat: string = 'girona'): Promise<CasalsBanner | null> {
   if (!supabase) return null;
@@ -421,6 +463,22 @@ export async function getDbCasalsBanner(ciutat: string = 'girona'): Promise<Casa
   };
 }
 
+export async function createDbCasalsBanner(nom: string, titol: string, subtitol: string, dataLimit: string, ciutat: string = 'girona'): Promise<string | null> {
+  if (!supabase || !nom) return null;
+  const id = `casal_${Math.random().toString(36).substring(2, 8)}`;
+  const { error } = await supabase.from('casals_banners').insert([{
+    id,
+    nom,
+    titol,
+    subtitol,
+    data_limit: dataLimit,
+    actiu: true,
+    ciutat
+  }]);
+  if (error) return null;
+  return id;
+}
+
 export async function updateDbCasalsBanner(id: string, data: Partial<CasalsBanner>): Promise<boolean> {
   if (!supabase || !id) return false;
   const updates: Record<string, any> = {};
@@ -435,6 +493,13 @@ export async function updateDbCasalsBanner(id: string, data: Partial<CasalsBanne
   const { error } = await supabase.from('casals_banners').update(updates).eq('id', id);
   return !error;
 }
+
+export async function deleteDbCasalsBanner(id: string): Promise<boolean> {
+  if (!supabase || !id) return false;
+  const { error } = await supabase.from('casals_banners').delete().eq('id', id);
+  return !error;
+}
+
 
 // ─── 6. USUARIS CENTRES ─────────────────────────────────────────────────────
 

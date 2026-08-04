@@ -9,7 +9,19 @@ import { Plus, Activity, ShieldCheck, Info, Lock } from "lucide-react";
 import ActivitatsTable from "./ActivitatsTable";
 import AdminDashboardTabs from "./AdminDashboardTabs";
 
-import { getAllDbActivitats, getDbActivitats, getDbCentres, getDbPoblacions, supabase } from "@/lib/db";
+import { 
+  getAllDbActivitats, 
+  getDbActivitats, 
+  getDbCentres, 
+  getDbPoblacions, 
+  getDbCategories,
+  getDbSubcategories,
+  getDbCasalsBanners,
+  getDbSponsors,
+  getDbUsuaris,
+  getDbAnalytics,
+  supabase 
+} from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +50,15 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
   // Carrega dades exclusives d'admin
   let initialCentresForAdmin: CRMCentre[] = [];
   const poblacionsGrouped: Record<string, string[]> = {};
+
+  let initialCategories: any[] = [];
+  let initialSubcategories: any[] = [];
+  let initialCasals: any[] = [];
+  let initialSponsors: any[] = [];
+  let initialUsuaris: any[] = [];
+  let initialPoblacionsList: any[] = [];
+  let initialAnalytics: any[] = [];
+
   if (isAdmin) {
     initialCentresForAdmin = await getCentresWithContacts();
     const allPoblacions = useDb ? await getDbPoblacions() : await getPoblacions();
@@ -49,6 +70,16 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
         poblacionsGrouped[p.comarca].push(p.nom);
       }
     });
+
+    if (useDb) {
+      initialCategories = await getDbCategories();
+      initialSubcategories = await getDbSubcategories();
+      initialCasals = await getDbCasalsBanners();
+      initialSponsors = await getDbSponsors();
+      initialUsuaris = await getDbUsuaris();
+      initialPoblacionsList = allPoblacions;
+      initialAnalytics = await getDbAnalytics();
+    }
   }
 
   return (
@@ -100,6 +131,13 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
           activitats={activitats}
           poblacions={poblacionsGrouped}
           initialCentreId={searchParams.centreId}
+          initialCategories={initialCategories}
+          initialSubcategories={initialSubcategories}
+          initialCasals={initialCasals}
+          initialSponsors={initialSponsors}
+          initialUsuaris={initialUsuaris}
+          initialPoblacionsList={initialPoblacionsList}
+          initialAnalytics={initialAnalytics}
         />
       ) : activitats.length === 0 ? (
         <div style={{ backgroundColor: "white", borderRadius: "16px", border: "1px solid var(--verd-pallid)", padding: "60px 40px", textAlign: "center", boxShadow: "0 10px 30px rgba(26,107,58,0.02)", maxWidth: "600px", margin: "40px auto 0" }}>
