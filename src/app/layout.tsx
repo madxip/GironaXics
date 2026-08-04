@@ -4,7 +4,6 @@ import "./globals.css";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
 import CookieBanner from "@/components/CookieBanner";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
-import { Analytics } from "@vercel/analytics/next";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -58,7 +57,6 @@ export default function RootLayout({
       <body>
         {children}
         <AnalyticsTracker />
-        <Analytics />
         <CookieBanner />
         <GoogleAnalytics />
       </body>
