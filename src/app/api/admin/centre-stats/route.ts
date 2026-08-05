@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
         .gte('created_at', since);
 
       allRecords = (dbAnalytics || [])
-        .map((r: any) => ({
+        .map((r: { id: string; event_type?: string; event_label?: string; device?: string; activitat_id?: string; activitatId?: string; created_at?: string }) => ({
           id: r.id,
           fields: {
             event_type: r.event_type,
