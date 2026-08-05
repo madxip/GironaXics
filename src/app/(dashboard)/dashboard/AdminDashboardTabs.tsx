@@ -24,7 +24,7 @@ interface AdminDashboardTabsProps {
   initialAnalytics?: any[];
 }
 
-type TabType = "centres" | "activitats" | "categories" | "casals" | "sponsors" | "usuaris" | "poblacions" | "analytics";
+type TabType = "centres" | "activitats" | "categories" | "casals" | "sponsors" | "usuaris" | "poblacions";
 
 export default function AdminDashboardTabs({ 
   initialCentres, 
@@ -49,7 +49,6 @@ export default function AdminDashboardTabs({
     { id: "sponsors", label: "Sponsors", icon: <Award size={16} /> },
     { id: "usuaris", label: "Usuaris Centres", icon: <Users size={16} /> },
     { id: "poblacions", label: "Poblacions", icon: <MapPin size={16} /> },
-    { id: "analytics", label: "Analytics", icon: <BarChart2 size={16} /> },
   ];
 
   return (

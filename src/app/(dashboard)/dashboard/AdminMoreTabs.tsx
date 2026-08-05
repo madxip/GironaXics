@@ -27,7 +27,7 @@ import ImageCropperModal from "@/components/ImageCropperModal";
 import { CRMCentre } from "@/lib/crm";
 
 interface AdminMoreTabsProps {
-  tab: "categories" | "casals" | "sponsors" | "usuaris" | "poblacions" | "analytics";
+  tab: "categories" | "casals" | "sponsors" | "usuaris" | "poblacions";
   initialCategories?: any[];
   initialSubcategories?: any[];
   initialCasals?: any[];
