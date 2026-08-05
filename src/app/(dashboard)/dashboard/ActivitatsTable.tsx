@@ -18,6 +18,7 @@ export default function ActivitatsTable({ activitats, isAdmin }: Props) {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const [selectedCentreFilter, setSelectedCentreFilter] = useState("Tots");
+  const [sortOrder, setSortOrder] = useState<"recents" | "antics" | "nom">("recents");
 
   // Llista de tots els centres únics de les activitats
   const uniqueCentres = useMemo(() => {
@@ -26,10 +27,10 @@ export default function ActivitatsTable({ activitats, isAdmin }: Props) {
     return Array.from(set).sort();
   }, [activitats]);
 
-  // Filtre de cerca i centre
+  // Filtre de cerca, centre i ordenació (més noves primer per defecte)
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
-    return activitats.filter(a => {
+    const list = activitats.filter(a => {
       const matchQuery = !q || (
         (a.nom && a.nom.toLowerCase().includes(q)) ||
         (a.centre && a.centre.toLowerCase().includes(q))
@@ -37,7 +38,18 @@ export default function ActivitatsTable({ activitats, isAdmin }: Props) {
       const matchCentre = selectedCentreFilter === "Tots" || a.centre === selectedCentreFilter;
       return matchQuery && matchCentre;
     });
-  }, [activitats, query, selectedCentreFilter]);
+
+    return list.sort((a, b) => {
+      if (sortOrder === "nom") {
+        return (a.nom || "").localeCompare(b.nom || "", "ca");
+      } else if (sortOrder === "antics") {
+        return (a.id || "").localeCompare(b.id || "");
+      } else {
+        // "recents": Més recents primer (ID / creació descendent)
+        return (b.id || "").localeCompare(a.id || "");
+      }
+    });
+  }, [activitats, query, selectedCentreFilter, sortOrder]);
 
   // Paginació
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
@@ -110,6 +122,28 @@ export default function ActivitatsTable({ activitats, isAdmin }: Props) {
             aria-label="Cerca activitats"
           />
         </div>
+
+        {/* Selector d'Ordenació */}
+        <select
+          value={sortOrder}
+          onChange={e => { setSortOrder(e.target.value as any); setPage(1); }}
+          style={{
+            padding: "12px 14px",
+            borderRadius: "10px",
+            border: "1px solid rgba(26,107,58,0.2)",
+            fontSize: "14px",
+            color: "var(--fosc)",
+            backgroundColor: "white",
+            outline: "none",
+            cursor: "pointer",
+            minWidth: "180px"
+          }}
+        >
+          <option value="recents">🆕 Més recents primer</option>
+          <option value="antics">⏳ Més antics primer</option>
+          <option value="nom">🔤 Nom (A-Z)</option>
+        </select>
+
         {isAdmin && (
           <select
             value={selectedCentreFilter}

@@ -60,6 +60,43 @@ export default function AdminMoreTabs({
 
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
+  const [sortOrder, setSortOrder] = useState<"recents" | "antics" | "nom">("recents");
+
+  const sortedCategories = React.useMemo(() => {
+    return [...categories].sort((a, b) => {
+      if (sortOrder === "nom") return (a.nom || "").localeCompare(b.nom || "", "ca");
+      if (sortOrder === "antics") return (a.id || "").localeCompare(b.id || "");
+      return (b.id || "").localeCompare(a.id || "");
+    });
+  }, [categories, sortOrder]);
+
+  const sortedCasals = React.useMemo(() => {
+    return [...casals].sort((a, b) => {
+      if (sortOrder === "nom") return (a.nom || "").localeCompare(b.nom || "", "ca");
+      if (sortOrder === "antics") return (a.id || "").localeCompare(b.id || "");
+      return (b.id || "").localeCompare(a.id || "");
+    });
+  }, [casals, sortOrder]);
+
+  const sortedSponsors = React.useMemo(() => {
+    return [...sponsors].sort((a, b) => {
+      if (sortOrder === "nom") return (a.nom || "").localeCompare(b.nom || "", "ca");
+      if (sortOrder === "antics") return (a.id || "").localeCompare(b.id || "");
+      return (b.id || "").localeCompare(a.id || "");
+    });
+  }, [sponsors, sortOrder]);
+
+  const sortedUsuaris = React.useMemo(() => {
+    return [...usuaris].sort((a, b) => {
+      const aPending = !a.aprovat && !a.isAdmin;
+      const bPending = !b.aprovat && !b.isAdmin;
+      if (aPending && !bPending) return -1;
+      if (!aPending && bPending) return 1;
+      if (sortOrder === "nom") return (a.nom || a.email || "").localeCompare(b.nom || b.email || "", "ca");
+      if (sortOrder === "antics") return (a.id || "").localeCompare(b.id || "");
+      return (b.id || "").localeCompare(a.id || "");
+    });
+  }, [usuaris, sortOrder]);
 
   // Estats per creació de categories i subcategories
   const [newCatName, setNewCatName] = useState("");
@@ -527,9 +564,29 @@ export default function AdminMoreTabs({
       {/* 3. SECCIÓ SPONSORS */}
       {tab === "sponsors" && (
         <div>
-          <h3 style={{ fontSize: "20px", fontFamily: "var(--font-serif)", fontStyle: "italic", color: "var(--verd-fosc)", marginBottom: "16px" }}>
-            🏆 Patrocinadors i Sponsors ({sponsors.length})
-          </h3>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "12px" }}>
+            <h3 style={{ fontSize: "20px", fontFamily: "var(--font-serif)", fontStyle: "italic", color: "var(--verd-fosc)", margin: 0 }}>
+              🏆 Patrocinadors i Sponsors ({sponsors.length})
+            </h3>
+            <select
+              value={sortOrder}
+              onChange={e => setSortOrder(e.target.value as any)}
+              style={{
+                padding: "8px 12px",
+                borderRadius: "8px",
+                border: "1px solid rgba(26,107,58,0.2)",
+                fontSize: "13px",
+                color: "var(--fosc)",
+                backgroundColor: "white",
+                outline: "none",
+                cursor: "pointer"
+              }}
+            >
+              <option value="recents">🆕 Més recents primer</option>
+              <option value="antics">⏳ Més antics primer</option>
+              <option value="nom">🔤 Nom (A-Z)</option>
+            </select>
+          </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "28px" }}>
             {/* FORMULARI CREAR SPONSOR */}
@@ -833,7 +890,7 @@ export default function AdminMoreTabs({
 
             {/* LLISTAT DE SPONSORS */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "16px", alignContent: "start" }}>
-              {sponsors.map(s => (
+              {sortedSponsors.map(s => (
                 <div key={s.id} style={{ border: "1px solid #eee", padding: "16px", borderRadius: "12px", background: "white" }}>
                   <div style={{ fontWeight: 700, fontSize: "16px", marginBottom: "4px" }}>{s.nom}</div>
                   <div style={{ fontSize: "12px", color: "var(--muted)", marginBottom: "8px" }}>{s.categoriaSlug}</div>
@@ -863,6 +920,24 @@ export default function AdminMoreTabs({
             <h3 style={{ fontSize: "20px", fontFamily: "var(--font-serif)", fontStyle: "italic", color: "var(--verd-fosc)", margin: 0 }}>
               👤 Comptes d'Accés i Acceptació de Centres ({usuaris.length})
             </h3>
+            <select
+              value={sortOrder}
+              onChange={e => setSortOrder(e.target.value as any)}
+              style={{
+                padding: "8px 12px",
+                borderRadius: "8px",
+                border: "1px solid rgba(26,107,58,0.2)",
+                fontSize: "13px",
+                color: "var(--fosc)",
+                backgroundColor: "white",
+                outline: "none",
+                cursor: "pointer"
+              }}
+            >
+              <option value="recents">🆕 Més recents primer</option>
+              <option value="antics">⏳ Més antics primer</option>
+              <option value="nom">🔤 Nom (A-Z)</option>
+            </select>
           </div>
 
           {/* Banner si hi ha usuaris pendents */}
@@ -887,7 +962,7 @@ export default function AdminMoreTabs({
                 </tr>
               </thead>
               <tbody>
-                {usuaris.map(u => {
+                {sortedUsuaris.map(u => {
                   const isPending = !u.aprovat && !u.isAdmin;
                   return (
                     <tr key={u.id} style={{ borderBottom: "1px solid #f0f0f0", backgroundColor: isPending ? "#fffbeb" : "transparent" }}>

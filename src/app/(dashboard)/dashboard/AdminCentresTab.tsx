@@ -106,17 +106,31 @@ export default function AdminCentresTab({ initialCentres, poblacions, initialCen
   const [isUploadingEdit, setIsUploadingEdit] = useState(false);
   const editFileInputRef = useRef<HTMLInputElement>(null);
 
-  // Filtered centres
-  const filteredCentres = centres.filter(c => {
+  const [sortOrder, setSortOrder] = useState<"recents" | "antics" | "nom">("recents");
+
+  // Filtered and sorted centres (més recents primer per defecte)
+  const filteredCentres = React.useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
-    if (!query) return true;
-    return (
-      (c.nom || "").toLowerCase().includes(query) ||
-      (c.barri || "").toLowerCase().includes(query) ||
-      (c.email || "").toLowerCase().includes(query) ||
-      (c.telefon || "").toLowerCase().includes(query)
-    );
-  });
+    const list = centres.filter(c => {
+      if (!query) return true;
+      return (
+        (c.nom || "").toLowerCase().includes(query) ||
+        (c.barri || "").toLowerCase().includes(query) ||
+        (c.email || "").toLowerCase().includes(query) ||
+        (c.telefon || "").toLowerCase().includes(query)
+      );
+    });
+
+    return list.sort((a, b) => {
+      if (sortOrder === "nom") {
+        return (a.nom || "").localeCompare(b.nom || "", "ca");
+      } else if (sortOrder === "antics") {
+        return (a.id || "").localeCompare(b.id || "");
+      } else {
+        return (b.id || "").localeCompare(a.id || "");
+      }
+    });
+  }, [centres, searchQuery, sortOrder]);
 
   // Auto-obre el centre si ve des del formulari d'activitat
   React.useEffect(() => {
@@ -370,24 +384,47 @@ export default function AdminCentresTab({ initialCentres, poblacions, initialCen
         <>
           {/* Cercador i afegir centre */}
           <div style={{ display: "flex", gap: "16px", marginBottom: "24px", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ position: "relative", flex: "1", minWidth: "280px", maxWidth: "480px" }}>
-              <Search size={18} style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--muted)" }} />
-              <input 
-                type="text" 
-                placeholder="Cerca centre per nom, barri, telèfon..." 
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
+            <div style={{ display: "flex", gap: "12px", flex: "1", minWidth: "280px", maxWidth: "680px", flexWrap: "wrap" }}>
+              <div style={{ position: "relative", flex: "1", minWidth: "260px" }}>
+                <Search size={18} style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--muted)" }} />
+                <input 
+                  type="text" 
+                  placeholder="Cerca centre per nom, barri, telèfon..." 
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "12px 16px 12px 42px",
+                    borderRadius: "10px",
+                    border: "1px solid var(--crema-fosca)",
+                    fontSize: "14px",
+                    outline: "none",
+                    backgroundColor: "white",
+                    color: "var(--fosc)"
+                  }}
+                />
+              </div>
+
+              {/* Selector d'ordenació de centres */}
+              <select
+                value={sortOrder}
+                onChange={e => setSortOrder(e.target.value as any)}
                 style={{
-                  width: "100%",
-                  padding: "12px 16px 12px 42px",
+                  padding: "12px 14px",
                   borderRadius: "10px",
                   border: "1px solid var(--crema-fosca)",
                   fontSize: "14px",
-                  outline: "none",
+                  color: "var(--fosc)",
                   backgroundColor: "white",
-                  color: "var(--fosc)"
+                  outline: "none",
+                  cursor: "pointer",
+                  minWidth: "180px"
                 }}
-              />
+              >
+                <option value="recents">🆕 Més recents primer</option>
+                <option value="antics">⏳ Més antics primer</option>
+                <option value="nom">🔤 Nom (A-Z)</option>
+              </select>
             </div>
             <button 
               onClick={() => setIsAddModalOpen(true)}

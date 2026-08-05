@@ -41,13 +41,15 @@ export default function AdminDashboardTabs({
 }: AdminDashboardTabsProps) {
   const [activeTab, setActiveTab] = useState<TabType>("centres");
 
-  const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
+  const pendingUsuarisCount = (initialUsuaris || []).filter((u: any) => !u.aprovat && !u.isAdmin).length;
+
+  const tabs: { id: TabType; label: string; icon: React.ReactNode; badge?: number }[] = [
     { id: "centres", label: "Centres", icon: <Building size={16} /> },
     { id: "activitats", label: "Activitats", icon: <Activity size={16} /> },
     { id: "categories", label: "Categories", icon: <Tag size={16} /> },
     { id: "casals", label: "Casals", icon: <Sun size={16} /> },
     { id: "sponsors", label: "Sponsors", icon: <Award size={16} /> },
-    { id: "usuaris", label: "Usuaris Centres", icon: <Users size={16} /> },
+    { id: "usuaris", label: "Usuaris Centres", icon: <Users size={16} />, badge: pendingUsuarisCount },
     { id: "poblacions", label: "Poblacions", icon: <MapPin size={16} /> },
   ];
 
@@ -88,6 +90,21 @@ export default function AdminDashboardTabs({
               }}
             >
               {t.icon} {t.label}
+              {t.badge && t.badge > 0 ? (
+                <span style={{
+                  backgroundColor: "#d97706",
+                  color: "white",
+                  fontSize: "11px",
+                  fontWeight: 800,
+                  borderRadius: "20px",
+                  padding: "2px 7px",
+                  marginLeft: "4px",
+                  fontStyle: "normal",
+                  boxShadow: "0 2px 4px rgba(217, 119, 6, 0.3)"
+                }}>
+                  🔔 {t.badge}
+                </span>
+              ) : null}
             </button>
           ))}
         </div>
