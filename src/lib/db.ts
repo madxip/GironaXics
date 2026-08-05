@@ -675,6 +675,25 @@ export async function getDbUserByEmail(email: string) {
   };
 }
 
+export async function getDbUserById(id: string): Promise<UserRecord | null> {
+  if (!supabase || !id) return null;
+  const { data, error } = await supabase.from('usuaris_centres').select('*').eq('id', id).single();
+  if (error || !data) return null;
+  const centres = await getDbCentres();
+  const centreMap = new Map(centres.map(c => [c.id || '', c.nom]));
+
+  return {
+    id: data.id,
+    email: data.email,
+    nom: data.nom || '',
+    centreId: data.centre_id || '',
+    nomCentre: centreMap.get(data.centre_id || '') || 'Sense centre',
+    passwordHash: data.password_hash || '',
+    aprovat: data.aprovat !== undefined ? !!data.aprovat : false,
+    isAdmin: !!data.is_admin
+  };
+}
+
 export async function updateDbUsuariAprovat(id: string, aprovat: boolean): Promise<boolean> {
   if (!supabase || !id) return false;
   const { error } = await supabase.from('usuaris_centres').update({ aprovat }).eq('id', id);

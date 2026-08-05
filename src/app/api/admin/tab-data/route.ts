@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import { sendApprovalEmail } from "@/app/actions/sendEmail";
 import { 
   getDbCategories, 
   getDbSubcategories, 
@@ -9,6 +10,8 @@ import {
   getDbUsuaris, 
   getDbPoblacions, 
   getDbAnalytics,
+  getDbUserById,
+  updateDbCentre,
   deleteDbSponsor,
   deleteDbCasalsBanner,
   deleteDbCategory,
@@ -126,6 +129,23 @@ export async function PATCH(req: NextRequest) {
       if (ok) return NextResponse.json({ success: true });
     } else if (action === "update-user-aprovat") {
       const ok = await updateDbUsuariAprovat(id, data.aprovat);
+      if (ok && data.aprovat) {
+        try {
+          const user = await getDbUserById(id);
+          if (user && user.email) {
+            if (user.centreId) {
+              await updateDbCentre(user.centreId, { actiu: true, interessat: true });
+            }
+            await sendApprovalEmail({
+              email: user.email,
+              nom: user.nom || user.email.split('@')[0],
+              centreNom: user.nomCentre || 'GironaXics'
+            });
+          }
+        } catch (err) {
+          console.error("[Approval Email] Error al processar l'aprovació i enviament de correu:", err);
+        }
+      }
       if (ok) return NextResponse.json({ success: true });
     } else if (action === "update-user-centre") {
       const ok = await updateDbUsuariCentre(id, data.centreId);
