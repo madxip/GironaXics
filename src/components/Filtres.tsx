@@ -561,7 +561,7 @@ export default function Filtres({
                         .sponsor-card-premium {
                           display: flex;
                           flex-direction: column;
-                          justify-content: flex-end;
+                          justify-content: space-between;
                           min-height: 380px;
                           border-radius: 20px;
                           position: relative;
@@ -569,6 +569,7 @@ export default function Filtres({
                           text-decoration: none;
                           color: white;
                           border: 1px solid rgba(9, 26, 15, 0.35);
+                          background-image: var(--bg-desktop);
                           background-size: cover;
                           background-position: center;
                           background-repeat: no-repeat;
@@ -771,6 +772,7 @@ export default function Filtres({
                         @media (max-width: 768px) {
                           .sponsor-card-premium {
                             min-height: 320px;
+                            background-image: var(--bg-mobile);
                           }
                           .sponsor-premium-title {
                             font-size: 26px;
@@ -821,41 +823,42 @@ export default function Filtres({
                             className="sponsor-card-premium hoverable"
                             onClick={() => handleSponsorClick(activeSponsor.nom)}
                             style={{
-                              backgroundImage: activeSponsor.imatgeFonsUrl 
-                                ? `url(${activeSponsor.imatgeFonsUrl})` 
-                                : `linear-gradient(135deg, #091a10 0%, #0c2214 50%, #112d1b 100%)`,
+                              '--bg-desktop': activeSponsor.imatgeFonsUrl ? `url(${activeSponsor.imatgeFonsUrl})` : `linear-gradient(135deg, #091a10 0%, #0c2214 50%, #112d1b 100%)`,
+                              '--bg-mobile': (activeSponsor.imatgeFonsMobilUrl || activeSponsor.imatgeFonsUrl) ? `url(${activeSponsor.imatgeFonsMobilUrl || activeSponsor.imatgeFonsUrl})` : `linear-gradient(135deg, #091a10 0%, #0c2214 50%, #112d1b 100%)`,
                               backgroundPosition: activeSponsor.posicioFons || 'center',
-                            }}
+                            } as React.CSSProperties}
                           >
                             {/* Fons fosc per llegibilitat */}
                             <div className="sponsor-card-overlay"></div>
                             
-                            {/* Badge superior: PATROCINAT · CATEGORIA */}
-                            <div className="sponsor-top-badge">
-                              {selectedCategoria === 'Totes' ? 'PATROCINAT' : `PATROCINAT · ${selectedCategoria.toUpperCase()}`}
+                            {/* Badge superior: PATROCINAT */}
+                            <div className="sponsor-top-badge" style={{ backgroundColor: '#ffb703', color: '#1b3d2f', fontWeight: 800, letterSpacing: '0.05em' }}>
+                              PATROCINAT
                             </div>
                             
                             {/* Contingut del patrocinador */}
                             <div className="sponsor-premium-content">
-                               <h3 className="sponsor-premium-title">
-                                 {activeSponsor.titol || `Mou-te amb ${activeSponsor.nom}`}
-                               </h3>
-                              {activeSponsor.descripcio ? (
+                              <h3 className="sponsor-premium-title" style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: '22px', color: 'white', lineHeight: '1.2' }}>
+                                {activeSponsor.titol || `Serveis d'animació per aniversaris i festes infantils`}
+                              </h3>
+                              {activeSponsor.descripcio && (
                                 <p className="sponsor-premium-desc">{activeSponsor.descripcio}</p>
-                              ) : selectedCategoria !== 'Totes' ? (
-                                <p className="sponsor-premium-desc">{`El partner d'${selectedCategoria} a GironaXics. Troba tot el que necessites per a les teves activitats.`}</p>
-                              ) : null}
+                              )}
                               
-                              {/* Fila de botons inferiors */}
+                              {/* Pill inferior de logo + nom */}
                               <div className="sponsor-buttons-row">
-                                <div className="sponsor-logo-pill">
-                                  {activeSponsor.imatgeUrl && (
-                                    <div className="sponsor-logo-icon">
+                                <div className="sponsor-logo-pill" style={{ backgroundColor: '#fdfbf7', borderRadius: '100px', padding: '6px 14px 6px 6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  {activeSponsor.imatgeUrl ? (
+                                    <div className="sponsor-logo-icon" style={{ width: '32px', height: '32px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0 }}>
                                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                                      <img src={activeSponsor.imatgeUrl} alt="" />
+                                      <img src={activeSponsor.imatgeUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                     </div>
+                                  ) : (
+                                    <div className="sponsor-logo-icon" style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'var(--verd)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '12px' }}>★</div>
                                   )}
-                                  <span className="sponsor-logo-text">{activeSponsor.nom.toUpperCase()}</span>
+                                  <span className="sponsor-logo-text" style={{ fontWeight: 800, fontSize: '11px', color: '#1b3d2f', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                                    {activeSponsor.nom.toUpperCase()}
+                                  </span>
                                 </div>
                               </div>
                             </div>

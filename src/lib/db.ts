@@ -446,6 +446,7 @@ export async function getDbSponsors(ciutat: string = 'girona'): Promise<Sponsor[
     actiu: !!r.actiu,
     descripcio: r.descripcio || '',
     imatgeFonsUrl: r.imatge_fons_url || '',
+    imatgeFonsMobilUrl: r.imatge_fons_mobil_url || '',
     titol: r.titol || '',
     posicioFons: r.posicio_fons || '',
   }));
@@ -463,6 +464,7 @@ export async function createDbSponsor(data: Partial<Sponsor> & { nom: string }, 
     actiu: data.actiu !== undefined ? data.actiu : true,
     descripcio: data.descripcio || '',
     imatge_fons_url: data.imatgeFonsUrl || '',
+    imatge_fons_mobil_url: data.imatgeFonsMobilUrl || '',
     titol: data.titol || '',
     ciutat
   };
@@ -481,6 +483,7 @@ export async function updateDbSponsor(id: string, data: Partial<Sponsor>): Promi
   if (data.actiu !== undefined) updates.actiu = data.actiu;
   if (data.descripcio !== undefined) updates.descripcio = data.descripcio;
   if (data.imatgeFonsUrl !== undefined) updates.imatge_fons_url = data.imatgeFonsUrl;
+  if (data.imatgeFonsMobilUrl !== undefined) updates.imatge_fons_mobil_url = data.imatgeFonsMobilUrl;
   if (data.titol !== undefined) updates.titol = data.titol;
 
   const { error } = await supabase.from('sponsors').update(updates).eq('id', id);

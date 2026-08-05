@@ -79,9 +79,10 @@ export default function AdminMoreTabs({
   // Estats per formulari de Sponsors
   const [newSponsor, setNewSponsor] = useState({
     nom: "",
-    categoriaSlug: "patrocinador",
+    categoriaSlug: "general",
     imatgeUrl: "",
     imatgeFonsUrl: "",
+    imatgeFonsMobilUrl: "",
     enllac: "",
     actiu: true,
     descripcio: "",
@@ -90,6 +91,8 @@ export default function AdminMoreTabs({
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingBg, setUploadingBg] = useState(false);
   const [cropperImageSrc, setCropperImageSrc] = useState<string | null>(null);
+  const [cropperAspect, setCropperAspect] = useState<number>(3 / 4);
+  const [cropperTargetField, setCropperTargetField] = useState<'desktop' | 'mobile'>('desktop');
 
   useEffect(() => {
     loadData();
@@ -567,10 +570,23 @@ export default function AdminMoreTabs({
 
                 <div>
                   <label style={{ display: "block", fontSize: "13px", fontWeight: 700, marginBottom: "4px" }}>
-                    Imatge de Fons / Banner (Pujar i Retallar)
+                    Text Promocional del Banner (Frase en Cursiva)
                   </label>
-                  
-                  <div style={{ marginBottom: "8px" }}>
+                  <input
+                    type="text"
+                    placeholder="Ex: Serveis d'animació per aniversaris i festes infantils"
+                    value={newSponsor.titol}
+                    onChange={e => setNewSponsor({ ...newSponsor, titol: e.target.value })}
+                    style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #ccc" }}
+                  />
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                  {/* Fons Desktop 3:4 */}
+                  <div>
+                    <label style={{ display: "block", fontSize: "12px", fontWeight: 700, marginBottom: "4px" }}>
+                      🖥️ Fons Desktop (3:4)
+                    </label>
                     <input
                       type="file"
                       accept="image/*"
@@ -581,121 +597,172 @@ export default function AdminMoreTabs({
                         reader.onload = () => {
                           if (typeof reader.result === 'string') {
                             setCropperImageSrc(reader.result);
+                            setCropperAspect(3 / 4);
+                            setCropperTargetField('desktop');
                           }
                         };
                         reader.readAsDataURL(file);
                         e.target.value = "";
                       }}
-                      style={{ width: "100%", padding: "6px 10px", borderRadius: "6px", border: "1px solid #ccc", background: "white", fontSize: "13px" }}
+                      style={{ width: "100%", padding: "5px 8px", borderRadius: "6px", border: "1px solid #ccc", background: "white", fontSize: "12px" }}
                     />
-                    {uploadingBg && <div style={{ fontSize: "12px", color: "var(--verd)", fontWeight: 600, marginTop: "4px" }}>⏳ Pujant fons retallat a Supabase...</div>}
+                    <input
+                      type="text"
+                      placeholder="URL fons desktop..."
+                      value={newSponsor.imatgeFonsUrl}
+                      onChange={e => setNewSponsor({ ...newSponsor, imatgeFonsUrl: e.target.value })}
+                      style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid #ccc", marginTop: "4px", fontSize: "11px" }}
+                    />
                   </div>
 
-                  <input
-                    type="text"
-                    placeholder="o URL de fons https://..."
-                    value={newSponsor.imatgeFonsUrl}
-                    onChange={e => setNewSponsor({ ...newSponsor, imatgeFonsUrl: e.target.value })}
-                    style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #ccc" }}
-                  />
+                  {/* Fons Mòbil 4:3 */}
+                  <div>
+                    <label style={{ display: "block", fontSize: "12px", fontWeight: 700, marginBottom: "4px" }}>
+                      📱 Fons Mòbil (4:3)
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          if (typeof reader.result === 'string') {
+                            setCropperImageSrc(reader.result);
+                            setCropperAspect(4 / 3);
+                            setCropperTargetField('mobile');
+                          }
+                        };
+                        reader.readAsDataURL(file);
+                        e.target.value = "";
+                      }}
+                      style={{ width: "100%", padding: "5px 8px", borderRadius: "6px", border: "1px solid #ccc", background: "white", fontSize: "12px" }}
+                    />
+                    <input
+                      type="text"
+                      placeholder="URL fons mòbil..."
+                      value={newSponsor.imatgeFonsMobilUrl}
+                      onChange={e => setNewSponsor({ ...newSponsor, imatgeFonsMobilUrl: e.target.value })}
+                      style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid #ccc", marginTop: "4px", fontSize: "11px" }}
+                    />
+                  </div>
+                </div>
 
-                  {/* PREVISUALITZACIÓ DUAL DESKTOP I MÒBIL */}
-                  {(newSponsor.imatgeUrl || newSponsor.imatgeFonsUrl || newSponsor.nom) && (
-                    <div style={{ marginTop: "12px", padding: "14px", background: "white", borderRadius: "12px", border: "1px solid #e0e0e0" }}>
-                      <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--verd)", marginBottom: "10px" }}>
-                        👁️ Previsualització en temps real (Com es veurà al web):
-                      </div>
+                {/* PREVISUALITZACIÓ DUAL DESKTOP I MÒBIL */}
+                {(newSponsor.imatgeUrl || newSponsor.imatgeFonsUrl || newSponsor.imatgeFonsMobilUrl || newSponsor.nom || newSponsor.titol) && (
+                  <div style={{ marginTop: "12px", padding: "14px", background: "white", borderRadius: "12px", border: "1px solid #e0e0e0" }}>
+                    <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--verd)", marginBottom: "10px" }}>
+                      👁️ Previsualització en temps real (Disseny idèntic al web):
+                    </div>
 
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
-                        {/* MODEL DESKTOP (3:4 Vertical) */}
-                        <div>
-                          <div style={{ fontSize: "10px", fontWeight: 800, color: "#666", marginBottom: "6px", textTransform: "uppercase" }}>
-                            🖥️ Desktop (Vertical 3:4)
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+                      {/* MODEL DESKTOP (Vertical 3:4) */}
+                      <div>
+                        <div style={{ fontSize: "10px", fontWeight: 800, color: "#666", marginBottom: "6px", textTransform: "uppercase" }}>
+                          🖥️ Desktop (3:4)
+                        </div>
+                        <div style={{
+                          width: "100%",
+                          aspectRatio: "3/4",
+                          borderRadius: "18px",
+                          position: "relative",
+                          overflow: "hidden",
+                          backgroundImage: newSponsor.imatgeFonsUrl ? `url(${newSponsor.imatgeFonsUrl})` : "none",
+                          backgroundColor: newSponsor.imatgeFonsUrl ? "transparent" : "#1b3d2f",
+                          backgroundSize: "cover",
+                          backgroundPosition: "center",
+                          display: "flex",
+                          flexDirection: "column",
+                          justifyContent: "space-between",
+                          padding: "14px",
+                          boxShadow: "0 8px 20px rgba(0,0,0,0.2)",
+                          color: "white"
+                        }}>
+                          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(12, 34, 20, 0.15) 0%, rgba(12, 34, 20, 0.4) 40%, rgba(9, 26, 15, 0.95) 100%)", zIndex: 1 }} />
+                          
+                          {/* Top Badge PATROCINAT */}
+                          <div style={{ position: "relative", zIndex: 2 }}>
+                            <span style={{ backgroundColor: "#ffb703", color: "#1b3d2f", fontSize: "9px", fontWeight: 800, padding: "4px 9px", borderRadius: "20px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                              PATROCINAT
+                            </span>
                           </div>
-                          <div style={{
-                            width: "100%",
-                            aspectRatio: "3/4",
-                            borderRadius: "14px",
-                            position: "relative",
-                            overflow: "hidden",
-                            backgroundImage: newSponsor.imatgeFonsUrl ? `url(${newSponsor.imatgeFonsUrl})` : "none",
-                            backgroundColor: newSponsor.imatgeFonsUrl ? "transparent" : "#1b3d2f",
-                            backgroundSize: "cover",
-                            backgroundPosition: "center",
-                            display: "flex",
-                            flexDirection: "column",
-                            justifyContent: "space-between",
-                            padding: "12px",
-                            boxShadow: "0 6px 16px rgba(0,0,0,0.15)",
-                            color: "white"
-                          }}>
-                            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(12, 34, 20, 0.1) 0%, rgba(12, 34, 20, 0.4) 40%, rgba(9, 26, 15, 0.95) 100%)", zIndex: 1 }} />
-                            
-                            <div style={{ position: "relative", zIndex: 2 }}>
-                              <span style={{ backgroundColor: "#ffb703", color: "#1b3d2f", fontSize: "8px", fontWeight: 800, padding: "3px 6px", borderRadius: "20px", textTransform: "uppercase" }}>
-                                Patrocinat
-                              </span>
+
+                          {/* Main Title + Bottom Pill */}
+                          <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", gap: "12px" }}>
+                            <div style={{ fontFamily: "var(--font-serif)", fontStyle: "italic", fontWeight: 700, fontSize: "16px", lineHeight: "1.25", color: "white", textShadow: "0 2px 4px rgba(0,0,0,0.5)" }}>
+                              {newSponsor.titol || newSponsor.nom || "Serveis d'animació per aniversaris i festes infantils"}
                             </div>
 
-                            <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", gap: "6px" }}>
-                              {newSponsor.imatgeUrl && (
-                                <div style={{ backgroundColor: "rgba(255,255,255,0.92)", padding: "4px 6px", borderRadius: "6px", width: "fit-content", display: "flex", alignItems: "center" }}>
-                                  <img src={newSponsor.imatgeUrl} alt="Logo" style={{ maxHeight: "24px", maxWidth: "70px", objectFit: "contain" }} />
-                                </div>
+                            {/* Bottom Pill Container */}
+                            <div style={{ backgroundColor: "#fdfbf7", borderRadius: "100px", padding: "4px 12px 4px 4px", display: "flex", alignItems: "center", gap: "8px", width: "fit-content", maxWidth: "100%" }}>
+                              {newSponsor.imatgeUrl ? (
+                                <img src={newSponsor.imatgeUrl} alt="Logo" style={{ width: "24px", height: "24px", borderRadius: "50%", objectFit: "cover" }} />
+                              ) : (
+                                <div style={{ width: "24px", height: "24px", borderRadius: "50%", backgroundColor: "var(--verd)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", fontWeight: 800 }}>★</div>
                               )}
-                              <div style={{ fontWeight: 800, fontSize: "13px", lineHeight: "1.2" }}>
-                                {newSponsor.nom || "Nom del Patrocinador"}
-                              </div>
+                              <span style={{ fontWeight: 800, fontSize: "9px", color: "var(--verd-fosc)", letterSpacing: "0.05em", textTransform: "uppercase", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                {newSponsor.nom || "ANIMACIÓ INFANTIL"}
+                              </span>
                             </div>
                           </div>
                         </div>
+                      </div>
 
-                        {/* MODEL MÒBIL (Horitzontal) */}
-                        <div>
-                          <div style={{ fontSize: "10px", fontWeight: 800, color: "#666", marginBottom: "6px", textTransform: "uppercase" }}>
-                            📱 Mòbil (Horitzontal)
+                      {/* MODEL MÒBIL (Horitzontal 4:3) */}
+                      <div>
+                        <div style={{ fontSize: "10px", fontWeight: 800, color: "#666", marginBottom: "6px", textTransform: "uppercase" }}>
+                          📱 Mòbil (4:3)
+                        </div>
+                        <div style={{
+                          width: "100%",
+                          aspectRatio: "4/3",
+                          borderRadius: "18px",
+                          position: "relative",
+                          overflow: "hidden",
+                          backgroundImage: (newSponsor.imatgeFonsMobilUrl || newSponsor.imatgeFonsUrl) ? `url(${newSponsor.imatgeFonsMobilUrl || newSponsor.imatgeFonsUrl})` : "none",
+                          backgroundColor: "#1b3d2f",
+                          backgroundSize: "cover",
+                          backgroundPosition: "center",
+                          display: "flex",
+                          flexDirection: "column",
+                          justifyContent: "space-between",
+                          padding: "12px",
+                          boxShadow: "0 8px 20px rgba(0,0,0,0.2)",
+                          color: "white"
+                        }}>
+                          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(12, 34, 20, 0.2) 0%, rgba(9, 26, 15, 0.95) 100%)", zIndex: 1 }} />
+
+                          {/* Top Badge PATROCINAT */}
+                          <div style={{ position: "relative", zIndex: 2 }}>
+                            <span style={{ backgroundColor: "#ffb703", color: "#1b3d2f", fontSize: "8px", fontWeight: 800, padding: "3px 7px", borderRadius: "20px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                              PATROCINAT
+                            </span>
                           </div>
-                          <div style={{
-                            width: "100%",
-                            height: "140px",
-                            borderRadius: "14px",
-                            position: "relative",
-                            overflow: "hidden",
-                            backgroundImage: newSponsor.imatgeFonsUrl ? `url(${newSponsor.imatgeFonsUrl})` : "none",
-                            backgroundColor: newSponsor.imatgeFonsUrl ? "transparent" : "#1b3d2f",
-                            backgroundSize: "cover",
-                            backgroundPosition: "center",
-                            display: "flex",
-                            flexDirection: "column",
-                            justifyContent: "space-between",
-                            padding: "10px",
-                            boxShadow: "0 6px 16px rgba(0,0,0,0.15)",
-                            color: "white"
-                          }}>
-                            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(12, 34, 20, 0.2) 0%, rgba(9, 26, 15, 0.95) 100%)", zIndex: 1 }} />
 
-                            <div style={{ position: "relative", zIndex: 2 }}>
-                              <span style={{ backgroundColor: "#ffb703", color: "#1b3d2f", fontSize: "8px", fontWeight: 800, padding: "2px 5px", borderRadius: "20px", textTransform: "uppercase" }}>
-                                Patrocinat
-                              </span>
+                          {/* Main Title + Bottom Pill */}
+                          <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", gap: "8px" }}>
+                            <div style={{ fontFamily: "var(--font-serif)", fontStyle: "italic", fontWeight: 700, fontSize: "13px", lineHeight: "1.2", color: "white", textShadow: "0 2px 4px rgba(0,0,0,0.5)" }}>
+                              {newSponsor.titol || newSponsor.nom || "Serveis d'animació..."}
                             </div>
 
-                            <div style={{ position: "relative", zIndex: 2, display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: "6px" }}>
-                              <div style={{ fontWeight: 800, fontSize: "12px", lineHeight: "1.2" }}>
-                                {newSponsor.nom || "Nom del Patrocinador"}
-                              </div>
-                              {newSponsor.imatgeUrl && (
-                                <div style={{ backgroundColor: "rgba(255,255,255,0.92)", padding: "3px 5px", borderRadius: "5px", flexShrink: 0 }}>
-                                  <img src={newSponsor.imatgeUrl} alt="Logo" style={{ maxHeight: "20px", maxWidth: "50px", objectFit: "contain" }} />
-                                </div>
+                            {/* Bottom Pill Container */}
+                            <div style={{ backgroundColor: "#fdfbf7", borderRadius: "100px", padding: "3px 10px 3px 3px", display: "flex", alignItems: "center", gap: "6px", width: "fit-content", maxWidth: "100%" }}>
+                              {newSponsor.imatgeUrl ? (
+                                <img src={newSponsor.imatgeUrl} alt="Logo" style={{ width: "20px", height: "20px", borderRadius: "50%", objectFit: "cover" }} />
+                              ) : (
+                                <div style={{ width: "20px", height: "20px", borderRadius: "50%", backgroundColor: "var(--verd)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "8px", fontWeight: 800 }}>★</div>
                               )}
+                              <span style={{ fontWeight: 800, fontSize: "8px", color: "var(--verd-fosc)", letterSpacing: "0.05em", textTransform: "uppercase", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                {newSponsor.nom || "ANIMACIÓ INFANTIL"}
+                              </span>
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
 
                 <div>
                   <label style={{ display: "block", fontSize: "13px", fontWeight: 700, marginBottom: "4px" }}>Enllaç Web (Link)</label>
@@ -849,19 +916,25 @@ export default function AdminMoreTabs({
       {cropperImageSrc && (
         <ImageCropperModal
           imageSrc={cropperImageSrc}
-          aspectRatio={3 / 4}
+          aspectRatio={cropperAspect}
           onClose={() => setCropperImageSrc(null)}
           onCropComplete={async (croppedBlob) => {
             setCropperImageSrc(null);
             setUploadingBg(true);
             try {
               const formData = new FormData();
-              formData.append('file', croppedBlob, 'sponsor_bg.jpg');
+              const fileName = cropperTargetField === 'mobile' ? 'sponsor_bg_mobile.jpg' : 'sponsor_bg_desktop.jpg';
+              formData.append('file', croppedBlob, fileName);
               const res = await fetch('/api/upload', { method: 'POST', body: formData });
               const json = await res.json();
               if (json.url) {
-                setNewSponsor(prev => ({ ...prev, imatgeFonsUrl: json.url }));
-                setMsg("✅ Imatge de fons retallada i desada a Supabase!");
+                if (cropperTargetField === 'mobile') {
+                  setNewSponsor(prev => ({ ...prev, imatgeFonsMobilUrl: json.url }));
+                  setMsg("✅ Imatge de fons mòbil (4:3) desada a Supabase!");
+                } else {
+                  setNewSponsor(prev => ({ ...prev, imatgeFonsUrl: json.url }));
+                  setMsg("✅ Imatge de fons desktop (3:4) desada a Supabase!");
+                }
               } else {
                 setMsg("❌ Error pujant la imatge de fons.");
               }

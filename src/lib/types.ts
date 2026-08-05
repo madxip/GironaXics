@@ -46,6 +46,7 @@ export interface Sponsor {
   actiu: boolean;
   descripcio?: string;
   imatgeFonsUrl?: string;
+  imatgeFonsMobilUrl?: string;
   titol?: string;
   rawImatgeUrl?: string;
   rawImatgeFonsUrl?: string;
