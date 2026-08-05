@@ -645,7 +645,7 @@ export async function getDbUsuaris(ciutat: string = 'girona'): Promise<UserRecor
     centreId: r.centre_id || '',
     nomCentre: centreMap.get(r.centre_id || '') || 'Sense centre',
     passwordHash: r.password_hash || '',
-    aprovat: r.aprovat !== undefined ? !!r.aprovat : true,
+    aprovat: r.aprovat !== undefined ? !!r.aprovat : false,
     isAdmin: !!r.is_admin
   }));
 }
@@ -662,6 +662,7 @@ export async function getDbUserByEmail(email: string) {
   const r = data[0];
   const cleanEmail = (r.email || '').toLowerCase().trim();
   const isAdmin = cleanEmail === 'hola@gironaxics.cat' || cleanEmail === 'jtaulats1976@gmail.com' || !!r.is_admin;
+  const isApproved = r.aprovat !== undefined ? !!r.aprovat : false;
 
   return {
     id: r.id,
@@ -669,9 +670,21 @@ export async function getDbUserByEmail(email: string) {
     email: r.email,
     passwordHash: r.password_hash || '',
     centreId: r.centre_id || null,
-    aprovat: true,
+    aprovat: isAdmin ? true : isApproved,
     isAdmin,
   };
+}
+
+export async function updateDbUsuariAprovat(id: string, aprovat: boolean): Promise<boolean> {
+  if (!supabase || !id) return false;
+  const { error } = await supabase.from('usuaris_centres').update({ aprovat }).eq('id', id);
+  return !error;
+}
+
+export async function updateDbUsuariCentre(id: string, centreId: string): Promise<boolean> {
+  if (!supabase || !id) return false;
+  const { error } = await supabase.from('usuaris_centres').update({ centre_id: centreId }).eq('id', id);
+  return !error;
 }
 
 export async function createDbCentre(nom: string, ciutat: string = 'girona'): Promise<{ id: string } | null> {
@@ -711,7 +724,7 @@ export async function createDbUsuari(user: { nom: string; email: string; passwor
     email: user.email.toLowerCase().trim(),
     password_hash: user.passwordHash,
     centre_id: user.centreId,
-    aprovat: true,
+    aprovat: false,
     ciutat
   };
   let { error } = await supabase.from('usuaris_centres').insert([record]);

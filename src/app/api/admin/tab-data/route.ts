@@ -18,7 +18,9 @@ import {
   createDbCasalsBanner,
   updateDbCasalsBanner,
   createDbCategory,
-  createDbSubcategory
+  createDbSubcategory,
+  updateDbUsuariAprovat,
+  updateDbUsuariCentre
 } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -121,6 +123,12 @@ export async function PATCH(req: NextRequest) {
       if (ok) return NextResponse.json({ success: true });
     } else if (action === "update-casal") {
       const ok = await updateDbCasalsBanner(id, data);
+      if (ok) return NextResponse.json({ success: true });
+    } else if (action === "update-user-aprovat") {
+      const ok = await updateDbUsuariAprovat(id, data.aprovat);
+      if (ok) return NextResponse.json({ success: true });
+    } else if (action === "update-user-centre") {
+      const ok = await updateDbUsuariCentre(id, data.centreId);
       if (ok) return NextResponse.json({ success: true });
     }
 

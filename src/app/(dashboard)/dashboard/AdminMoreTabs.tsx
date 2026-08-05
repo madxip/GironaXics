@@ -277,10 +277,31 @@ export default function AdminMoreTabs({
 
   // 4. HANDLERS USUARIS CENTRES
   async function handleAssignUserCentre(userId: string, centreId: string) {
-    if (!supabase || !userId) return;
-    await supabase.from("usuaris_centres").update({ centre_id: centreId }).eq("id", userId);
-    setMsg("✅ Centre assignat a l'usuari amb èxit!");
-    loadData();
+    const res = await fetch("/api/admin/tab-data", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "update-user-centre", id: userId, data: { centreId } })
+    });
+    if (res.ok) {
+      setMsg("✅ Centre assignat a l'usuari amb èxit!");
+      loadData();
+    } else {
+      setMsg("❌ Error assignant el centre.");
+    }
+  }
+
+  async function handleToggleUserAprovat(userId: string, currentStatus: boolean) {
+    const res = await fetch("/api/admin/tab-data", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "update-user-aprovat", id: userId, data: { aprovat: !currentStatus } })
+    });
+    if (res.ok) {
+      setMsg(!currentStatus ? "✅ Compte d'usuari aprovat amb èxit!" : "ℹ️ Compte desmarcat com a aprovat.");
+      loadData();
+    } else {
+      setMsg("❌ Error actualitzant l'estat d'aprovació.");
+    }
   }
 
   return (
@@ -838,9 +859,22 @@ export default function AdminMoreTabs({
       {/* 4. SECCIÓ USUARIS CENTRES */}
       {tab === "usuaris" && (
         <div>
-          <h3 style={{ fontSize: "20px", fontFamily: "var(--font-serif)", fontStyle: "italic", color: "var(--verd-fosc)", marginBottom: "16px" }}>
-            👤 Comptes d'Accés i Acceptació de Centres ({usuaris.length})
-          </h3>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "12px" }}>
+            <h3 style={{ fontSize: "20px", fontFamily: "var(--font-serif)", fontStyle: "italic", color: "var(--verd-fosc)", margin: 0 }}>
+              👤 Comptes d'Accés i Acceptació de Centres ({usuaris.length})
+            </h3>
+          </div>
+
+          {/* Banner si hi ha usuaris pendents */}
+          {usuaris.filter(u => !u.aprovat && !u.isAdmin).length > 0 && (
+            <div style={{ padding: "16px 20px", borderRadius: "12px", background: "#fef3c7", border: "1px solid #f59e0b", color: "#92400e", marginBottom: "24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+              <div>
+                <strong style={{ fontSize: "15px" }}>⚠️ Tens {usuaris.filter(u => !u.aprovat && !u.isAdmin).length} compte(s) de centre pendents d'aprovació</strong>
+                <div style={{ fontSize: "13px", marginTop: "2px" }}>Els nous centres registrats no poden accedir al panell fins que els aprovis aquí.</div>
+              </div>
+            </div>
+          )}
+
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
               <thead>
@@ -848,31 +882,67 @@ export default function AdminMoreTabs({
                   <th style={{ padding: "10px" }}>Nom de Contacte</th>
                   <th style={{ padding: "10px" }}>Email d'Accés</th>
                   <th style={{ padding: "10px" }}>Centre Assignat</th>
-                  <th style={{ padding: "10px" }}>Acció d'Assignació</th>
+                  <th style={{ padding: "10px" }}>Estat</th>
+                  <th style={{ padding: "10px" }}>Acció d'Aprovació</th>
                 </tr>
               </thead>
               <tbody>
-                {usuaris.map(u => (
-                  <tr key={u.id} style={{ borderBottom: "1px solid #f0f0f0" }}>
-                    <td style={{ padding: "12px 10px", fontWeight: 600 }}>{u.nom || u.email.split('@')[0]}</td>
-                    <td style={{ padding: "12px 10px" }}>{u.email}</td>
-                    <td style={{ padding: "12px 10px", color: "var(--verd-fosc)", fontWeight: 700 }}>
-                      {u.nomCentre && u.nomCentre !== 'Sense centre' ? u.nomCentre : (centres.find(c => c.id === u.centreId)?.nom || "Sense centre")}
-                    </td>
-                    <td style={{ padding: "12px 10px" }}>
-                      <select
-                        value={u.centreId || ""}
-                        onChange={e => handleAssignUserCentre(u.id, e.target.value)}
-                        style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid #ccc", fontSize: "13px" }}
-                      >
-                        <option value="">-- Assignar Centre --</option>
-                        {centres.map(c => (
-                          <option key={c.id} value={c.id}>{c.nom}</option>
-                        ))}
-                      </select>
-                    </td>
-                  </tr>
-                ))}
+                {usuaris.map(u => {
+                  const isPending = !u.aprovat && !u.isAdmin;
+                  return (
+                    <tr key={u.id} style={{ borderBottom: "1px solid #f0f0f0", backgroundColor: isPending ? "#fffbeb" : "transparent" }}>
+                      <td style={{ padding: "12px 10px", fontWeight: 600 }}>{u.nom || u.email.split('@')[0]}</td>
+                      <td style={{ padding: "12px 10px" }}>{u.email}</td>
+                      <td style={{ padding: "12px 10px" }}>
+                        <select
+                          value={u.centreId || ""}
+                          onChange={e => handleAssignUserCentre(u.id, e.target.value)}
+                          style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid #ccc", fontSize: "13px", maxWidth: "200px" }}
+                        >
+                          <option value="">-- Sense Centre --</option>
+                          {centres.map(c => (
+                            <option key={c.id} value={c.id}>{c.nom}</option>
+                          ))}
+                        </select>
+                      </td>
+                      <td style={{ padding: "12px 10px" }}>
+                        {u.isAdmin ? (
+                          <span style={{ color: "#d95738", fontWeight: 800, backgroundColor: "rgba(217,87,56,0.1)", padding: "4px 10px", borderRadius: "20px", fontSize: "11px", textTransform: "uppercase" }}>
+                            🛡️ Admin
+                          </span>
+                        ) : u.aprovat ? (
+                          <span style={{ color: "#137333", fontWeight: 700, backgroundColor: "#e6f4ea", padding: "4px 10px", borderRadius: "20px", fontSize: "12px" }}>
+                            ✓ Aprovat
+                          </span>
+                        ) : (
+                          <span style={{ color: "#b45309", fontWeight: 700, backgroundColor: "#fef3c7", padding: "4px 10px", borderRadius: "20px", fontSize: "12px", border: "1px solid #f59e0b" }}>
+                            ⏳ Pendent
+                          </span>
+                        )}
+                      </td>
+                      <td style={{ padding: "12px 10px" }}>
+                        {!u.isAdmin && (
+                          <button
+                            onClick={() => handleToggleUserAprovat(u.id, !!u.aprovat)}
+                            style={{
+                              padding: "7px 14px",
+                              borderRadius: "8px",
+                              border: "none",
+                              backgroundColor: u.aprovat ? "#f3f4f6" : "var(--verd)",
+                              color: u.aprovat ? "#4b5563" : "white",
+                              fontWeight: 700,
+                              cursor: "pointer",
+                              fontSize: "13px",
+                              boxShadow: u.aprovat ? "none" : "0 2px 6px rgba(26,107,58,0.2)"
+                            }}
+                          >
+                            {u.aprovat ? "Desactivar Accés" : "✅ Aprovar Compte"}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
