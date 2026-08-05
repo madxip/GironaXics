@@ -2,6 +2,7 @@ import React from "react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { getCentreByIdDirect, getPoblacions } from "@/lib/airtable";
+import { getDbCentreById, getDbPoblacions, supabase } from "@/lib/db";
 import { redirect } from "next/navigation";
 import CentreForm from "./CentreForm";
 
@@ -19,18 +20,20 @@ export default async function CentreDashboardPage() {
     redirect("/dashboard");
   }
 
+  const useDb = process.env.DB_PROVIDER === 'supabase' || !!supabase;
+
   // Carrega el centre directament per ID
-  const currentCentre = await getCentreByIdDirect(centreId);
+  const currentCentre = useDb ? await getDbCentreById(centreId) : await getCentreByIdDirect(centreId);
 
   if (!currentCentre) {
     redirect("/dashboard");
   }
 
-  // Carrega totes les poblacions d'Airtable i les agrupa per comarca
-  const allPoblacions = await getPoblacions();
+  // Carrega totes les poblacions
+  const allPoblacions = useDb ? await getDbPoblacions() : await getPoblacions();
   const poblacionsGrouped: Record<string, string[]> = {};
 
-  allPoblacions.forEach(p => {
+  (allPoblacions as any[]).forEach(p => {
     if (p.comarca && p.nom) {
       if (!poblacionsGrouped[p.comarca]) {
         poblacionsGrouped[p.comarca] = [];
