@@ -340,7 +340,7 @@ export async function getDbCentreById(id: string): Promise<Centre | null> {
   return mapSupabaseCentre(data);
 }
 
-export async function updateDbCentre(id: string, data: Partial<Centre>): Promise<boolean> {
+export async function updateDbCentre(id: string, data: Partial<Centre> & { actiu?: boolean }): Promise<boolean> {
   if (!supabase || !id) return false;
   const updates: Record<string, any> = {};
   if (data.nom !== undefined) updates.nom = data.nom;
@@ -353,6 +353,7 @@ export async function updateDbCentre(id: string, data: Partial<Centre>): Promise
   if (data.imatgeUrl !== undefined) updates.imatge_url = data.imatgeUrl;
   if (data.interessat !== undefined) updates.interessat = data.interessat;
   if (data.vacances !== undefined) updates.vacances = data.vacances;
+  if (data.actiu !== undefined) updates.actiu = data.actiu;
 
   updates.updated_at = new Date().toISOString();
 
