@@ -922,7 +922,7 @@ export default function AdminMoreTabs({
             </h3>
             <select
               value={sortOrder}
-              onChange={e => setSortOrder(e.target.value as any)}
+              onChange={e => setSortOrder(e.target.value as "recents" | "antics" | "nom")}
               style={{
                 padding: "8px 12px",
                 borderRadius: "8px",

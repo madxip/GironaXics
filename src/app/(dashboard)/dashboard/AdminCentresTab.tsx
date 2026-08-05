@@ -408,7 +408,7 @@ export default function AdminCentresTab({ initialCentres, poblacions, initialCen
               {/* Selector d'ordenació de centres */}
               <select
                 value={sortOrder}
-                onChange={e => setSortOrder(e.target.value as any)}
+                onChange={e => setSortOrder(e.target.value as "recents" | "antics" | "nom")}
                 style={{
                   padding: "12px 14px",
                   borderRadius: "10px",

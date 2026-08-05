@@ -126,7 +126,7 @@ export default function ActivitatsTable({ activitats, isAdmin }: Props) {
         {/* Selector d'Ordenació */}
         <select
           value={sortOrder}
-          onChange={e => { setSortOrder(e.target.value as any); setPage(1); }}
+          onChange={e => { setSortOrder(e.target.value as "recents" | "antics" | "nom"); setPage(1); }}
           style={{
             padding: "12px 14px",
             borderRadius: "10px",
