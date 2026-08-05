@@ -371,7 +371,7 @@ export async function getActivitiesByCentre(centreId: string, centreNom: string)
       const allActs = await getDbActivitats();
       const filtered = allActs.filter(a => a.centreId === centreId || a.centre === centreNom);
       return filtered.map(r => ({
-        id: r.id,
+        id: r.id || '',
         nom: r.nom,
         slug: r.slug,
         centreId: r.centreId || centreId,
