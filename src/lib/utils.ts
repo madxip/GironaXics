@@ -155,43 +155,29 @@ export function mapAirtableError(err: unknown): string {
 
   const lower = msg.toLowerCase();
 
-  // SSL and network errors (e.g. Node fetch local certificate issues or lack of connection)
+  // SSL and network errors
   if (lower.includes("unable_to_verify_leaf_signature") || lower.includes("leaf signature") || lower.includes("ssl")) {
-    return "Error de connexió SSL segura amb la base de dades. Si us plau, comprova que la configuració de xarxa i el certificat siguin correctes.";
+    return "Error de connexió SSL segura amb la base de dades. Si us plau, comprova que la configuració sigui correcta.";
   }
   
   if (lower.includes("fetch failed") || lower.includes("enotfound") || lower.includes("econnrefused")) {
-    return "No s'ha pogut establir connexió amb el servidor d'Airtable. Comprova que tinguis connexió activa a internet.";
-  }
-
-  // Schema & computed fields constraints
-  if (lower.includes("computed") || lower.includes("cannot be modified") || lower.includes("computed field")) {
-    return "No es pot desar el valor directament perquè la columna és un camp calculat o Lookup a Airtable. Si us plau, verifica el disseny de la base de dades.";
+    return "No s'ha pogut establir connexió amb el servidor. Comprova que tinguis connexió activa a internet.";
   }
 
   if (lower.includes("invalid_value_for_column") || lower.includes("invalid cell value") || lower.includes("cell value")) {
-    return "Hi ha un valor no admès o de format incorrecte en algun camp. Si us plau, revisa les dades (com ara URLs d'imatge o relacions).";
+    return "Hi ha un valor no admès o de format incorrecte en algun camp. Si us plau, revisa les dades.";
   }
 
   if (lower.includes("not_found") || lower.includes("record_not_found") || lower.includes("does not exist") || lower.includes("not found")) {
-    return "No s'ha trobat el registre especificat. És possible que hagi estat eliminat per un altre usuari.";
+    return "No s'ha trobat el registre especificat. És possible que hagi estat eliminat.";
   }
 
-  if (lower.includes("unauthorized") || lower.includes("authentication_required") || lower.includes("bearer") || lower.includes("401")) {
-    return "Error de credencials de base de dades (API key incorrecta o caducada). Si us plau, revisa la configuració local (.env.local).";
-  }
-
-  if (lower.includes("table not found") || lower.includes("base not found") || lower.includes("404")) {
-    return "No s'ha trobat la taula o la base de dades de destí a Airtable. Verifica que el BASE_ID i el nom siguin correctes.";
+  if (lower.includes("unauthorized") || lower.includes("authentication_required") || lower.includes("401")) {
+    return "Error de credencials de base de dades. Si us plau, revisa la configuració local (.env.local).";
   }
 
   if (lower.includes("request_too_large") || lower.includes("413") || lower.includes("too large")) {
-    return "La mida de la petició supera el límit. Assegura't que les fotos adjuntes no pesin massa (màxim 4MB).";
-  }
-
-  if (lower.includes("422") || lower.includes("airtable 422")) {
-    // Passa el missatge específic d'Airtable per ajudar a diagnosticar quin camp falla
-    return `Error de validació de dades (Airtable 422): ${msg}`;
+    return "La mida de la petició supera el límit (màxim 4MB per imatge).";
   }
 
   // General fallback

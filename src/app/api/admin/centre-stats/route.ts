@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { getActivitatsByCentreId } from '@/lib/airtable';
+import { getAllDbActivitats, supabase } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,8 +45,13 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'centreId is required' }, { status: 400 });
     }
 
+    const useDb = process.env.DB_PROVIDER === 'supabase' || !!supabase;
+
     // 1. Obtenir totes les activitats del centre
-    const activitats = await getActivitatsByCentreId(centreId);
+    const activitats = useDb 
+      ? (await getAllDbActivitats()).filter(a => a.centreId === centreId)
+      : await getActivitatsByCentreId(centreId);
+
     const activitatIds = new Set(activitats.map(a => a.id).filter(Boolean) as string[]);
 
     if (activitatIds.size === 0) {
@@ -57,22 +63,43 @@ export async function GET(req: NextRequest) {
 
     // 2. Obtenir events d'analytics filtrats per data
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
-    const dateFilter = `IS_AFTER({created_at}, "${since}")`;
-    const allRecords: AirtableRecord[] = [];
-    let offset: string | undefined;
+    let allRecords: AirtableRecord[] = [];
 
-    do {
-      const params = new URLSearchParams({ pageSize: '100', filterByFormula: dateFilter });
-      if (offset) params.set('offset', offset);
-      const data = await fetchAnalyticsPage(params);
-      // Filtrar per activitat_id del centre
-      const filtered = (data.records ?? []).filter((r: AirtableRecord) => {
-        const aid = r.fields.activitat_id;
-        return aid && activitatIds.has(aid);
-      });
-      allRecords.push(...filtered);
-      offset = data.offset;
-    } while (offset);
+    if (useDb && supabase) {
+      const { data: dbAnalytics } = await supabase
+        .from('analytics')
+        .select('*')
+        .gte('created_at', since);
+
+      allRecords = (dbAnalytics || [])
+        .map((r: any) => ({
+          id: r.id,
+          fields: {
+            event_type: r.event_type,
+            event_label: r.event_label,
+            device: r.device,
+            activitat_id: r.activitat_id || r.activitatId,
+            created_at: r.created_at
+          }
+        }))
+        .filter(r => r.fields.activitat_id && activitatIds.has(r.fields.activitat_id));
+    } else {
+      const dateFilter = `IS_AFTER({created_at}, "${since}")`;
+      let offset: string | undefined;
+
+      do {
+        const params = new URLSearchParams({ pageSize: '100', filterByFormula: dateFilter });
+        if (offset) params.set('offset', offset);
+        const data = await fetchAnalyticsPage(params);
+        // Filtrar per activitat_id del centre
+        const filtered = (data.records ?? []).filter((r: AirtableRecord) => {
+          const aid = r.fields.activitat_id;
+          return aid && activitatIds.has(aid);
+        });
+        allRecords.push(...filtered);
+        offset = data.offset;
+      } while (offset);
+    }
 
     // 3. Agregar per tipus
     const views  = allRecords.filter(r => r.fields.event_type === 'activity_view');

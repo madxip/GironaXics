@@ -6,9 +6,8 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { clearAllCache } from "@/lib/airtable";
 
 /**
- * Acció admin: invalida la memòria cau d'Airtable i força la re-renderització
- * de totes les pàgines públiques a Vercel ISR.
- * Útil quan l'admin ha modificat dades directament a Airtable sense passar pel panell.
+ * Acció admin: invalida la memòria cau de la base de dades i força la re-renderització
+ * de totes les pàgines públiques.
  */
 export async function refreshCacheAction(): Promise<{ success: boolean; error?: string }> {
   try {

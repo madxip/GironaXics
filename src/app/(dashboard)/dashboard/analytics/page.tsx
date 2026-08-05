@@ -294,7 +294,7 @@ export default function AnalyticsDashboard() {
       {/* ── Error ── */}
       {error && (
         <div style={{ backgroundColor: "#fde8e8", color: "#c0392b", padding: "16px 20px", borderRadius: "12px", marginBottom: "24px", fontSize: "14px" }}>
-          Error carregant les estadístiques. Comprova la connexió a Airtable.
+          Error carregant les estadístiques. Comprova la connexió a la base de dades.
         </div>
       )}
 
@@ -479,7 +479,7 @@ export default function AnalyticsDashboard() {
 
           {/* Peu */}
           <div style={{ marginTop: "32px", padding: "16px 20px", backgroundColor: "rgba(26,107,58,0.03)", borderRadius: "12px", border: "1px solid rgba(26,107,58,0.08)", fontSize: "12px", color: "var(--muted)", lineHeight: 1.6 }}>
-            📊 Les dades es guarden a Airtable · No es recull cap dada personal · Els events es registren de manera anònima i agregada.
+            📊 Les dades es guarden a Supabase · No es recull cap dada personal · Els events es registren de manera anònima i agregada.
           </div>
         </>
       )}

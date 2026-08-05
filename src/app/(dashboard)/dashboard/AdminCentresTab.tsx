@@ -355,7 +355,7 @@ export default function AdminCentresTab({ initialCentres, poblacions, initialCen
         setToast({ type: "error", message: res.error || "No s'ha pogut canviar l'estat." });
       }
     } catch {
-      setToast({ type: "error", message: "Error al connectar amb Airtable." });
+      setToast({ type: "error", message: "Error al connectar amb la base de dades." });
     }
   };
 

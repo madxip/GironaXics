@@ -23,7 +23,7 @@ export default function RefreshCacheButton() {
     <button
       onClick={handleRefresh}
       disabled={loading}
-      title="Invalida la memòria cau d'Airtable i força la re-renderització de totes les pàgines"
+      title="Invalida la memòria cau i força la re-renderització de totes les pàgines"
       style={{
         display: "inline-flex",
         alignItems: "center",
