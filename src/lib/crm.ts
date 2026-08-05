@@ -128,8 +128,6 @@ async function fetchFromAirtable(endpoint: string, options: RequestInit = {}): P
 
 // --- Public APIs ---
 
-import { getDbCentres, getDbUsuaris, getDbActivitats, supabase } from './db';
-
 /**
  * Fetch all centres, matching each with their contact user from Usuaris_Centres.
  */
@@ -198,35 +196,34 @@ export async function getCentresWithContacts(): Promise<CRMCentre[]> {
     });
 
     // 3. Format CRM centres
-    const formattedCentres: CRMCentre[] = centresRecords.map(c => {
-      const contact = userByCentreMap.get(c.id);
-      // Attachment field: Airtable returns an array of objects with a 'url' property
-      // Try both capitalizations since the field is named 'Logo' in Airtable
-      const imatgeAttachments = (c.fields.Logo || c.fields.logo) as Array<{ url: string }> | undefined;
-      const imatgeUrl = Array.isArray(imatgeAttachments) && imatgeAttachments.length > 0
-        ? imatgeAttachments[0].url
-        : '';
+    const centres: CRMCentre[] = centresRecords.map(c => {
+      const user = userByCentreMap.get(c.id);
+      const logoField = c.fields.Logo as Array<{ url: string }> | undefined;
+      const imatgeUrl = (logoField && logoField.length > 0) ? logoField[0].url : '';
+      const actiuField = c.fields.actiu;
+      const actiu = actiuField !== undefined ? Boolean(actiuField) : true;
+
       return {
         id: c.id,
         nom: (c.fields.nom as string) || '',
-        adreca: (c.fields.adreça as string) || (c.fields.adreca as string) || '',
+        adreca: (c.fields.adreça as string) || '',
         telefon: (c.fields.telefon as string) || '',
         email: (c.fields.email as string) || '',
         web: (c.fields.web as string) || '',
-        barri: Array.isArray(c.fields.barri) ? (c.fields.barri[0] as string) || '' : (c.fields.barri as string) || '',
+        barri: Array.isArray(c.fields.poblacio) ? (c.fields.poblacio[0] as string) || '' : (c.fields.poblacio as string) || '',
         descripcio: (c.fields.descripcio as string) || '',
         imatgeUrl,
-        contactName: contact?.nom || '',
-        contactEmail: contact?.email || '',
-        contactUserId: contact?.id,
-        activityCount: Array.isArray(c.fields.Activitats) ? c.fields.Activitats.length : 0,
-        actiu: !!(c.fields.actiu || c.fields.Actiu),
+        contactName: user?.nom || '',
+        contactEmail: user?.email || '',
+        contactUserId: user?.id,
+        activityCount: 0,
+        actiu,
       };
     });
 
     // Save cache locally for offline/fallback
-    saveLocalCache(formattedCentres);
-    return formattedCentres;
+    saveLocalCache(centres);
+    return centres;
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : 'Unknown error';
     console.error('[CRM] Error loading centres from Airtable. Returning local cache.', errorMsg);
@@ -242,6 +239,40 @@ export async function updateCentreAndContact(
   centreData: Partial<Omit<CRMCentre, 'id' | 'contactName' | 'contactEmail' | 'contactUserId' | 'activityCount'>>,
   contactData: { nom?: string; email?: string }
 ): Promise<boolean> {
+  const useDb = process.env.DB_PROVIDER === 'supabase' || !!supabase;
+  if (useDb) {
+    try {
+      const centreUpdates: Record<string, any> = {};
+      if (centreData.nom !== undefined) centreUpdates.nom = centreData.nom;
+      if (centreData.adreca !== undefined) centreUpdates.adreca = centreData.adreca;
+      if (centreData.telefon !== undefined) centreUpdates.telefon = centreData.telefon;
+      if (centreData.email !== undefined) centreUpdates.email = centreData.email;
+      if (centreData.web !== undefined) centreUpdates.web = centreData.web;
+      if (centreData.barri !== undefined) centreUpdates.barri = centreData.barri;
+      if (centreData.descripcio !== undefined) centreUpdates.descripcio = centreData.descripcio;
+      if (centreData.imatgeUrl !== undefined) centreUpdates.imatgeUrl = centreData.imatgeUrl;
+      if (centreData.actiu !== undefined) centreUpdates.actiu = centreData.actiu;
+
+      if (Object.keys(centreUpdates).length > 0) {
+        await updateDbCentre(centreId, centreUpdates);
+      }
+
+      if (contactData.nom !== undefined || contactData.email !== undefined) {
+        const userUpdates: Record<string, any> = {};
+        if (contactData.nom !== undefined) userUpdates.nom = contactData.nom;
+        if (contactData.email !== undefined) userUpdates.email = contactData.email.toLowerCase().trim();
+
+        if (supabase && Object.keys(userUpdates).length > 0) {
+          await supabase.from('usuaris_centres').update(userUpdates).eq('centre_id', centreId);
+        }
+      }
+      return true;
+    } catch (err) {
+      console.error('[CRM DB] Error updating centre and contact in Supabase:', err);
+      return false;
+    }
+  }
+
   if (!API_KEY || !BASE_ID) return false;
 
   try {
@@ -305,6 +336,13 @@ export async function updateCentreAndContact(
  * Toggle the `actiu` field of a centre directly in Airtable.
  */
 export async function updateCentreActiu(centreId: string, actiu: boolean): Promise<boolean> {
+  const useDb = process.env.DB_PROVIDER === 'supabase' || !!supabase;
+  if (useDb) {
+    if (!supabase || !centreId) return false;
+    const { error } = await supabase.from('centres').update({ actiu }).eq('id', centreId);
+    return !error;
+  }
+  
   if (!API_KEY || !BASE_ID) return false;
   try {
     await fetchFromAirtable('Centres', {
@@ -324,6 +362,35 @@ export async function updateCentreActiu(centreId: string, actiu: boolean): Promi
  * Fetch all activities belonging to a specific centre.
  */
 export async function getActivitiesByCentre(centreId: string, centreNom: string): Promise<CRMActivity[]> {
+  const useDb = process.env.DB_PROVIDER === 'supabase' || !!supabase;
+  if (useDb) {
+    try {
+      const allActs = await getDbActivitats();
+      const filtered = allActs.filter(a => a.centreId === centreId || a.centre === centreNom);
+      return filtered.map(r => ({
+        id: r.id,
+        nom: r.nom,
+        slug: r.slug,
+        centreId: r.centreId || centreId,
+        centreNom: r.centre || centreNom,
+        barri: r.barri,
+        categoria: Array.isArray(r.categoria) ? r.categoria.join(', ') : r.categoria,
+        edat: r.edat,
+        preu: r.preu || 0,
+        horari: r.horari,
+        dies: r.dies,
+        descripcio: r.descripcio,
+        publicada: r.publicada,
+        destacada: r.destacada,
+        poblacio_propia: r.poblacio_propia,
+        tipus: r.tipus || "Extraescolar"
+      }));
+    } catch (err) {
+      console.error(`[CRM DB] Error fetching activities for centre ${centreNom}:`, err);
+      return [];
+    }
+  }
+
   if (!API_KEY || !BASE_ID) return [];
 
   try {
@@ -363,10 +430,57 @@ export async function getActivitiesByCentre(centreId: string, centreNom: string)
 export async function createCentreWithContact(
   nom: string,
   centreData: { adreca?: string; telefon?: string; email?: string; web?: string; barri?: string; descripcio?: string; imatgeUrl?: string },
-  _contactData: { nom?: string; email?: string }
+  contactData: { nom?: string; email?: string }
 ): Promise<CRMCentre | null> {
+  const useDb = process.env.DB_PROVIDER === 'supabase' || !!supabase;
+  if (useDb) {
+    try {
+      const created = await createDbCentre(nom);
+      if (!created || !created.id) return null;
+
+      const centreId = created.id;
+      await updateDbCentre(centreId, {
+        adreca: centreData.adreca || '',
+        telefon: centreData.telefon || '',
+        email: centreData.email || '',
+        web: centreData.web || '',
+        barri: centreData.barri || '',
+        descripcio: centreData.descripcio || '',
+        imatgeUrl: centreData.imatgeUrl || ''
+      });
+
+      if (contactData.email && supabase) {
+        const uId = `u_${Math.random().toString(36).substring(2, 8)}`;
+        await supabase.from('usuaris_centres').insert([{
+          id: uId,
+          nom: contactData.nom || nom,
+          email: contactData.email.toLowerCase().trim(),
+          centre_id: centreId,
+          ciutat: 'girona'
+        }]);
+      }
+
+      return {
+        id: centreId,
+        nom,
+        adreca: centreData.adreca || '',
+        telefon: centreData.telefon || '',
+        email: centreData.email || '',
+        web: centreData.web || '',
+        barri: centreData.barri || '',
+        descripcio: centreData.descripcio || '',
+        imatgeUrl: centreData.imatgeUrl || '',
+        contactName: contactData.nom || '',
+        contactEmail: contactData.email || '',
+        activityCount: 0
+      };
+    } catch (err) {
+      console.error('[CRM DB] Error creating centre with contact in Supabase:', err);
+      return null;
+    }
+  }
+
   if (!API_KEY || !BASE_ID) return null;
-  void _contactData;
 
   try {
     // 1. Create Centre in Airtable

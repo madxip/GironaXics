@@ -2,7 +2,8 @@
 
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { updateCentre, getCentres, clearAllCache } from "@/lib/airtable";
+import { updateCentre as updateAirtableCentre, getCentres as getAirtableCentres, clearAllCache } from "@/lib/airtable";
+import { updateDbCentre, getDbCentres, supabase } from "@/lib/db";
 import { revalidatePath, revalidateTag } from "next/cache";
 
 async function getAuthenticatedCentreId(formData: FormData): Promise<string> {
@@ -10,13 +11,11 @@ async function getAuthenticatedCentreId(formData: FormData): Promise<string> {
   if (!session || !session.user) {
     throw new Error("Sessió no autoritzada.");
   }
-  // Admin can edit any centre — use the centreId sent from the form
   if (session.user.isAdmin) {
     const centreId = formData.get("centreId") as string;
     if (!centreId) throw new Error("Sessió no autoritzada.");
     return centreId;
   }
-  // Regular centre user
   if (!session.user.centreId) {
     throw new Error("Sessió no autoritzada.");
   }
@@ -47,7 +46,8 @@ export async function updateCentreAction(prevState: unknown, formData: FormData)
       return { success: false, error: "Si us plau, omple els camps obligatoris (Nom del Centre i Barri de Girona)." };
     }
 
-    const success = await updateCentre(centreId, {
+    const useDb = process.env.DB_PROVIDER === 'supabase' || !!supabase;
+    const updateData = {
       nom,
       adreca: adreca || "",
       telefon: telefon || "",
@@ -57,17 +57,21 @@ export async function updateCentreAction(prevState: unknown, formData: FormData)
       descripcio: descripcio || "",
       imatgeUrl: imatgeUrl || "",
       vacances: vacances || ""
-    });
+    };
+
+    const success = useDb 
+      ? await updateDbCentre(centreId, updateData) 
+      : await updateAirtableCentre(centreId, updateData);
 
     if (!success) {
-      return { success: false, error: "No s'ha pogut actualitzar el perfil del centre a Airtable." };
+      return { success: false, error: "No s'ha pogut actualitzar el perfil del centre." };
     }
 
-    // 1. Netejar la memòria cau interna d'Airtable i Next.js Data Cache
-    clearAllCache(revalidateTag);
+    if (!useDb) {
+      clearAllCache(revalidateTag);
+    }
 
-    // 2. On-demand revalidation per a totes les pàgines afectades
-    const centres = await getCentres();
+    const centres = useDb ? await getDbCentres() : await getAirtableCentres();
     const currentCentre = centres.find(c => c.id === centreId);
     if (currentCentre) {
       try {
@@ -77,7 +81,6 @@ export async function updateCentreAction(prevState: unknown, formData: FormData)
       }
     }
 
-    // Purge other active pages
     try {
       revalidatePath("/");
     } catch (e) {

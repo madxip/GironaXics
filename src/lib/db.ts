@@ -307,6 +307,13 @@ export async function deleteDbActivitat(id: string): Promise<boolean> {
   return !error;
 }
 
+export async function getDbActivitatRawById(id: string): Promise<Activitat | null> {
+  if (!supabase || !id) return null;
+  const { data, error } = await supabase.from('activitats').select('*').eq('id', id).single();
+  if (error || !data) return null;
+  return mapSupabaseActivitat(data);
+}
+
 // ─── 2. CENTRES ────────────────────────────────────────────────────────────
 
 export async function getDbCentres(ciutat: string = 'girona'): Promise<Centre[]> {

@@ -2,7 +2,20 @@
 
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { createActivitat, updateActivitat, deleteActivitat, getActivitatRawById, clearAllCache } from "@/lib/airtable";
+import { 
+  createActivitat as createAirtableActivitat, 
+  updateActivitat as updateAirtableActivitat, 
+  deleteActivitat as deleteAirtableActivitat, 
+  getActivitatRawById as getAirtableActivitatRawById, 
+  clearAllCache 
+} from "@/lib/airtable";
+import { 
+  createDbActivitat, 
+  updateDbActivitat, 
+  deleteDbActivitat, 
+  getDbActivitatRawById, 
+  supabase 
+} from "@/lib/db";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { normalizeSlug } from "@/lib/utils";
 
@@ -22,7 +35,6 @@ async function getAuthInfo() {
 export async function createActivitatAction(prevState: unknown, formData: FormData) {
   try {
     const { centreId: sessionCentreId, isAdmin } = await getAuthInfo();
-    // Admin pot especificar el centre via formData; usuari normal usa el seu centreId
     const centreId = isAdmin
       ? (formData.get("centreId") as string || sessionCentreId)
       : sessionCentreId;
@@ -48,7 +60,6 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
     const poblacio_propia = formData.get("poblacio_propia") as string;
     const adreca_propia = formData.get("adreca_propia") as string;
 
-    // Parse galeria robustly
     const galeriaRaw = formData.get("galeria");
     let galeria: string[] = [];
     if (galeriaRaw) {
@@ -65,15 +76,14 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
       return { success: false, error: "Si us plau, omple com a mínim els camps obligatoris (Nom, Categoria, Edat, Horari i Dies)." };
     }
 
-    // Validacio: admin ha de seleccionar un centre; sense centreId Airtable retornaria INVALID_RECORD_ID
     if (!centreId) {
       return { success: false, error: "Has de seleccionar un centre per a aquesta activitat." };
     }
 
-
     const preu = preuStr ? preuStr.trim() : undefined;
+    const useDb = process.env.DB_PROVIDER === 'supabase' || !!supabase;
 
-    const result = await createActivitat({
+    const actData = {
       nom,
       barri,
       categoria: categories,
@@ -98,15 +108,27 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
       torns: torns || undefined,
       poblacio_propia: poblacio_propia || undefined,
       adreca_propia: adreca_propia || undefined
-    });
+    };
 
-    if (!result) {
-      return { success: false, error: "No s'ha pogut guardar l'activitat a Airtable." };
+    let resultId: string | null = null;
+    let slug: string = normalizeSlug(nom);
+
+    if (useDb) {
+      resultId = await createDbActivitat(actData);
+    } else {
+      const res = await createAirtableActivitat(actData);
+      if (res) {
+        resultId = res.id;
+        if (res.slug) slug = res.slug;
+      }
     }
 
-    // On-demand revalidation
+    if (!resultId) {
+      return { success: false, error: "No s'ha pogut guardar l'activitat a la base de dades." };
+    }
+
     try {
-      revalidateTag('activitats'); // Invalida la caché cross-instància de Next.js
+      revalidateTag('activitats');
       revalidatePath("/");
     } catch (e) {
       console.error("[Revalidate] Error revalidating '/':", e);
@@ -129,8 +151,8 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
       console.error(`[Revalidate] Error revalidating '/barris/${normalizeSlug(barri)}':`, e);
     }
     try {
-      if (result && result.slug) {
-        revalidatePath(`/activitats/${normalizeSlug(categories[0] || 'altres')}/${result.slug}`);
+      if (slug) {
+        revalidatePath(`/activitats/${normalizeSlug(categories[0] || 'altres')}/${slug}`);
       }
     } catch (e) {
       console.error("[Revalidate] Error revalidating activity page:", e);
@@ -139,7 +161,7 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
     return { success: true };
   } catch (error) {
     console.error("[Create Activity Action] Error:", error);
-    const message = error instanceof Error ? error.message : "S'ha produÃ¯t un error inesperat.";
+    const message = error instanceof Error ? error.message : "S'ha produït un error inesperat.";
     return { success: false, error: message };
   }
 }
@@ -147,17 +169,14 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
 export async function updateActivitatAction(id: string, prevState: unknown, formData: FormData) {
   try {
     const { centreId, isAdmin } = await getAuthInfo();
+    const useDb = process.env.DB_PROVIDER === 'supabase' || !!supabase;
 
-    // Ownership check (IDOR/BOLA prevention) â€” admin ho salta.
-    // Usem getActivitatRawById per obtenir el registre directament d'Airtable
-    // sense cap filtre de publicaciÃ³ (getActivitats() filtra {publicada}=TRUE()
-    // i no trobaria activitats no publicades).
-    const activitat = await getActivitatRawById(id);
+    const activitat = useDb ? await getDbActivitatRawById(id) : await getAirtableActivitatRawById(id);
     if (!activitat) {
       return { success: false, error: "L'activitat no existeix." };
     }
     if (!isAdmin && activitat.centreId !== centreId) {
-      return { success: false, error: "No tens permÃ­s per modificar aquesta activitat." };
+      return { success: false, error: "No tens permís per modificar aquesta activitat." };
     }
 
     const nom = formData.get("nom") as string;
@@ -198,8 +217,7 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
     }
 
     const preu = preuStr ? preuStr.trim() : undefined;
-
-    const success = await updateActivitat(id, {
+    const updateData = {
       nom,
       barri,
       categoria: categories,
@@ -221,18 +239,22 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
       torns: torns !== null ? torns : undefined,
       poblacio_propia: poblacio_propia !== null ? poblacio_propia : undefined,
       adreca_propia: adreca_propia !== null ? adreca_propia : undefined
-    });
+    };
+
+    const success = useDb 
+      ? await updateDbActivitat(id, updateData) 
+      : await updateAirtableActivitat(id, updateData);
 
     if (!success) {
-      return { success: false, error: "No s'ha pogut actualitzar l'activitat a Airtable." };
+      return { success: false, error: "No s'ha pogut actualitzar l'activitat." };
     }
 
-    // Netejar la memòria cau interna i Next.js Data Cache
-    clearAllCache(revalidateTag);
+    if (!useDb) {
+      clearAllCache(revalidateTag);
+    }
 
-    // On-demand revalidation
     try {
-      revalidateTag('activitats'); // Invalida la caché cross-instància de Next.js
+      revalidateTag('activitats');
       revalidatePath("/");
     } catch (e) {
       console.error("[Revalidate] Error revalidating '/':", e);
@@ -265,7 +287,7 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
     return { success: true };
   } catch (error) {
     console.error("[Update Activity Action] Error:", error);
-    const message = error instanceof Error ? error.message : "S'ha produÃ¯t un error inesperat.";
+    const message = error instanceof Error ? error.message : "S'ha produït un error inesperat.";
     return { success: false, error: message };
   }
 }
@@ -273,27 +295,23 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
 export async function deleteActivitatAction(id: string) {
   try {
     const { centreId, isAdmin } = await getAuthInfo();
+    const useDb = process.env.DB_PROVIDER === 'supabase' || !!supabase;
 
-    // Ownership check (IDOR/BOLA prevention) â€” admin ho salta.
-    // Usem getActivitatRawById per obtenir el registre directament d'Airtable
-    // sense cap filtre de publicaciÃ³ (getActivitats() filtra {publicada}=TRUE()
-    // i no trobaria activitats no publicades).
-    const activitat = await getActivitatRawById(id);
+    const activitat = useDb ? await getDbActivitatRawById(id) : await getAirtableActivitatRawById(id);
     if (!activitat) {
       return { success: false, error: "L'activitat no existeix o ja ha estat eliminada." };
     }
     if (!isAdmin && activitat.centreId !== centreId) {
-      return { success: false, error: "No tens permÃ­s per eliminar aquesta activitat." };
+      return { success: false, error: "No tens permís per eliminar aquesta activitat." };
     }
 
-    const success = await deleteActivitat(id);
+    const success = useDb ? await deleteDbActivitat(id) : await deleteAirtableActivitat(id);
     if (!success) {
       return { success: false, error: "No s'ha pogut eliminar l'activitat." };
     }
 
-    // On-demand revalidation
     try {
-      revalidateTag('activitats'); // Invalida la caché cross-instància de Next.js
+      revalidateTag('activitats');
       revalidatePath("/");
     } catch (e) {
       console.error("[Revalidate] Error revalidating '/':", e);
@@ -307,7 +325,7 @@ export async function deleteActivitatAction(id: string) {
     return { success: true };
   } catch (error) {
     console.error("[Delete Activity Action] Error:", error);
-    const message = error instanceof Error ? error.message : "S'ha produÃ¯t un error inesperat.";
+    const message = error instanceof Error ? error.message : "S'ha produït un error inesperat.";
     return { success: false, error: message };
   }
 }
@@ -315,24 +333,21 @@ export async function deleteActivitatAction(id: string) {
 export async function togglePublicadaAction(id: string, publicada: boolean) {
   try {
     const { centreId, isAdmin } = await getAuthInfo();
+    const useDb = process.env.DB_PROVIDER === 'supabase' || !!supabase;
 
-    // Ownership check (IDOR/BOLA prevention) â€” admin ho salta.
-    // Usem getActivitatRawById per obtenir el registre directament d'Airtable
-    // sense cap filtre de publicaciÃ³.
-    const activitat = await getActivitatRawById(id);
+    const activitat = useDb ? await getDbActivitatRawById(id) : await getAirtableActivitatRawById(id);
     if (!activitat) {
       return { success: false, error: "L'activitat no existeix." };
     }
     if (!isAdmin && activitat.centreId !== centreId) {
-      return { success: false, error: "No tens permÃ­s per canviar l'estat d'aquesta activitat." };
+      return { success: false, error: "No tens permís per canviar l'estat d'aquesta activitat." };
     }
 
-    const success = await updateActivitat(id, { publicada });
+    const success = useDb ? await updateDbActivitat(id, { publicada }) : await updateAirtableActivitat(id, { publicada });
     if (!success) {
-      return { success: false, error: "No s'ha pogut canviar l'estat de publicaciÃ³." };
+      return { success: false, error: "No s'ha pogut canviar l'estat de publicació." };
     }
 
-    // Revalidar memÃ²ria cau a Vercel on-demand per a que es reflecteixi immediatament
     try {
       revalidatePath("/");
     } catch (e) {
@@ -347,7 +362,7 @@ export async function togglePublicadaAction(id: string, publicada: boolean) {
     return { success: true };
   } catch (error) {
     console.error("[Toggle Publicada Action] Error:", error);
-    const message = error instanceof Error ? error.message : "S'ha produÃ¯t un error inesperat.";
+    const message = error instanceof Error ? error.message : "S'ha produït un error inesperat.";
     return { success: false, error: message };
   }
 }
