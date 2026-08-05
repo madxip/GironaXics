@@ -28,8 +28,11 @@ export interface UserRecord {
   id: string;
   email: string;
   centreId: string;
+  nom?: string;
   nomCentre?: string;
   passwordHash?: string;
+  aprovat?: boolean;
+  isAdmin?: boolean;
 }
 
 export interface AnalyticsRecord {
@@ -638,9 +641,12 @@ export async function getDbUsuaris(ciutat: string = 'girona'): Promise<UserRecor
   return (data || []).map(r => ({
     id: r.id,
     email: r.email,
+    nom: r.nom || '',
     centreId: r.centre_id || '',
     nomCentre: centreMap.get(r.centre_id || '') || 'Sense centre',
-    passwordHash: r.password_hash || ''
+    passwordHash: r.password_hash || '',
+    aprovat: r.aprovat !== undefined ? !!r.aprovat : true,
+    isAdmin: !!r.is_admin
   }));
 }
 

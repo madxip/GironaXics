@@ -845,16 +845,20 @@ export default function AdminMoreTabs({
             <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
               <thead>
                 <tr style={{ borderBottom: "2px solid #eee", paddingBottom: "8px" }}>
+                  <th style={{ padding: "10px" }}>Nom de Contacte</th>
                   <th style={{ padding: "10px" }}>Email d'Accés</th>
                   <th style={{ padding: "10px" }}>Centre Assignat</th>
-                  <th style={{ padding: "10px" }}>Acció d'Assignació / Aprovació</th>
+                  <th style={{ padding: "10px" }}>Acció d'Assignació</th>
                 </tr>
               </thead>
               <tbody>
                 {usuaris.map(u => (
                   <tr key={u.id} style={{ borderBottom: "1px solid #f0f0f0" }}>
-                    <td style={{ padding: "12px 10px", fontWeight: 600 }}>{u.email}</td>
-                    <td style={{ padding: "12px 10px", color: "var(--verd-fosc)", fontWeight: 600 }}>{u.nomCentre}</td>
+                    <td style={{ padding: "12px 10px", fontWeight: 600 }}>{u.nom || u.email.split('@')[0]}</td>
+                    <td style={{ padding: "12px 10px" }}>{u.email}</td>
+                    <td style={{ padding: "12px 10px", color: "var(--verd-fosc)", fontWeight: 700 }}>
+                      {u.nomCentre && u.nomCentre !== 'Sense centre' ? u.nomCentre : (centres.find(c => c.id === u.centreId)?.nom || "Sense centre")}
+                    </td>
                     <td style={{ padding: "12px 10px" }}>
                       <select
                         value={u.centreId || ""}
