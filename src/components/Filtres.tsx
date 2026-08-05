@@ -629,6 +629,9 @@ export default function Filtres({
                           flex-direction: column;
                           gap: 12px;
                           text-align: left;
+                          margin-top: auto;
+                          width: 100%;
+                          box-sizing: border-box;
                         }
                         
                         .sponsor-pre-title {
@@ -771,25 +774,29 @@ export default function Filtres({
                         
                         @media (max-width: 768px) {
                           .sponsor-card-premium {
-                            min-height: 320px;
+                            min-height: 280px;
+                            aspect-ratio: 1 / 1;
                             background-image: var(--bg-mobile);
                           }
+                          .sponsor-top-badge {
+                            top: 12px;
+                            left: 12px;
+                            padding: 4px 10px;
+                            font-size: 9px;
+                          }
                           .sponsor-premium-title {
-                            font-size: 26px;
+                            font-size: 18px !important;
+                            line-height: 1.25 !important;
                           }
                           .sponsor-premium-content {
-                            padding: 16px;
+                            padding: 14px;
                             gap: 8px;
                           }
                           .sponsor-buttons-row {
                             gap: 8px;
                           }
                           .sponsor-logo-pill {
-                            padding: 6px 12px;
-                          }
-                          .sponsor-cta-pill {
-                            padding: 7px 14px;
-                            font-size: 11px;
+                            padding: 4px 10px 4px 4px !important;
                           }
                         }
                       `}</style>
