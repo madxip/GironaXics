@@ -202,7 +202,7 @@ export async function getDbActivitatById(id: string): Promise<Activitat | null> 
   return act;
 }
 
-export async function createDbActivitat(data: Partial<Activitat> & { nom: string; centreId: string }): Promise<string | null> {
+export async function createDbActivitat(data: Partial<Omit<Activitat, 'categoria'>> & { nom: string; centreId: string; categoria?: string | string[] }): Promise<string | null> {
   if (!supabase) return null;
   const id = `rec${Math.random().toString(36).substring(2, 11)}${Date.now().toString(36)}`;
   let slug = normalizeSlug(data.nom);
@@ -255,7 +255,7 @@ export async function createDbActivitat(data: Partial<Activitat> & { nom: string
   return id;
 }
 
-export async function updateDbActivitat(id: string, data: Partial<Activitat>): Promise<boolean> {
+export async function updateDbActivitat(id: string, data: Partial<Omit<Activitat, 'categoria'>> & { categoria?: string | string[] }): Promise<boolean> {
   if (!supabase || !id) return false;
   const updates: Record<string, any> = {};
 
