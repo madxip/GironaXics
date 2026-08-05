@@ -14,6 +14,7 @@ export default function ImageCropperModal({
   imageSrc,
   onCropComplete,
   onClose,
+  aspectRatio = 3 / 4
 }: ImageCropperModalProps) {
   const currentAspect = aspectRatio;
   const [zoom, setZoom] = useState(1);
