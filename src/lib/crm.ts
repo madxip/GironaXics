@@ -129,6 +129,8 @@ async function fetchFromAirtable(endpoint: string, options: RequestInit = {}): P
 
 // --- Public APIs ---
 
+import { getDbCentres, getDbUsuaris, getDbActivitats, updateDbCentre, createDbCentre, supabase } from './db';
+
 /**
  * Fetch all centres, matching each with their contact user from Usuaris_Centres.
  */
