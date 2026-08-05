@@ -144,34 +144,12 @@ export default function ImageCropperModal({
           </button>
         </div>
 
-        {/* Selecció de Proporció d'Aspecte */}
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <span style={{ fontSize: '12px', fontWeight: 700, color: '#9ca3af', marginRight: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <Crop size={14} /> Proporció:
+        {/* Proporció fixada segons tipus de dispositiu */}
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', backgroundColor: '#374151', padding: '8px 12px', borderRadius: '8px' }}>
+          <Crop size={15} color="#10b981" />
+          <span style={{ fontSize: '13px', fontWeight: 700, color: 'white' }}>
+            Proporció fixada: {Math.abs(aspectRatio - 1) < 0.01 ? '📱 1:1 Quadrat (Mòbil)' : '🖥️ 3:4 Vertical (Desktop)'}
           </span>
-          {[
-            { label: '3:4 Vertical (Desktop)', val: 3 / 4 },
-            { label: '1:1 Quadrat (Mòbil)', val: 1 },
-            { label: '16:9 Horitzontal', val: 16 / 9 }
-          ].map(opt => (
-            <button
-              key={opt.label}
-              type="button"
-              onClick={() => setCurrentAspect(opt.val)}
-              style={{
-                padding: '5px 10px',
-                borderRadius: '6px',
-                border: 'none',
-                fontSize: '11px',
-                fontWeight: 700,
-                cursor: 'pointer',
-                background: Math.abs(currentAspect - opt.val) < 0.01 ? 'var(--verd, #10b981)' : '#374151',
-                color: Math.abs(currentAspect - opt.val) < 0.01 ? 'white' : '#9ca3af'
-              }}
-            >
-              {opt.label}
-            </button>
-          ))}
         </div>
 
         {/* Àrea de Retall */}
@@ -184,8 +162,8 @@ export default function ImageCropperModal({
             onMouseLeave={handleMouseUp}
             style={{
               position: 'relative',
-              width: currentAspect < 1 ? '240px' : '100%',
-              height: currentAspect < 1 ? '320px' : '260px',
+              width: Math.abs(currentAspect - 1) < 0.01 ? '260px' : currentAspect < 1 ? '240px' : '100%',
+              height: Math.abs(currentAspect - 1) < 0.01 ? '260px' : currentAspect < 1 ? '320px' : '260px',
               backgroundColor: '#111827',
               borderRadius: '12px',
               overflow: 'hidden',

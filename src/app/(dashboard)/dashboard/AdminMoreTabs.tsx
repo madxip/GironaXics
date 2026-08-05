@@ -615,10 +615,10 @@ export default function AdminMoreTabs({
                     />
                   </div>
 
-                  {/* Fons Mòbil 4:3 */}
+                  {/* Fons Mòbil 1:1 Quadrat */}
                   <div>
                     <label style={{ display: "block", fontSize: "12px", fontWeight: 700, marginBottom: "4px" }}>
-                      📱 Fons Mòbil (4:3)
+                      📱 Fons Mòbil (Quadrat 1:1)
                     </label>
                     <input
                       type="file"
@@ -630,7 +630,7 @@ export default function AdminMoreTabs({
                         reader.onload = () => {
                           if (typeof reader.result === 'string') {
                             setCropperImageSrc(reader.result);
-                            setCropperAspect(4 / 3);
+                            setCropperAspect(1);
                             setCropperTargetField('mobile');
                           }
                         };
@@ -709,14 +709,14 @@ export default function AdminMoreTabs({
                         </div>
                       </div>
 
-                      {/* MODEL MÒBIL (Horitzontal 4:3) */}
+                      {/* MODEL MÒBIL (Quadrat 1:1) */}
                       <div>
                         <div style={{ fontSize: "10px", fontWeight: 800, color: "#666", marginBottom: "6px", textTransform: "uppercase" }}>
-                          📱 Mòbil (4:3)
+                          📱 Mòbil (Quadrat 1:1)
                         </div>
                         <div style={{
                           width: "100%",
-                          aspectRatio: "4/3",
+                          aspectRatio: "1/1",
                           borderRadius: "18px",
                           position: "relative",
                           overflow: "hidden",
