@@ -661,7 +661,7 @@ export async function getDbUserByEmail(email: string) {
   if (error || !data || data.length === 0) return null;
   const r = data[0];
   const cleanEmail = (r.email || '').toLowerCase().trim();
-  const isAdmin = cleanEmail === 'hola@gironaxics.cat' || cleanEmail === 'jtaulats1976@gmail.com' || !!r.is_admin;
+  const isAdmin = cleanEmail === 'hola@gironaxics.cat' || !!r.is_admin;
   const isApproved = r.aprovat !== undefined ? !!r.aprovat : false;
 
   return {
