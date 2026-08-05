@@ -238,7 +238,7 @@ export default function AdminMoreTabs({
     });
     if (res.ok) {
       setMsg("✅ Sponsor afegit amb èxit!");
-      setNewSponsor({ nom: "", categoriaSlug: "general", imatgeUrl: "", imatgeFonsUrl: "", enllac: "", actiu: true, descripcio: "", titol: "" });
+      setNewSponsor({ nom: "", categoriaSlug: "general", imatgeUrl: "", imatgeFonsUrl: "", imatgeFonsMobilUrl: "", enllac: "", actiu: true, descripcio: "", titol: "" });
       loadData();
     } else {
       setMsg("❌ Error creant el sponsor.");
