@@ -40,8 +40,11 @@ export async function registerCentreAction(prevState: unknown, formData: FormDat
       if (!newCentre) {
         return { success: false, error: "No s'ha pogut crear el nou centre. Torna-ho a provar." };
       }
-      if ('error' in newCentre && newCentre.error === 'quota') {
-        return { success: false, error: "El servei de registre no està disponible temporalment per límit de capacitat. Si us plau, contacta amb hola@gironaxics.cat perquè et registrem manualment." };
+      if ('error' in newCentre) {
+        return { success: false, error: "El servei de registre no està disponible temporalment. Contacta amb nosaltres a hola@gironaxics.cat." };
+      }
+      if (!('id' in newCentre) || !newCentre.id) {
+        return { success: false, error: "Error obtenint l'ID del nou centre." };
       }
       centreId = newCentre.id;
       
