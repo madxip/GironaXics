@@ -72,8 +72,15 @@ export async function POST(req: NextRequest) {
     const { action, data } = body;
 
     if (action === "create-sponsor") {
+      if (!data || !data.nom) {
+        return NextResponse.json({ error: "El nom del patrocinador és obligatori" }, { status: 400 });
+      }
       const id = await createDbSponsor(data);
-      if (id) return NextResponse.json({ success: true, id });
+      if (id) {
+        return NextResponse.json({ success: true, id });
+      } else {
+        return NextResponse.json({ error: "Error en desar el patrocinador a la base de dades. Revisa els camps." }, { status: 500 });
+      }
     } else if (action === "create-casal") {
       const id = await createDbCasalsBanner(
         data.nom,

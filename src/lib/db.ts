@@ -453,23 +453,40 @@ export async function getDbSponsors(ciutat: string = 'girona'): Promise<Sponsor[
 }
 
 export async function createDbSponsor(data: Partial<Sponsor> & { nom: string }, ciutat: string = 'girona'): Promise<string | null> {
-  if (!supabase || !data.nom) return null;
+  if (!supabase || !data.nom) {
+    console.error("[createDbSponsor] Error: falta client supabase o data.nom", data);
+    return null;
+  }
   const id = `sp_${Math.random().toString(36).substring(2, 8)}`;
-  const record = {
+  const record: Record<string, any> = {
     id,
     nom: data.nom,
-    categoria_slug: data.categoriaSlug || 'patrocinador',
+    categoria_slug: data.categoriaSlug || 'general',
     imatge_url: data.imatgeUrl || '',
     enllac: data.enllac || '',
     actiu: data.actiu !== undefined ? data.actiu : true,
     descripcio: data.descripcio || '',
     imatge_fons_url: data.imatgeFonsUrl || '',
-    imatge_fons_mobil_url: data.imatgeFonsMobilUrl || '',
     titol: data.titol || '',
     ciutat
   };
-  const { error } = await supabase.from('sponsors').insert([record]);
-  if (error) return null;
+  if (data.imatgeFonsMobilUrl) {
+    record.imatge_fons_mobil_url = data.imatgeFonsMobilUrl;
+  }
+
+  let { error } = await supabase.from('sponsors').insert([record]);
+  
+  if (error && (error.code === 'PGRST204' || error.message?.includes('imatge_fons_mobil_url'))) {
+    console.warn("[createDbSponsor] Columna imatge_fons_mobil_url no trobada a Supabase, reintentant sense aquesta columna...");
+    delete record.imatge_fons_mobil_url;
+    const retry = await supabase.from('sponsors').insert([record]);
+    error = retry.error;
+  }
+
+  if (error) {
+    console.error("[createDbSponsor] Supabase Insert Error:", error);
+    return null;
+  }
   return id;
 }
 
@@ -486,7 +503,18 @@ export async function updateDbSponsor(id: string, data: Partial<Sponsor>): Promi
   if (data.imatgeFonsMobilUrl !== undefined) updates.imatge_fons_mobil_url = data.imatgeFonsMobilUrl;
   if (data.titol !== undefined) updates.titol = data.titol;
 
-  const { error } = await supabase.from('sponsors').update(updates).eq('id', id);
+  let { error } = await supabase.from('sponsors').update(updates).eq('id', id);
+
+  if (error && (error.code === 'PGRST204' || error.message?.includes('imatge_fons_mobil_url')) && updates.imatge_fons_mobil_url) {
+    console.warn("[updateDbSponsor] Columna imatge_fons_mobil_url no trobada a Supabase, reintentant sense aquesta columna...");
+    delete updates.imatge_fons_mobil_url;
+    const retry = await supabase.from('sponsors').update(updates).eq('id', id);
+    error = retry.error;
+  }
+
+  if (error) {
+    console.error("[updateDbSponsor] Supabase Update Error:", error);
+  }
   return !error;
 }
 
