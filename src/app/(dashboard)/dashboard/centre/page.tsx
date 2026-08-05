@@ -33,7 +33,7 @@ export default async function CentreDashboardPage() {
   const allPoblacions = useDb ? await getDbPoblacions() : await getPoblacions();
   const poblacionsGrouped: Record<string, string[]> = {};
 
-  (allPoblacions as any[]).forEach(p => {
+  (allPoblacions as { comarca?: string; nom?: string }[]).forEach(p => {
     if (p.comarca && p.nom) {
       if (!poblacionsGrouped[p.comarca]) {
         poblacionsGrouped[p.comarca] = [];
