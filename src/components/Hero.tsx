@@ -89,15 +89,15 @@ export default function Hero({
       <div className="hero-green-stats-bar">
         <div className="hero-green-stats-container">
           <div className="hero-stat-box">
-            <div className="hero-stat-number" data-val={numCentres} ref={el => { statRefs.current[0] = el; }}>0</div>
+            <div className="hero-stat-number" data-val={numCentres} ref={el => { statRefs.current[0] = el; }}>{numCentres}</div>
             <div className="hero-stat-label">centres</div>
           </div>
           <div className="hero-stat-box">
-            <div className="hero-stat-number" data-val={numCategories} ref={el => { statRefs.current[1] = el; }}>0</div>
+            <div className="hero-stat-number" data-val={numCategories} ref={el => { statRefs.current[1] = el; }}>{numCategories}</div>
             <div className="hero-stat-label">categories</div>
           </div>
           <div className="hero-stat-box">
-            <div className="hero-stat-number" data-val={numActivitats} data-plus="true" ref={el => { statRefs.current[2] = el; }}>+0</div>
+            <div className="hero-stat-number" data-val={numActivitats} data-plus="true" ref={el => { statRefs.current[2] = el; }}>+{numActivitats}</div>
             <div className="hero-stat-label">activitats</div>
           </div>
         </div>
