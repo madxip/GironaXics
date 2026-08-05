@@ -8,6 +8,7 @@ import AccordionCategoria from './AccordionCategoria';
 import { normalizeSlug, getSessionRandomSeed, getDeterministicSeed } from '@/lib/utils';
 import { trackEvent } from '@/lib/trackEvent';
 import { isTallerExpiredOrEnded, getNextTallerDate } from '@/lib/tallerDates';
+import SafeImage from './SafeImage';
 
 
 
@@ -857,8 +858,7 @@ export default function Filtres({
                                 <div className="sponsor-logo-pill" style={{ backgroundColor: '#fdfbf7', borderRadius: '100px', padding: '6px 14px 6px 6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                   {activeSponsor.imatgeUrl ? (
                                     <div className="sponsor-logo-icon" style={{ width: '32px', height: '32px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0 }}>
-                                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                                      <img src={activeSponsor.imatgeUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                      <SafeImage src={activeSponsor.imatgeUrl} alt="" width={32} height={32} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                     </div>
                                   ) : (
                                     <div className="sponsor-logo-icon" style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'var(--verd)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '12px' }}>★</div>
