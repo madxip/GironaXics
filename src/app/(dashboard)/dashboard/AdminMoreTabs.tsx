@@ -891,37 +891,6 @@ export default function AdminMoreTabs({
           </div>
         </div>
       )}
-
-      {/* 6. SECCIÓ ANALYTICS */}
-      {tab === "analytics" && (
-        <div>
-          <h3 style={{ fontSize: "20px", fontFamily: "var(--font-serif)", fontStyle: "italic", color: "var(--verd-fosc)", marginBottom: "16px" }}>
-            📊 Mètrics i Estadístiques ({analytics.length} esdeveniments recents)
-          </h3>
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "14px" }}>
-              <thead>
-                <tr style={{ borderBottom: "2px solid #eee" }}>
-                  <th style={{ padding: "10px" }}>Data / Hora</th>
-                  <th style={{ padding: "10px" }}>Tipus d'Esdeveniment</th>
-                  <th style={{ padding: "10px" }}>Filtre / Cerca</th>
-                  <th style={{ padding: "10px" }}>Dispositiu</th>
-                </tr>
-              </thead>
-              <tbody>
-                {analytics.map(a => (
-                  <tr key={a.id} style={{ borderBottom: "1px solid #f0f0f0" }}>
-                    <td style={{ padding: "10px", fontSize: "12px", color: "var(--muted)" }}>{new Date(a.created_at).toLocaleString('ca-ES')}</td>
-                    <td style={{ padding: "10px", fontWeight: 600, color: "var(--verd)" }}>{a.event_type}</td>
-                    <td style={{ padding: "10px" }}>{a.event_label || a.category_name || '-'}</td>
-                    <td style={{ padding: "10px" }}>{a.device || 'desktop'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
       {cropperImageSrc && (
         <ImageCropperModal
           imageSrc={cropperImageSrc}
