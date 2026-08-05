@@ -91,13 +91,5 @@ export default function SafeImage({ src, alt, ...props }: ImageProps) {
     }
   }
 
-  const isExternal = typeof src === 'string' && (
-    src.startsWith('/api/imatges') ||
-    ALLOWED_DOMAINS.some(domain => {
-      try { return new URL(src).hostname.endsWith(domain) || new URL(src).hostname === domain; }
-      catch { return false; }
-    })
-  );
-
-  return <Image src={src} alt={alt} onError={() => setError(true)} unoptimized={isExternal} {...props} />;
+  return <Image src={src} alt={alt} onError={() => setError(true)} {...props} />;
 }

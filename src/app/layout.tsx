@@ -54,6 +54,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ca" className={`${dmSans.variable} ${playfair.variable}`}>
+      <head>
+        <link rel="preconnect" href="https://fgghipujyartbzumtmzv.supabase.co" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://fgghipujyartbzumtmzv.supabase.co" />
+      </head>
       <body>
         {children}
         <AnalyticsTracker />
