@@ -699,15 +699,23 @@ export async function createDbCentre(nom: string, ciutat: string = 'girona'): Pr
 export async function createDbUsuari(user: { nom: string; email: string; passwordHash: string; centreId: string }, ciutat: string = 'girona'): Promise<{ id: string } | null> {
   if (!supabase || !user.email) return null;
   const id = `u_${Math.random().toString(36).substring(2, 8)}`;
-  const record = {
+  const record: Record<string, any> = {
     id,
     nom: user.nom,
     email: user.email.toLowerCase().trim(),
     password_hash: user.passwordHash,
     centre_id: user.centreId,
+    aprovat: true,
     ciutat
   };
-  const { error } = await supabase.from('usuaris_centres').insert([record]);
+  let { error } = await supabase.from('usuaris_centres').insert([record]);
+  if (error && (error.code === 'PGRST204' || error.message?.includes('nom') || error.message?.includes('aprovat'))) {
+    console.warn("[createDbUsuari] Columnes nom/aprovat no trobades a Supabase, reintentant sense aquestes columnes...");
+    delete record.nom;
+    delete record.aprovat;
+    const retry = await supabase.from('usuaris_centres').insert([record]);
+    error = retry.error;
+  }
   if (error) {
     console.error("[createDbUsuari] Supabase error:", error);
     return null;
