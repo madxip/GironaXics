@@ -95,8 +95,17 @@ export default function AdminMoreTabs({
   const [cropperTargetField, setCropperTargetField] = useState<'desktop' | 'mobile'>('desktop');
 
   useEffect(() => {
+    setMsg("");
     loadData();
   }, [tab]);
+
+  useEffect(() => {
+    if (!msg) return;
+    const timer = setTimeout(() => {
+      setMsg("");
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [msg]);
 
   async function loadData() {
     setLoading(true);
