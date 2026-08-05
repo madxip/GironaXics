@@ -117,7 +117,7 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
       resultId = await createDbActivitat(actData);
     } else {
       const res = await createAirtableActivitat(actData);
-      if (res) {
+      if (res && res.id) {
         resultId = res.id;
         if (res.slug) slug = res.slug;
       }
