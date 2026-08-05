@@ -661,6 +661,53 @@ export async function getDbUserByEmail(email: string) {
   };
 }
 
+export async function createDbCentre(nom: string, ciutat: string = 'girona'): Promise<{ id: string } | null> {
+  if (!supabase || !nom) return null;
+  const slug = nom.toLowerCase().trim()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  const id = `c_${Math.random().toString(36).substring(2, 8)}`;
+  
+  const record = {
+    id,
+    slug,
+    nom,
+    adreca: '',
+    telefon: '',
+    email: '',
+    web: '',
+    barri: 'Girona',
+    descripcio: '',
+    ciutat
+  };
+  const { error } = await supabase.from('centres').insert([record]);
+  if (error) {
+    console.error("[createDbCentre] Supabase error:", error);
+    return null;
+  }
+  return { id };
+}
+
+export async function createDbUsuari(user: { nom: string; email: string; passwordHash: string; centreId: string }, ciutat: string = 'girona'): Promise<{ id: string } | null> {
+  if (!supabase || !user.email) return null;
+  const id = `u_${Math.random().toString(36).substring(2, 8)}`;
+  const record = {
+    id,
+    nom: user.nom,
+    email: user.email.toLowerCase().trim(),
+    password_hash: user.passwordHash,
+    centre_id: user.centreId,
+    ciutat
+  };
+  const { error } = await supabase.from('usuaris_centres').insert([record]);
+  if (error) {
+    console.error("[createDbUsuari] Supabase error:", error);
+    return null;
+  }
+  return { id };
+}
+
 
 // ─── 7. POBLACIONS ──────────────────────────────────────────────────────────
 

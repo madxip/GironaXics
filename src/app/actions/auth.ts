@@ -1,7 +1,8 @@
 "use server";
 
 import bcrypt from "bcryptjs";
-import { getUserByEmail, createUser, createCentre } from "@/lib/airtable";
+import { getUserByEmail as getAirtableUser, createUser as createAirtableUser, createCentre as createAirtableCentre } from "@/lib/airtable";
+import { getDbUserByEmail, createDbUsuari, createDbCentre, supabase } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { sendInternalEmail } from "./sendEmail";
 
@@ -24,28 +25,26 @@ export async function registerCentreAction(prevState: unknown, formData: FormDat
     return { success: false, error: "Si us plau, especifica el nom del nou centre." };
   }
 
+  const useDb = process.env.DB_PROVIDER === 'supabase' || !!supabase;
+
   try {
     // 1. Check if user already exists
-    const existingUser = await getUserByEmail(email);
+    const existingUser = useDb ? await getDbUserByEmail(email) : await getAirtableUser(email);
     if (existingUser) {
       return { success: false, error: "Aquest correu ja està registrat en un compte existent." };
     }
 
-    // 2. If it's a new center, create it in Airtable first
+    // 2. If it's a new center, create it first
     if (centreId === "nou-centre") {
-      const newCentre = await createCentre(nouCentreNom);
+      const newCentre = useDb ? await createDbCentre(nouCentreNom) : await createAirtableCentre(nouCentreNom);
       if (!newCentre) {
         return { success: false, error: "No s'ha pogut crear el nou centre. Torna-ho a provar." };
       }
-      if ('error' in newCentre) {
-        if (newCentre.error === 'quota') {
-          return { success: false, error: "El servei de registre no està disponible temporalment per límit de capacitat. Si us plau, torna a intentar-ho l'1 de juliol o contacta amb hola@gironaxics.cat perquè et registrem manualment." };
-        }
-        return { success: false, error: "No s'ha pogut crear el nou centre. Torna-ho a provar." };
+      if ('error' in newCentre && newCentre.error === 'quota') {
+        return { success: false, error: "El servei de registre no està disponible temporalment per límit de capacitat. Si us plau, contacta amb hola@gironaxics.cat perquè et registrem manualment." };
       }
       centreId = newCentre.id;
       
-      // Force path revalidation since the list of centers has changed
       revalidatePath("/registre");
     }
 
@@ -53,16 +52,13 @@ export async function registerCentreAction(prevState: unknown, formData: FormDat
     const salt = bcrypt.genSaltSync(10);
     const passwordHash = bcrypt.hashSync(password, salt);
 
-    // 4. Create the user in Airtable linked to the center
-    const newUser = await createUser({
-      nom,
-      email,
-      passwordHash,
-      centreId,
-    });
+    // 4. Create the user linked to the center
+    const newUser = useDb 
+      ? await createDbUsuari({ nom, email, passwordHash, centreId })
+      : await createAirtableUser({ nom, email, passwordHash, centreId });
 
     if (!newUser) {
-      return { success: false, error: "S'ha produït un error al registrar el compte a Airtable. Torna-ho a provar." };
+      return { success: false, error: "S'ha produït un error al registrar el compte. Torna-ho a provar." };
     }
 
     // 5. Send notification email to the administrator (hola@gironaxics.cat)
@@ -78,12 +74,9 @@ Dades del registre:
 - Nom del contacte: ${nom}
 - Correu electrònic: ${email}
 - Nom del centre: ${nouCentreNom || "Enllaçat a centre existent"}
-- ID del centre: ${centreId}
-
-Si us plau, accedeix a Airtable per validar el centre o l'usuari i activar el compte si cal.`,
+- ID del centre: ${centreId}`,
       });
     } catch (mailError) {
-      // Don't block registration if email notification fails
       console.error("[Register Action] Error sending admin notification email:", mailError);
     }
 
