@@ -1016,11 +1016,14 @@ export async function createActivitat(data: Omit<Activitat, 'id' | 'slug' | 'cen
       fields.subcategoria_enllac = [subcatId];
     }
 
-    if (data.imatgeUrl) {
+    if (data.imatgeUrl && (data.imatgeUrl.startsWith('http://') || data.imatgeUrl.startsWith('https://'))) {
       fields.Imatge = [{ url: data.imatgeUrl }];
     }
     if (Array.isArray(data.galeria) && data.galeria.length > 0) {
-      fields.Galeria = data.galeria.map(url => ({ url }));
+      const validGallery = data.galeria.filter(url => typeof url === 'string' && (url.startsWith('http://') || url.startsWith('https://')));
+      if (validGallery.length > 0) {
+        fields.Galeria = validGallery.map(url => ({ url }));
+      }
     }
 
     const tryCreateRecord = async (currentFields: Record<string, unknown>): Promise<{ records?: { id: string; fields: Record<string, unknown> }[] }> => {
@@ -1154,10 +1157,19 @@ export async function updateActivitat(id: string, data: Partial<Omit<Activitat, 
     }
 
     if (data.imatgeUrl !== undefined) {
-      fields.Imatge = data.imatgeUrl ? [{ url: data.imatgeUrl }] : [];
+      if (data.imatgeUrl && (data.imatgeUrl.startsWith('http://') || data.imatgeUrl.startsWith('https://'))) {
+        fields.Imatge = [{ url: data.imatgeUrl }];
+      } else if (!data.imatgeUrl) {
+        fields.Imatge = [];
+      }
     }
     if (data.galeria !== undefined) {
-      fields.Galeria = Array.isArray(data.galeria) ? data.galeria.map(url => ({ url })) : [];
+      if (Array.isArray(data.galeria)) {
+        const validGallery = data.galeria.filter(url => typeof url === 'string' && (url.startsWith('http://') || url.startsWith('https://')));
+        fields.Galeria = validGallery.map(url => ({ url }));
+      } else {
+        fields.Galeria = [];
+      }
     }
 
     const tryUpdateRecord = async (currentFields: Record<string, unknown>): Promise<boolean> => {
@@ -1297,7 +1309,11 @@ export async function updateCentre(id: string, data: Partial<Omit<Centre, 'id' |
     if (data.descripcio !== undefined) fields.descripcio = data.descripcio;
 
     if (data.imatgeUrl !== undefined) {
-      fields.Logo = data.imatgeUrl ? [{ url: data.imatgeUrl }] : [];
+      if (data.imatgeUrl && (data.imatgeUrl.startsWith('http://') || data.imatgeUrl.startsWith('https://'))) {
+        fields.Logo = [{ url: data.imatgeUrl }];
+      } else if (!data.imatgeUrl) {
+        fields.Logo = [];
+      }
     }
     if (data.vacances !== undefined) {
       fields.vacances = data.vacances || null;

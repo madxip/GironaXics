@@ -196,6 +196,10 @@ export function mapAirtableError(err: unknown): string {
     return "La mida de la petició supera el límit. Assegura't que les fotos adjuntes no pesin massa (màxim 4MB).";
   }
 
+  if (lower.includes("invalid_attachment_url") || lower.includes("data:image") || lower.includes("attachment url")) {
+    return "Hi ha hagut un problema amb el format o la càrrega de la imatge. Si us plau, torna a seleccionar la foto i espera que es carregui.";
+  }
+
   if (lower.includes("422") || lower.includes("airtable 422")) {
     // Passa el missatge específic d'Airtable per ajudar a diagnosticar quin camp falla
     return `Error de validació de dades (Airtable 422): ${msg}`;

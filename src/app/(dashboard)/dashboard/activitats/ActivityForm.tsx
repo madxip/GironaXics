@@ -864,6 +864,11 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
       formData.append("inici", inici);
       formData.append("idioma", idioma);
       formData.append("qui_imparteix", qui_imparteix);
+      if (imatgeUrl && imatgeUrl.startsWith("data:")) {
+        setToast({ type: "error", message: "La imatge s'està processant o té un format no vàlid. Si us plau, torna a carregar la foto." });
+        setLoading(false);
+        return;
+      }
       formData.append("imatgeUrl", imatgeUrl);
       formData.append("galeria", JSON.stringify(galeria));
       formData.append("tipus", tipus);
