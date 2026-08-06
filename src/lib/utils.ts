@@ -180,15 +180,15 @@ export function mapAirtableError(err: unknown): string {
     return "Hi ha un valor no admès o de format incorrecte en algun camp. Si us plau, revisa les dades (com ara URLs d'imatge o relacions).";
   }
 
-  if (lower.includes("not_found") || lower.includes("record_not_found") || lower.includes("does not exist") || lower.includes("not found")) {
+  if (lower.includes("record_not_found") || lower.includes("record not found") || lower.includes("does not exist")) {
     return "No s'ha trobat el registre especificat. És possible que hagi estat eliminat per un altre usuari.";
   }
 
   if (lower.includes("unauthorized") || lower.includes("authentication_required") || lower.includes("bearer") || lower.includes("401")) {
-    return "Error de credencials de base de dades (API key incorrecta o caducada). Si us plau, revisa la configuració local (.env.local).";
+    return "Error de credencials de base de dades (API key incorrecta o caducada). Si us plau, revisa la configuració de les variables d'entorn.";
   }
 
-  if (lower.includes("table not found") || lower.includes("base not found") || lower.includes("404")) {
+  if (lower.includes("table_not_found") || lower.includes("base_not_found") || lower.includes("could not find table")) {
     return "No s'ha trobat la taula o la base de dades de destí a Airtable. Verifica que el BASE_ID i el nom siguin correctes.";
   }
 
