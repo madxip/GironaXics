@@ -255,6 +255,17 @@ function mapActivitatRecord(
   } else if (typeof rawCat === 'string' && rawCat) {
     categoriesArray = rawCat.split(',').map(c => c.trim());
   }
+  categoriesArray = categoriesArray.map(c => {
+    const trimmed = String(c).trim();
+    const lower = trimmed.toLowerCase();
+    if (lower === 'en família' || lower === 'en familia') return 'En família';
+    if (lower === 'salut i benestar') return 'Salut i benestar';
+    if (lower === 'creativitat i expressió' || lower === 'creativitat i expressio') return 'Creativitat i Expressió';
+    if (lower === 'reforç escolar' || lower === 'reforc escolar') return 'Reforç escolar';
+    if (lower === 'programació i robòtica' || lower === 'programacio i robotica') return 'Programació i robòtica';
+    if (lower === 'tallers i oci') return 'Tallers i Oci';
+    return trimmed;
+  });
   f.categoria = categoriesArray[0] || '';
   f.categories = categoriesArray;
   
