@@ -80,6 +80,51 @@ function matchEdatGroup(edatStr: string | undefined, group: string): boolean {
   return false;
 }
 
+/**
+ * Interleaves activities so that no more than `maxConsecutive` cards from the same center
+ * appear consecutively in the list.
+ */
+function limitConsecutiveByCentre(items: Activitat[], maxConsecutive = 4): Activitat[] {
+  if (items.length <= maxConsecutive) return items;
+
+  const result: Activitat[] = [];
+  const pool = [...items];
+
+  while (pool.length > 0) {
+    const lastItem = result[result.length - 1];
+    let streak = 0;
+    const lastCentre = lastItem ? (lastItem.centre || lastItem.centreId || '').toLowerCase().trim() : '';
+
+    if (lastCentre !== '') {
+      for (let i = result.length - 1; i >= 0; i--) {
+        const c = (result[i].centre || result[i].centreId || '').toLowerCase().trim();
+        if (c === lastCentre) {
+          streak++;
+        } else {
+          break;
+        }
+      }
+    }
+
+    let candidateIndex = -1;
+    if (streak >= maxConsecutive && lastCentre !== '') {
+      candidateIndex = pool.findIndex(a => {
+        const c = (a.centre || a.centreId || '').toLowerCase().trim();
+        return c !== lastCentre;
+      });
+    }
+
+    if (candidateIndex === -1) {
+      candidateIndex = 0;
+    }
+
+    const [chosen] = pool.splice(candidateIndex, 1);
+    result.push(chosen);
+  }
+
+  return result;
+}
+
 export default function Filtres({ 
   activitats, 
   sponsors = [],
@@ -346,7 +391,7 @@ export default function Filtres({
     // Extraescolars de centres no confirmats: ordre aleatori estabilitzat per la sessió de l'usuari
     noConfirmats.sort((a, b) => (randomWeights[a.id || a.slug] ?? 0.5) - (randomWeights[b.id || b.slug] ?? 0.5));
 
-    return [...tallers, ...confirmats, ...noConfirmats];
+    return limitConsecutiveByCentre([...tallers, ...confirmats, ...noConfirmats], 4);
   }, [activitats, selectedTipus, selectedCategoria, selectedSubcategoria, selectedEdat, selectedBarri, selectedNee, sessionSeed]);
 
   const grouped = useMemo(() => {
