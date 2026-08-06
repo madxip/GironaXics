@@ -864,12 +864,31 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
       formData.append("inici", inici);
       formData.append("idioma", idioma);
       formData.append("qui_imparteix", qui_imparteix);
-      if (imatgeUrl && imatgeUrl.startsWith("data:")) {
-        setToast({ type: "error", message: "La imatge s'està processant o té un format no vàlid. Si us plau, torna a carregar la foto." });
-        setLoading(false);
-        return;
+      let finalImatgeUrl = imatgeUrl;
+      if (finalImatgeUrl && finalImatgeUrl.startsWith("data:")) {
+        try {
+          const fetchRes = await fetch(finalImatgeUrl);
+          const blob = await fetchRes.blob();
+          const uploadFormData = new FormData();
+          uploadFormData.append("file", blob, "imatge.jpg");
+          const uploadRes = await fetch("/api/upload", { method: "POST", body: uploadFormData });
+          if (uploadRes.ok) {
+            const uploadData = await uploadRes.json();
+            if (uploadData.url && uploadData.url.startsWith("http")) {
+              finalImatgeUrl = uploadData.url;
+              setImatgeUrl(uploadData.url);
+            }
+          }
+        } catch (e) {
+          console.error("Error auto-uploading base64 image:", e);
+        }
       }
-      formData.append("imatgeUrl", imatgeUrl);
+
+      if (finalImatgeUrl && finalImatgeUrl.startsWith("data:")) {
+        finalImatgeUrl = "";
+      }
+
+      formData.append("imatgeUrl", finalImatgeUrl);
       formData.append("galeria", JSON.stringify(galeria));
       formData.append("tipus", tipus);
       formData.append("torns", torns);

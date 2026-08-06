@@ -77,8 +77,30 @@ export async function POST(req: NextRequest) {
         });
         return NextResponse.json({ url: blob.url });
       } catch (blobErr) {
-        console.warn("[Upload API] Error amb Vercel Blob, intentant fallback a Catbox:", blobErr);
+        console.warn("[Upload API] Error amb Vercel Blob, intentant fallback:", blobErr);
       }
+    }
+
+    // 4. Fallback 1: ImgBB API (permanent, súper ràpid i 100% fiable)
+    try {
+      const imgbbForm = new FormData();
+      imgbbForm.append("key", "6d207e60798348d40013c010e410b249");
+      imgbbForm.append("image", buffer.toString("base64"));
+
+      const response = await fetch("https://api.imgbb.com/1/upload", {
+        method: "POST",
+        body: imgbbForm,
+        signal: AbortSignal.timeout(10000)
+      });
+
+      if (response.ok) {
+        const json = await response.json();
+        if (json?.data?.url && typeof json.data.url === "string") {
+          return NextResponse.json({ url: json.data.url });
+        }
+      }
+    } catch (imgbbErr) {
+      console.warn("[Upload API] ImgBB no disponible, intentant següent fallback:", imgbbErr);
     }
 
     // 4. Fallback 1: Catbox.moe (permanent)
