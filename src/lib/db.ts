@@ -83,6 +83,8 @@ function mapSupabaseActivitat(r: Record<string, any>): Activitat {
     poblacio_propia: r.poblacio_propia || '',
     adreca_propia: r.adreca_propia || '',
     nee: !!r.nee,
+    lat: r.lat ? Number(r.lat) : undefined,
+    lng: r.lng ? Number(r.lng) : undefined,
   };
 }
 
@@ -100,6 +102,8 @@ function mapSupabaseCentre(r: Record<string, any>): Centre {
     imatgeUrl: r.imatge_url || '',
     interessat: !!r.interessat,
     vacances: r.vacances || '',
+    lat: r.lat ? Number(r.lat) : undefined,
+    lng: r.lng ? Number(r.lng) : undefined,
   };
 }
 
@@ -249,6 +253,8 @@ export async function createDbActivitat(data: Partial<Omit<Activitat, 'categoria
     poblacio_propia: data.poblacio_propia || '',
     adreca_propia: data.adreca_propia || '',
     nee: !!data.nee,
+    lat: data.lat !== undefined ? data.lat : null,
+    lng: data.lng !== undefined ? data.lng : null,
     ciutat: 'girona'
   };
 
@@ -286,6 +292,8 @@ export async function updateDbActivitat(id: string, data: Partial<Omit<Activitat
   if (data.qui_imparteix !== undefined) updates.qui_imparteix = data.qui_imparteix;
   if (data.publicada !== undefined) updates.publicada = data.publicada;
   if (data.nee !== undefined) updates.nee = data.nee;
+  if (data.lat !== undefined) updates.lat = data.lat;
+  if (data.lng !== undefined) updates.lng = data.lng;
   if (data.imatgeUrl !== undefined) {
     updates.imatge_url = data.imatgeUrl;
     updates.imatge_thumbnail_url = data.imatgeThumbnailUrl || data.imatgeUrl;
@@ -357,6 +365,8 @@ export async function updateDbCentre(id: string, data: Partial<Centre> & { actiu
   if (data.interessat !== undefined) updates.interessat = data.interessat;
   if (data.vacances !== undefined) updates.vacances = data.vacances;
   if (data.actiu !== undefined) updates.actiu = data.actiu;
+  if (data.lat !== undefined) updates.lat = data.lat;
+  if (data.lng !== undefined) updates.lng = data.lng;
 
   updates.updated_at = new Date().toISOString();
 

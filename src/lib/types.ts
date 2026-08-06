@@ -36,6 +36,8 @@ export interface Activitat {
   poblacio_propia?: string;
   adreca_propia?: string;
   nee?: boolean;
+  lat?: number;
+  lng?: number;
 }
 
 export interface Sponsor {
@@ -68,6 +70,8 @@ export interface Centre {
   interessat?: boolean; // Centre ha confirmat participació (casella Airtable)
   vacances?: string; // Rangs de vacances (una línia per rang: "DD/MM/AA-DD/MM/AA")
   rawImatgeUrl?: string;
+  lat?: number;
+  lng?: number;
 }
 
 export interface CasalsBanner {
