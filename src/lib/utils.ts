@@ -180,6 +180,10 @@ export function mapAirtableError(err: unknown): string {
     return "La mida de la petició supera el límit (màxim 4MB per imatge).";
   }
 
+  if (lower.includes("invalid_attachment_url") || lower.includes("data:image") || lower.includes("attachment url")) {
+    return "Hi ha hagut un problema amb el format o la càrrega de la imatge. Si us plau, torna a seleccionar la foto i espera que es carregui.";
+  }
+
   // General fallback
   return `Error de la base de dades: ${msg}`;
 }

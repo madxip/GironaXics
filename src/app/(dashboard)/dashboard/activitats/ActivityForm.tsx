@@ -865,7 +865,31 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
       formData.append("inici", inici);
       formData.append("idioma", idioma);
       formData.append("qui_imparteix", qui_imparteix);
-      formData.append("imatgeUrl", imatgeUrl);
+      let finalImatgeUrl = imatgeUrl;
+      if (finalImatgeUrl && finalImatgeUrl.startsWith("data:")) {
+        try {
+          const fetchRes = await fetch(finalImatgeUrl);
+          const blob = await fetchRes.blob();
+          const uploadFormData = new FormData();
+          uploadFormData.append("file", blob, "imatge.jpg");
+          const uploadRes = await fetch("/api/upload", { method: "POST", body: uploadFormData });
+          if (uploadRes.ok) {
+            const uploadData = await uploadRes.json();
+            if (uploadData.url && uploadData.url.startsWith("http")) {
+              finalImatgeUrl = uploadData.url;
+              setImatgeUrl(uploadData.url);
+            }
+          }
+        } catch (e) {
+          console.error("Error auto-uploading base64 image:", e);
+        }
+      }
+
+      if (finalImatgeUrl && finalImatgeUrl.startsWith("data:")) {
+        finalImatgeUrl = "";
+      }
+
+      formData.append("imatgeUrl", finalImatgeUrl);
       formData.append("galeria", JSON.stringify(galeria));
       formData.append("tipus", tipus);
       formData.append("torns", torns);
