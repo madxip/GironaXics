@@ -155,8 +155,15 @@ export function mapAirtableError(err: unknown): string {
 
   const lower = msg.toLowerCase();
 
-  // SSL and network errors (e.g. Node fetch local certificate issues or lack of connection)
-  if (lower.includes("unable_to_verify_leaf_signature") || lower.includes("leaf signature") || lower.includes("ssl")) {
+  // SSL and network errors (e.g. Node fetch local certificate issues)
+  if (
+    lower.includes("unable_to_verify_leaf_signature") ||
+    lower.includes("leaf signature") ||
+    lower.includes("cert_has_expired") ||
+    lower.includes("depth_zero_self_signed_cert") ||
+    lower.includes("ssl_error") ||
+    lower.includes("err_ssl_")
+  ) {
     return "Error de connexió SSL segura amb la base de dades. Si us plau, comprova que la configuració de xarxa i el certificat siguin correctes.";
   }
   
