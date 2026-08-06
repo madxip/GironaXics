@@ -298,6 +298,7 @@ async function main() {
       centre_vacances: centreId ? (centreVacancesMap.get(centreId) || '') : '',
       poblacio_propia: poblacioPropia,
       adreca_propia: adrecaPropia,
+      nee: !!(f.nee || f.NEE),
       ciutat: 'girona'
     };
   });
