@@ -421,20 +421,6 @@ export default function Filtres({
                 <>Casals <span className="mobile-br-only"><br /></span>d&apos;estiu</>
               )}
             </button>
-
-            <button 
-              type="button"
-              onClick={() => updateFilter('nee', selectedNee ? 'false' : 'true')}
-              className={`filter-tab-button ${selectedNee ? 'active' : ''}`}
-              style={{
-                backgroundColor: selectedNee ? '#2c6e49' : 'transparent',
-                color: selectedNee ? 'white' : 'var(--verd-fosc)',
-                borderColor: selectedNee ? '#2c6e49' : 'rgba(26,107,58,0.3)',
-                fontWeight: 700
-              }}
-            >
-              🧩 Adaptades NEE
-            </button>
           </div>
         </div>
 
