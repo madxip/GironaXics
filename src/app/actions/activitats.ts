@@ -59,6 +59,7 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
     const torns = formData.get("torns") as string;
     const poblacio_propia = formData.get("poblacio_propia") as string;
     const adreca_propia = formData.get("adreca_propia") as string;
+    const nee = formData.get("nee") === "true";
 
     const galeriaRaw = formData.get("galeria");
     let galeria: string[] = [];
@@ -107,7 +108,8 @@ export async function createActivitatAction(prevState: unknown, formData: FormDa
       tipus: tipus || "Extraescolar",
       torns: torns || undefined,
       poblacio_propia: poblacio_propia || undefined,
-      adreca_propia: adreca_propia || undefined
+      adreca_propia: adreca_propia || undefined,
+      nee,
     };
 
     let resultId: string | null = null;
@@ -199,6 +201,7 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
     const torns = formData.get("torns") as string;
     const poblacio_propia = formData.get("poblacio_propia") as string;
     const adreca_propia = formData.get("adreca_propia") as string;
+    const nee = formData.has("nee") ? formData.get("nee") === "true" : undefined;
 
     const galeriaRaw = formData.get("galeria");
     let galeria: string[] | undefined = undefined;
@@ -238,7 +241,8 @@ export async function updateActivitatAction(id: string, prevState: unknown, form
       tipus: tipus || "Extraescolar",
       torns: torns !== null ? torns : undefined,
       poblacio_propia: poblacio_propia !== null ? poblacio_propia : undefined,
-      adreca_propia: adreca_propia !== null ? adreca_propia : undefined
+      adreca_propia: adreca_propia !== null ? adreca_propia : undefined,
+      nee,
     };
 
     const success = useDb 

@@ -314,6 +314,7 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
   const [customComarca, setCustomComarca] = useState("");
   const [customPoblacio, setCustomPoblacio] = useState(initialPoblacio);
   const [customAdreca, setCustomAdreca] = useState(initialAdrecaPropia);
+  const [nee, setNee] = useState<boolean>(!!initialData?.nee);
 
   // Carrega la comarca a partir del barri/població inicial
   React.useEffect(() => {
@@ -873,6 +874,7 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
       const finalAdrecaPropia = hasCustomLocation ? customAdreca.trim() : "";
       formData.append("poblacio_propia", finalPoblacioPropia);
       formData.append("adreca_propia", finalAdrecaPropia);
+      formData.append("nee", nee ? "true" : "false");
       // Admin: afegir el centre seleccionat al FormData (no llegit del hidden input perquÃ¨ construÃ¯m FormData manualment)
       if (isAdmin && selectedCentreId) {
         formData.append("centreId", selectedCentreId);
@@ -1326,6 +1328,37 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
                   )}
                 </div>
               )}
+
+              {/* NEE SWITCH */}
+              <div style={{
+                marginTop: "12px",
+                padding: "16px 20px",
+                backgroundColor: nee ? "rgba(26,107,58,0.06)" : "#fdfbf7",
+                borderRadius: "12px",
+                border: nee ? "1.5px solid var(--verd)" : "1px solid rgba(26,107,58,0.15)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "16px",
+                transition: "all 0.2s"
+              }}>
+                <div>
+                  <label htmlFor="nee-checkbox" style={{ fontWeight: 700, color: "var(--verd-fosc)", fontSize: "14px", margin: 0, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}>
+                    🧩 Activitat adaptada / inclusiva per a NEE
+                  </label>
+                  <p style={{ margin: "4px 0 0 0", fontSize: "12px", color: "#557063" }}>
+                    Marqueu aquesta casella si l&apos;activitat està adaptada per a infants amb Necessitats Educatives Especials.
+                  </p>
+                </div>
+                <input
+                  type="checkbox"
+                  id="nee-checkbox"
+                  checked={nee}
+                  onChange={e => setNee(e.target.checked)}
+                  disabled={loading}
+                  style={{ width: "20px", height: "20px", accentColor: "var(--verd)", cursor: "pointer" }}
+                />
+              </div>
 
               {/* LOCALITZACIÓ PERSONALITZADA (OVERRIDE DE POBLACIÓ) */}
               <div style={{ marginTop: "12px", borderTop: "1px solid rgba(26,107,58,0.1)", paddingTop: "20px" }}>

@@ -125,13 +125,14 @@ export default function Filtres({
   const selectedSubcategoria = searchParams.get('subcategoria') || 'Totes';
   const selectedEdat = searchParams.get('edat') || 'Totes';
   const selectedBarri = searchParams.get('barri') || 'Totes';
+  const selectedNee = searchParams.get('nee') === 'true';
 
   const updateFilter = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
     if (key === 'categoria') {
       params.delete('subcategoria'); // Reset subcategory when category changes
     }
-    if (value === 'Totes') {
+    if (value === 'Totes' || value === 'false') {
       params.delete(key);
     } else {
       params.set(key, value);
@@ -151,11 +152,12 @@ export default function Filtres({
     }
 
     // Tracking analytics
-    if (value !== 'Totes') {
+    if (value !== 'Totes' && value !== 'false') {
       if (key === 'categoria')    trackEvent('filter_categoria', value);
       else if (key === 'barri')   trackEvent('filter_barri', value);
       else if (key === 'edat')    trackEvent('filter_edat', value);
       else if (key === 'tipus')   trackEvent('filter_tipus', value);
+      else if (key === 'nee')     trackEvent('filter_nee', 'true');
     }
   };
 
@@ -297,7 +299,8 @@ export default function Filtres({
         : selectedBarri === 'Girona'
           ? (a.barri?.trim().startsWith('Girona - ') || a.barri?.trim() === 'Girona')
           : a.barri === selectedBarri;
-      return matchTipus && matchCat && matchSubcat && matchEdat && matchBarri;
+      const matchNee = !selectedNee || !!a.nee;
+      return matchTipus && matchCat && matchSubcat && matchEdat && matchBarri && matchNee;
     });
     const filtered = result.filter(a => {
       // Amaga tallers expirats (puntuals acabats o recurrents fora de dates)
@@ -344,7 +347,7 @@ export default function Filtres({
     noConfirmats.sort((a, b) => (randomWeights[a.id || a.slug] ?? 0.5) - (randomWeights[b.id || b.slug] ?? 0.5));
 
     return [...tallers, ...confirmats, ...noConfirmats];
-  }, [activitats, selectedTipus, selectedCategoria, selectedSubcategoria, selectedEdat, selectedBarri, sessionSeed]);
+  }, [activitats, selectedTipus, selectedCategoria, selectedSubcategoria, selectedEdat, selectedBarri, selectedNee, sessionSeed]);
 
   const grouped = useMemo(() => {
     return filtered.reduce((acc, a) => {
@@ -418,6 +421,20 @@ export default function Filtres({
                 <>Casals <span className="mobile-br-only"><br /></span>d&apos;estiu</>
               )}
             </button>
+
+            <button 
+              type="button"
+              onClick={() => updateFilter('nee', selectedNee ? 'false' : 'true')}
+              className={`filter-tab-button ${selectedNee ? 'active' : ''}`}
+              style={{
+                backgroundColor: selectedNee ? '#2c6e49' : 'transparent',
+                color: selectedNee ? 'white' : 'var(--verd-fosc)',
+                borderColor: selectedNee ? '#2c6e49' : 'rgba(26,107,58,0.3)',
+                fontWeight: 700
+              }}
+            >
+              🧩 Adaptades NEE
+            </button>
           </div>
         </div>
 
@@ -488,6 +505,33 @@ export default function Filtres({
                           </>
                         )}
                     </select>
+                </div>
+
+                {/* FILTRE NEE SIDEBAR SWITCH */}
+                <div style={{
+                  padding: '14px 16px',
+                  backgroundColor: selectedNee ? 'rgba(44, 110, 73, 0.08)' : 'rgba(26, 107, 58, 0.03)',
+                  border: selectedNee ? '1.5px solid #2c6e49' : '1px solid rgba(26, 107, 58, 0.2)',
+                  borderRadius: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }} onClick={() => updateFilter('nee', selectedNee ? 'false' : 'true')}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '18px' }}>🧩</span>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--verd-fosc)' }}>Només adaptades NEE</div>
+                      <div style={{ fontSize: '11px', color: '#666' }}>Inclusives per a necessitats especials</div>
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={selectedNee}
+                    onChange={() => {}}
+                    style={{ accentColor: '#2c6e49', width: '18px', height: '18px', cursor: 'pointer' }}
+                  />
                 </div>
                 
                 {/* Botó "Veure X resultats" fixe directament a sobre del de netejar filtres */}

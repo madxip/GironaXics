@@ -82,6 +82,7 @@ function mapSupabaseActivitat(r: Record<string, any>): Activitat {
     centreVacances: r.centre_vacances || undefined,
     poblacio_propia: r.poblacio_propia || '',
     adreca_propia: r.adreca_propia || '',
+    nee: !!r.nee,
   };
 }
 
@@ -247,6 +248,7 @@ export async function createDbActivitat(data: Partial<Omit<Activitat, 'categoria
     torns: data.torns || '',
     poblacio_propia: data.poblacio_propia || '',
     adreca_propia: data.adreca_propia || '',
+    nee: !!data.nee,
     ciutat: 'girona'
   };
 
@@ -283,6 +285,7 @@ export async function updateDbActivitat(id: string, data: Partial<Omit<Activitat
   if (data.idioma !== undefined) updates.idioma = data.idioma;
   if (data.qui_imparteix !== undefined) updates.qui_imparteix = data.qui_imparteix;
   if (data.publicada !== undefined) updates.publicada = data.publicada;
+  if (data.nee !== undefined) updates.nee = data.nee;
   if (data.imatgeUrl !== undefined) {
     updates.imatge_url = data.imatgeUrl;
     updates.imatge_thumbnail_url = data.imatgeThumbnailUrl || data.imatgeUrl;

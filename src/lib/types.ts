@@ -35,6 +35,7 @@ export interface Activitat {
   rawGaleria?: string[];
   poblacio_propia?: string;
   adreca_propia?: string;
+  nee?: boolean;
 }
 
 export interface Sponsor {
