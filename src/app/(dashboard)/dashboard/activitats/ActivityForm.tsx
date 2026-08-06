@@ -1344,7 +1344,7 @@ export default function ActivityForm({ initialData = {}, categories, subcategori
               }}>
                 <div>
                   <label htmlFor="nee-checkbox" style={{ fontWeight: 700, color: "var(--verd-fosc)", fontSize: "14px", margin: 0, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}>
-                    🧩 Activitat adaptada / inclusiva per a NEE
+                    ♾️ Activitat adaptada / inclusiva per a NEE
                   </label>
                   <p style={{ margin: "4px 0 0 0", fontSize: "12px", color: "#557063" }}>
                     Marqueu aquesta casella si l&apos;activitat està adaptada per a infants amb Necessitats Educatives Especials.

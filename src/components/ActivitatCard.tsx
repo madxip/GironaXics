@@ -149,7 +149,7 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
           <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
             {activitat.nee && (
               <span className="casal-card-badge" style={{ backgroundColor: '#2c6e49', color: 'white', border: 'none' }}>
-                🧩 NEE
+                ♾️ NEE
               </span>
             )}
             <span className="casal-card-badge">
@@ -271,7 +271,7 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
             {activitat.nee && (
               <span style={{ fontSize: '10px', fontWeight: 700, color: '#1b3d2f', background: '#d2e7d7', padding: '2px 7px', borderRadius: '4px', letterSpacing: '0.04em' }}>
-                🧩 NEE
+                ♾️ NEE
               </span>
             )}
             {inVacation && (
@@ -343,7 +343,7 @@ export default function ActivitatCard({ activitat }: { activitat: Activitat }) {
             )}
             {activitat.nee && (
               <span className="activitat-badge" style={{ backgroundColor: '#2c6e49', color: 'white' }}>
-                🧩 NEE / Adaptada
+                ♾️ NEE / Adaptada
               </span>
             )}
           </div>

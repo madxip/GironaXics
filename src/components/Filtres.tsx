@@ -506,7 +506,7 @@ export default function Filtres({
                   transition: 'all 0.2s'
                 }} onClick={() => updateFilter('nee', selectedNee ? 'false' : 'true')}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ fontSize: '18px' }}>🧩</span>
+                    <span style={{ fontSize: '18px' }}>♾️</span>
                     <div>
                       <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--verd-fosc)' }}>Només adaptades NEE</div>
                       <div style={{ fontSize: '11px', color: '#666' }}>Inclusives per a necessitats especials</div>
